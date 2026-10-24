@@ -1137,7 +1137,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.02" data-build="20261024-221924" data-cache="violin-toolkit-test-"><span>Version 1.02-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.02" data-build="20261024-223454" data-cache="violin-toolkit-test-"><span>Version 1.02-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2953,7 +2953,7 @@ function yin(buf, sr) {
 
   function apply() {
     document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-    document.title = lang === 'zh' ? '小提琴工具箱' : 'Violin Toolkit';
+    document.title = (lang === 'zh' ? '小提琴工具箱' : 'Violin Toolkit') + ' (Test)';
     busy = true; process(document.body); busy = false; obs.takeRecords();
   }
   window.I18N = {
