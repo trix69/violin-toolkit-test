@@ -1179,7 +1179,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.05" data-build="20261025-004320" data-cache="violin-toolkit-test-"><span>Version 1.05-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.05" data-build="20261025-013155" data-cache="violin-toolkit-test-"><span>Version 1.05-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2814,7 +2814,8 @@ function noteGate() {
 <script>
 /* First-use tips: the first time each tool opens, a short tour dims the page, spotlights one
    control at a time and explains it in a bubble. Finished or skipped tours are remembered in
-   localStorage (violin-tips-seen); Settings > Show tips again clears that.
+   localStorage (violin-tips-seen; violin-tips-seen-test on the test site, renamed by make_pwa.py);
+   Settings > Show tips again clears that.
    nav_js calls APP.coach.maybe(view) after showing a tool and after the start overlay closes. */
 (function () {
   var KEY = 'violin-tips-seen-test';
