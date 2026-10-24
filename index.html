@@ -805,7 +805,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 .sheet-done { position: sticky; bottom: 0; box-shadow: 0 -10px 12px var(--panel); }
 .sheet-done { margin-top: 18px; width: 100%; height: 46px; border: 0; border-radius: 12px; background: var(--accent); color: var(--on-accent); font: 700 16px var(--font-note); cursor: pointer; }
 /* ---- first-use tips (coach.js) ---- */
-.coach { position: fixed; inset: 0; z-index: 105; cursor: pointer; touch-action: none; overscroll-behavior: contain; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.coach { position: fixed; inset: 0; z-index: 105; cursor: pointer; touch-action: pinch-zoom; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 /* the spotlight: a clear rounded box whose huge shadow dims everything else */
 .coach-hole {
   position: fixed; border-radius: 14px; pointer-events: none;
@@ -1179,7 +1179,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.04" data-build="20261025-002607" data-cache="violin-toolkit-test-"><span>Version 1.04-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.04" data-build="20261025-003221" data-cache="violin-toolkit-test-"><span>Version 1.04-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2943,7 +2943,8 @@ function noteGate() {
   }
   /* the page behind must not scroll under the tour: inert stops clicks and focus, not scrolling */
   var SCROLL_KEYS = { ArrowUp: 1, ArrowDown: 1, PageUp: 1, PageDown: 1, Home: 1, End: 1, ' ': 1 };
-  function noScroll(e) { e.preventDefault(); }
+  /* one finger or a wheel would scroll the page; two fingers are a pinch-zoom, which stays allowed */
+  function noScroll(e) { if (e.touches && e.touches.length > 1) return; e.preventDefault(); }
   function onKey(e) {
     if (SCROLL_KEYS[e.key] && !(e.key === ' ' && e.target.tagName === 'BUTTON')) { e.preventDefault(); return; }
     if (e.key === 'Escape') { e.preventDefault(); close(); }
