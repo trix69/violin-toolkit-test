@@ -1137,7 +1137,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.03" data-build="20261024-233613" data-cache="violin-toolkit-test-"><span>Version 1.03-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.03" data-build="20261024-233907" data-cache="violin-toolkit-test-"><span>Version 1.03-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2081,6 +2081,7 @@ function noteGate() {
   }
 
   /* ---------- Pitch Check ---------- */
+  /* yin() and noteGate() come from the tuner's shared dsp script (src/tuner.html), loaded before this one */
   var mic = null, pcStatus = '', pcRaf = 0, pcLast = 0, hist = [], lastHeard = 0, pcGate = noteGate();
 
   function clearHeard() {
