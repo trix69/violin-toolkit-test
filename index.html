@@ -1179,7 +1179,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.04" data-build="20261025-003221" data-cache="violin-toolkit-test-"><span>Version 1.04-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.05" data-build="20261025-004320" data-cache="violin-toolkit-test-"><span>Version 1.05-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2683,7 +2683,7 @@ function noteGate() {
   howto.addEventListener('click', function (e) { if (e.target === howto) closeHowto(); });
   /* ---- offline tip: only on a first visit, after 5 minutes of use, never when opened from a local file or an installed app ---- */
   (function () {
-    var offer = document.getElementById('offer'), FIRST = 'violin-first-visit';
+    var offer = document.getElementById('offer'), FIRST = 'violin-first-visit-test';
     var seen = null;
     try { seen = localStorage.getItem(FIRST); localStorage.setItem(FIRST, '1'); } catch (e) { return; }
     if (seen || standalone || !('serviceWorker' in navigator) || !window.isSecureContext || location.protocol === 'file:') return;
@@ -2817,7 +2817,7 @@ function noteGate() {
    localStorage (violin-tips-seen); Settings > Show tips again clears that.
    nav_js calls APP.coach.maybe(view) after showing a tool and after the start overlay closes. */
 (function () {
-  var KEY = 'violin-tips-seen';
+  var KEY = 'violin-tips-seen-test';
   var TOURS = {
     tuner: [
       { sel: '#go', title: 'Start tuning', text: 'Tap here, then bow or pluck an open string. The tuner listens through the microphone.' },
