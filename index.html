@@ -33,6 +33,8 @@
   --nut: #EDE6D3;
   --ink: #15110F;
   --board-good: #6FD6A0;
+  --pc-good: #5BD08E;   /* the tuner's in-tune green on a dark surface */
+  --pc-off: #9AA59F;    /* grey for a pitch well away from the note */
   --off: #6A7770;
   --off-ink: #E6EEE8;
   --g: #E3A24C;
@@ -433,21 +435,26 @@ h1 {
 }
 #view-board .posbar button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 #view-board .pc { position: absolute; inset: 0; }
-#view-board .pc-name { position: absolute; top: 2px; left: 6px; right: 0; font: 700 21px/1 var(--font-note); color: var(--nut); white-space: nowrap; }
-#view-board .pc-cents { position: absolute; top: 30px; left: 6px; right: 0; font: 500 12px/1.2 var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--board-text); white-space: nowrap; }
+#view-board .pc-read { position: absolute; left: 6px; right: 0; top: var(--y, 0); transform: translateY(-50%); transition: top 120ms ease-out; }
+#view-board .pc:not(.on) .pc-read { visibility: hidden; }
+#view-board .pc-name { font: 700 21px/1 var(--font-note); color: var(--nut); white-space: nowrap; }
+#view-board .pc-cents { margin-top: 3px; font: 500 12px/1.2 var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--board-text); white-space: nowrap; }
 #view-board .pc.on .pc-name { color: var(--nut); }
 #view-board .pc.tune .pc-cents { color: var(--board-good); }
 #view-board .pc:not(.on) .pc-name { color: var(--board-text); }
 #view-board .pcm {
+  --pcc: color-mix(in srgb, var(--pc-good) var(--gp, 0%), var(--pc-off));
   position: absolute; left: var(--x); top: 0;
   width: calc(var(--r) * 2 + 16px); height: calc(var(--r) * 2 + 16px);
   border-radius: 50%; transform: translate(-50%, -50%);
-  background: var(--board-good); opacity: 0; pointer-events: none;
-  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--board-good) 55%, transparent);
-  transition: top 90ms linear, opacity 120ms;
+  background: var(--pcc); opacity: 0; pointer-events: none;
+  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--pcc) 55%, transparent);
+  transition: top 90ms linear, opacity 120ms, background-color 120ms;
 }
 #view-board .pcm.on { opacity: .9; }
 #view-board .board.pcmode .note.heard { box-shadow: 0 2px 4px rgba(0, 0, 0, .45); }
+#view-board .board.pcmode,
+#view-board .board.pcmode .note { touch-action: pan-y; }
 @media (prefers-reduced-motion: reduce) {
 #view-board .note { transition: none; }
 #view-board .pcm { transition: none; }
@@ -1197,7 +1204,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.05" data-build="20261025-161923" data-cache="violin-toolkit-test-"><span>Version 1.05-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.05" data-build="20261025-165914" data-cache="violin-toolkit-test-"><span>Version 1.05-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1940,7 +1947,7 @@ function noteGate() {
   }
 
   /* Recolour in place so a note being held keeps sounding when the position switches. */
-  var PC_HTML = '<div class="pc"><div class="pc-name">–</div><div class="pc-cents"></div></div>';
+  var PC_HTML = '<div class="pc"><div class="pc-read"><div class="pc-name"></div><div class="pc-cents"></div></div></div>';
   var pcCur = null;
 
   function pcShow(r) {
@@ -1950,12 +1957,19 @@ function noteGate() {
       var n = r && state.pos === 'pc' ? r.m - STRINGS[si].midi : -9;
       var show = n >= -0.5 && n <= MAXN + 0.5;
       d.classList.toggle('on', show);
-      if (show) d.style.top = 'calc(var(--head) + ' + mm(n).toFixed(2) + ' * var(--k))';
+      if (show) {
+        d.style.top = 'calc(var(--head) + ' + mm(n).toFixed(2) + ' * var(--k))';
+        d.style.setProperty('--gp', Math.round(100 * Math.max(0, Math.min(1, (25 - Math.abs(r.cents)) / 22))) + '%');
+      }
     });
     var el = labels.querySelector('.pc');
     if (!el) return;
     var nm = el.querySelector('.pc-name'), ce = el.querySelector('.pc-cents');
-    if (!r) { el.classList.remove('on', 'tune'); nm.textContent = '–'; ce.textContent = ''; return; }
+    if (!r) { el.classList.remove('on', 'tune'); nm.textContent = ''; ce.textContent = ''; return; }
+    /* level with the note on the board, on the string where it sits lowest (A4 = open A, not D 4th finger) */
+    var at = null, k = Math.round(r.m);
+    STRINGS.forEach(function (st) { var n = k - st.midi; if (n >= 0 && n <= MAXN && (at === null || n < at)) at = n; });
+    el.querySelector('.pc-read').style.setProperty('--y', yFor(at === null ? 0 : at));
     el.classList.add('on');
     el.classList.toggle('tune', Math.abs(r.cents) <= 5);
     nm.textContent = r.name;
@@ -2340,7 +2354,8 @@ function noteGate() {
   board.addEventListener('selectstart', function (e) { e.preventDefault(); });
   board.addEventListener('dragstart', function (e) { e.preventDefault(); });
   board.addEventListener('touchstart', function (e) {
-    if (e.target.closest && e.target.closest('.note')) e.preventDefault();
+    /* in Pitch Check a touch may scroll the page instead */
+    if (state.pos !== 'pc' && e.target.closest && e.target.closest('.note')) e.preventDefault();
   }, { passive: false });
 
   board.addEventListener('keydown', function (e) {
