@@ -1225,7 +1225,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.06" data-build="20261026-081837" data-cache="violin-toolkit-test-"><span>Version 1.06-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.06" data-build="20261026-083955" data-cache="violin-toolkit-test-"><span>Version 1.06-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3051,6 +3051,7 @@ function noteGate() {
       var upY = g, downY = vh - g - h;
       var hid = function (y0) { return Math.max(0, Math.min(y0 + h, bottom) - Math.max(y0, top)); };
       y = hid(upY) < hid(downY) ? upY : downY;
+      if (h <= vh) y = Math.max(0, Math.min(y, vh - h));   /* it fits the screen: keep all of it on screen */
     }
     tip.style.left = x + 'px'; tip.style.top = y + 'px';
     arrow.hidden = !side;
