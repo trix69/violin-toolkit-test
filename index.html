@@ -770,6 +770,7 @@ html[lang="zh-CN"] {
 .sheet-card { width: min(100%, 420px); background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 18px 50px rgba(0,0,0,.3); outline: none; }
 .sheet-card h2 { margin: 0 0 14px; font: 700 24px/1.1 var(--font-display); letter-spacing: -0.02em; }
 .sheet-card h3 { margin: 14px 0 8px; font: 500 12px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sheet-card h3 .nc { text-transform: none; }   /* a note name keeps its own case: La4, not LA4 */
 .segc { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .segc button { height: 42px; border: 0; background: transparent; color: var(--fg); font: 500 15px var(--font-note); cursor: pointer; }
 .segc button + button { border-left: 1px solid var(--line); }
@@ -1195,7 +1196,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" role="radio" aria-checked="false" data-names="letter">Pitch names</button>
       <button type="button" role="radio" aria-checked="false" data-names="solfege">Solfège</button>
     </div>
-    <h3 id="lblA4">Tuning pitch (A4)</h3>
+    <h3 id="lblA4">Tuning pitch <span class="nc">(A4)</span></h3>
     <div class="segc two" role="radiogroup" aria-labelledby="lblA4" id="segA4">
       <button type="button" role="radio" aria-checked="false" data-a4="442">442 Hz</button>
       <button type="button" role="radio" aria-checked="false" data-a4="440">440 Hz</button>
@@ -1225,7 +1226,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.06" data-build="20261026-083955" data-cache="violin-toolkit-test-"><span>Version 1.06-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.07" data-build="20261026-105806" data-cache="violin-toolkit-test-"><span>Version 1.07-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3258,7 +3259,7 @@ function noteGate() {
     'Tap the top number to change the beats per bar, and the bottom number to change the note value.': '点上面的数字改变每小节拍数，点下面的数字改变音符时值。',
     'Accents': '重音', 'Tap a beat to change how loudly it clicks: accent, medium, normal or muted.': '点一个拍子改变它的音量：重音、中、普通或静音。',
     'Tap tempo': '点拍定速', 'Tap in time a few times to set the tempo from your own beat.': '按你的节奏点几下，就能按你的拍子设定速度。',
-    'Support': '支持', 'Note names': '音符名称', 'Tuning pitch (A4)': '标准音高 (A4)', 'Pitch names': '音名', 'Solfège': '唱名',
+    'Support': '支持', 'Note names': '音符名称', 'Tuning pitch (A4)': '标准音高 (A4)', 'Tuning pitch': '标准音高', 'Pitch names': '音名', 'Solfège': '唱名',
     'Buy me a coffee': '请我喝杯咖啡',
     'Like this app?': '喜欢这个应用？', 'Star on GitHub': '在 GitHub 上点个星',
     'QR code for buymeacoffee.com/trinks': 'buymeacoffee.com/trinks 二维码',
