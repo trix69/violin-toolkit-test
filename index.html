@@ -1206,7 +1206,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.05" data-build="20261025-224248" data-cache="violin-toolkit-test-"><span>Version 1.05-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.06" data-build="20261026-024705" data-cache="violin-toolkit-test-"><span>Version 1.06-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1966,8 +1966,9 @@ function noteGate() {
       var n = r && state.pos === 'pc' ? r.m - STRINGS[si].midi : -9;
       var show = n >= -0.5 && n <= MAXN + 0.5;
       /* drawn no further than a little past the nut or the octave, so the disc isn't cut off
-         by the board's edge; its colour and the cents readout still say how far off it is */
-      n = Math.max(-0.05, Math.min(MAXN + 0.15, n));
+         by the board's edge (at the nut, -0.02 keeps it 2.1 px inside the stage even at the
+         largest scale, K = 5); its colour and the cents readout still say how far off it is */
+      n = Math.max(-0.02, Math.min(MAXN + 0.15, n));
       d.classList.toggle('on', show);
       if (show) {
         d.style.top = 'calc(var(--head) + ' + mm(n).toFixed(2) + ' * var(--k))';
@@ -2991,6 +2992,19 @@ function noteGate() {
     }
     else if (vw - right - gap - g >= w) { x = right + gap; side = 'right'; }
     else if (left - gap - g >= w) { x = left - gap - w; side = 'left'; }
+    if (!side) {
+      /* a short, wide screen (a phone on its side): no side has room for the full width, so try a
+         narrower bubble beside the target before covering it */
+      var sw = Math.floor(Math.max(vw - right - gap - g, left - gap - g));
+      if (sw >= 180) {
+        tip.style.width = sw + 'px';
+        if (tip.offsetHeight + 2 * g <= vh) {
+          w = sw; h = tip.offsetHeight;
+          side = vw - right - gap - g >= left - gap - g ? 'right' : 'left';
+          x = side === 'right' ? right + gap : left - gap - w;
+        } else tip.style.width = w + 'px';
+      }
+    }
     if (side === 'below' || side === 'above') x = Math.max(g, Math.min(vw - g - w, cx - w / 2));
     else if (side) y = Math.max(g, Math.min(vh - g - h, cy - h / 2));
     else {
@@ -3026,6 +3040,9 @@ function noteGate() {
     titleEl.textContent = s.title;
     textEl.textContent = s.text;
     nextBtn.textContent = i + 1 < tour.length ? 'Next' : 'Got it';
+    /* place now as well as on the next frame: a browser that skips the frame (a hidden or covered
+       window) must not leave the bubble unplaced at the top left */
+    place();
     requestAnimationFrame(function () { place(); try { nextBtn.focus({ preventScroll: true }); } catch (e) {} });
   }
   function next() { if (idx + 1 < tour.length) step(idx + 1); else close(); }
