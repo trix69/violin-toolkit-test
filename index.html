@@ -868,6 +868,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 .coach-pic .cp-sharp .cp-disc { fill: color-mix(in srgb, var(--pc-good, #5BD08E) 40%, var(--pc-off, #9AA59F)); }
 .coach-pic figcaption { margin-top: 5px; font: 400 12px/1.3 var(--font-note); color: var(--muted); }
 .coach-pic figcaption b { display: block; font-weight: 600; color: var(--fg); }
+@media (max-height: 400px) { .coach-pic { display: none; } }   /* short landscape screens: keep the whole tip, and its buttons, on screen (Hermes R6.1) */
 
 /* ---- accent colours (set by data-accent on <html>) ---- */
 :root[data-accent="teal"]{--accent:#2F7377;--on-accent:#FFFFFF;--t-accent:#2F7377;--t-on-accent:#FFFFFF;}
@@ -1222,7 +1223,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.06" data-build="20261026-065921" data-cache="violin-toolkit-test-"><span>Version 1.06-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.06" data-build="20261026-072926" data-cache="violin-toolkit-test-"><span>Version 1.06-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
