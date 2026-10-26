@@ -537,6 +537,7 @@ h1 {
 #view-tuner .str.hit.ok { box-shadow: 0 0 0 3px var(--t-bg), 0 0 0 6px var(--t-good); }
 #view-tuner .str[aria-pressed="true"]::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--t-sc); animation: ring 1.4s ease-out infinite; pointer-events: none; }
 @keyframes ring { from { transform: scale(0.92); opacity: 0.9; } to { transform: scale(1.14); opacity: 0; } }
+#view-tuner .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 #view-tuner .tips { margin: 0; display: grid; gap: 14px 28px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #view-tuner .tips dt { font-weight: 700; margin-bottom: 2px; }
 #view-tuner .tips dd { margin: 0; color: var(--t-muted); font-size: 15px; }
@@ -1226,7 +1227,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.07" data-build="20261026-111839" data-cache="violin-toolkit-test-"><span>Version 1.07-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.07" data-build="20261026-112833" data-cache="violin-toolkit-test-"><span>Version 1.07-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
