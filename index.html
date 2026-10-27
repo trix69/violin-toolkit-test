@@ -812,7 +812,6 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 @media (prefers-reduced-motion: reduce) { .offer { animation: none; } }
 #howto { z-index: 120; }
 #howto .sheet-card { width: min(100%, 440px); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto; }
-.howto-lead { margin: 0 0 14px; font: 400 14px/1.5 var(--font-note); color: var(--muted); }
 .howto-steps { margin: 14px 0 0; padding: 0; list-style: none; counter-reset: st; display: grid; gap: 10px; }
 .howto-steps li { counter-increment: st; display: flex; align-items: center; gap: 12px; font: 400 15px/1.4 var(--font-note); }
 .howto-steps li::before { content: counter(st); flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font: 700 13px var(--font-note); }
@@ -1227,7 +1226,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.07" data-build="20261026-112833" data-cache="violin-toolkit-test-"><span>Version 1.07-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.08" data-build="20261028-060258" data-cache="violin-toolkit-test-"><span>Version 1.08-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1235,7 +1234,6 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 <div class="sheet" id="howto" role="dialog" aria-modal="true" aria-labelledby="howtoTitle" hidden>
   <div class="sheet-card" id="howtoCard" tabindex="-1">
     <h2 id="howtoTitle">Use offline</h2>
-    <p class="howto-lead">Save Violin Toolkit so it opens like an app, even without internet.</p>
     <div class="segc" role="radiogroup" aria-label="Device" id="segDev">
       <button type="button" role="radio" aria-checked="false" data-dev="ios">iPhone / iPad</button>
       <button type="button" role="radio" aria-checked="false" data-dev="android">Android</button>
@@ -3232,7 +3230,6 @@ function noteGate() {
     'No install icon? Open the browser menu and choose Install Violin Toolkit. In Safari on a Mac, use File, then Add to Dock. Firefox cannot install apps, but the page still opens offline in a browser tab after one visit.': '没有安装图标？打开浏览器菜单，选择“安装小提琴工具箱”。在 Mac 的 Safari 中，请使用“文件”→“添加到 Dock”。Firefox 无法安装应用，但访问一次后，页面仍可在浏览器标签页中离线打开。',
     'Save Violin Toolkit for offline use.': '保存小提琴工具箱，离线也能用。', 'Show me how': '查看方法', 'Dismiss': '关闭', 'Offline use': '离线使用',
     'Offline': '离线使用', 'Use offline on your phone': '在手机上离线使用', 'Use offline': '离线使用',
-    'Save Violin Toolkit so it opens like an app, even without internet.': '保存小提琴工具箱，像应用一样打开，没有网络也能用。',
     'iPhone / iPad': 'iPhone / iPad', 'Android': 'Android',
     'Open this page in Safari.': '用 Safari 打开此页面。',
     'Tap the Share button.': '点按“分享”按钮。',
