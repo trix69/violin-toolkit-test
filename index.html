@@ -811,8 +811,9 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 @keyframes offer-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .offer { animation: none; } }
 #howto { z-index: 120; }
-/* metronome beat flash (Settings > Beat flash): a full-screen wash in the accent colour on each beat, animated by met.js */
-.beat-flash { position: absolute; left: 0; top: 0; width: 100%; height: 100vh; z-index: 130; pointer-events: none; opacity: 0; background: var(--accent); display: none; }   /* the colour chosen in Settings > Colour.
+/* metronome beat flash (Settings > Beat flash): a full-screen wash in the accent colour on each beat, animated by met.js.
+   z-index 104: over the page, under the tour (105), Settings (110) and Use offline (120), so an open window stays still. */
+.beat-flash { position: absolute; left: 0; top: 0; width: 100%; height: 100vh; z-index: 104; pointer-events: none; opacity: 0; background: var(--accent); display: none; }   /* the colour chosen in Settings > Colour.
    Not position: fixed and display: none at rest: iOS Safari tints its toolbar from fixed elements at the screen edge, even invisible ones. */
 #howto .sheet-card { width: min(100%, 440px); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto; }
 .howto-steps { margin: 14px 0 0; padding: 0; list-style: none; counter-reset: st; display: grid; gap: 10px; }
@@ -1235,7 +1236,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.08" data-build="20261028-205000" data-cache="violin-toolkit-test-"><span>Version 1.08-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.09" data-build="20261028-205847" data-cache="violin-toolkit-test-"><span>Version 1.09-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1268,7 +1269,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <li><span>Click Install to confirm.</span></li>
       <li><span>Open it from its new icon once while you have internet.</span></li>
     </ol>
-    <p class="howto-note" id="howtoNote">Use the app at least once with internet. After that, it also works offline.</p>
+    <p class="howto-note" id="howtoNote">After the first visit, it also works offline.</p>
     <p class="howto-note" id="howtoDesk" hidden>No install icon? Open the browser menu and choose Install Violin Toolkit. In Safari on a Mac, use File, then Add to Dock. Firefox cannot install apps, but the page still opens offline in a browser tab after one visit.</p>
     <button type="button" class="sheet-done" id="howtoDone">Done</button>
   </div>
@@ -2692,8 +2693,22 @@ function noteGate() {
     softKey = key; softMax = lo;
     return lo;
   }
+  /* the metronome tab also pulses on each beat: a small area, so it can stay strong at any tempo and
+     still shows the beat where the soft wash is hard to see (the dark fingerboard above 168 BPM) */
+  var metTab = null, tabAnim = null;
+  function pulseTab(level) {
+    metTab = metTab || document.querySelector('.tab[data-view="metronome"]');
+    if (!metTab || !metTab.animate) return;
+    var cs = getComputedStyle(document.documentElement), ac = cs.getPropertyValue('--accent').trim(), on = cs.getPropertyValue('--on-accent').trim();
+    if (tabAnim) tabAnim.cancel();
+    tabAnim = metTab.animate([
+      { backgroundColor: ac, color: on, borderColor: ac, boxShadow: '0 0 0 ' + (level === 3 ? 5 : 3) + 'px ' + ac },
+      { boxShadow: '0 0 0 0 ' + ac }
+    ], { duration: Math.min(380, 0.6 * 60000 / state.bpm), easing: 'ease-out' });
+  }
   function flash(level) {
     if (!window.APP || !APP.flash || !level) return;
+    pulseTab(level);
     flashEl = flashEl || document.getElementById('beatFlash');
     if (!flashEl || !flashEl.animate) return;
     if (flashAnim) flashAnim.cancel();
@@ -2730,6 +2745,7 @@ function noteGate() {
     clearInterval(timer); cancelAnimationFrame(raf);
     queue = []; paintNow(-1);
     if (flashAnim) { flashAnim.cancel(); flashAnim = null; }
+    if (tabAnim) { tabAnim.cancel(); tabAnim = null; }
     if (flashEl) flashEl.style.display = 'none';
     drawPlay();
   }
@@ -3296,7 +3312,7 @@ function noteGate() {
     'Tap Install app, or Add to Home screen.': '点按“安装应用”或“添加到主屏幕”。',
     'Tap Install to confirm.': '点按“安装”确认。',
     'Open it from the new icon once while you have internet.': '在有网络时，从新图标打开一次。',
-    'Use the app at least once with internet. After that, it also works offline.': '请至少在有网络时使用一次，之后也可离线使用。',
+    'After the first visit, it also works offline.': '第一次访问后，离线也能使用。',
     'Help': '帮助', 'Show tips again': '再次显示提示', 'Skip': '跳过', 'Next': '下一步', 'Got it': '知道了',
     'Tap here, then bow or pluck an open string. The tuner listens through the microphone.': '点这里，然后拉奏或拨一根空弦。调音器会通过麦克风听音。',
     'Read the needle': '看指针', 'In the middle and green means in tune. Left of centre is flat, right is sharp.': '指针在中间并变绿表示音准。偏左是偏低，偏右是偏高。',
