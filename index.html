@@ -1236,7 +1236,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.09" data-build="20261028-223222" data-cache="violin-toolkit-test-"><span>Version 1.09-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.09" data-build="20261028-233301" data-cache="violin-toolkit-test-"><span>Version 1.09-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2706,8 +2706,11 @@ function noteGate() {
       { backgroundColor: ac, color: on, borderColor: ac, boxShadow: '0 0 0 ' + (level === 3 ? 5 : 3) + 'px ' + ac },
       { boxShadow: '0 0 0 0 ' + ac }
     ], { duration: Math.min(380, 0.6 * 60000 / state.bpm), easing: 'ease-out' });
-    var t = tabAnim;
-    t.onfinish = t.oncancel = function () { if (t === tabAnim) metTab.classList.remove('pulsing'); };
+    var t = tabAnim, off = function () { if (t === tabAnim) metTab.classList.remove('pulsing'); };
+    t.onfinish = t.oncancel = off;
+    /* hand the dot back to --accent once the fill has faded about halfway to the panel colour
+       (a third of the ease-out): the two dot colours cross in contrast there (Hermes R10.2) */
+    setTimeout(off, Math.round(t.effect.getTiming().duration / 3));
   }
   function flash(level) {
     if (!window.APP || !APP.flash || !level) return;
