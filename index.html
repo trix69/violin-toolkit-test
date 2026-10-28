@@ -812,7 +812,8 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 @media (prefers-reduced-motion: reduce) { .offer { animation: none; } }
 #howto { z-index: 120; }
 /* metronome beat flash (Settings > Beat flash): a full-screen wash in the accent colour on each beat, animated by met.js */
-.beat-flash { position: fixed; inset: 0; z-index: 130; pointer-events: none; opacity: 0; background: var(--accent); }   /* the colour chosen in Settings > Colour */
+.beat-flash { position: absolute; left: 0; top: 0; width: 100%; height: 100vh; z-index: 130; pointer-events: none; opacity: 0; background: var(--accent); display: none; }   /* the colour chosen in Settings > Colour.
+   Not position: fixed and display: none at rest: iOS Safari tints its toolbar from fixed elements at the screen edge, even invisible ones. */
 #howto .sheet-card { width: min(100%, 440px); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto; }
 .howto-steps { margin: 14px 0 0; padding: 0; list-style: none; counter-reset: st; display: grid; gap: 10px; }
 .howto-steps li { counter-increment: st; display: flex; align-items: center; gap: 12px; font: 400 15px/1.4 var(--font-note); }
@@ -1214,8 +1215,8 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
     <div class="swatches" role="radiogroup" aria-labelledby="lblCol" id="swatches"><button type="button" class="swatch" role="radio" aria-checked="false" data-accent="teal" style="--sw:#2F7377;--sw-d:#6DBBC0"><i></i><span>Calm teal</span></button><button type="button" class="swatch" role="radio" aria-checked="false" data-accent="sage" style="--sw:#4F7A66;--sw-d:#86C2A5"><i></i><span>Sage green</span></button><button type="button" class="swatch" role="radio" aria-checked="false" data-accent="slate" style="--sw:#4D6F93;--sw-d:#8DB0D6"><i></i><span>Slate blue</span></button><button type="button" class="swatch" role="radio" aria-checked="false" data-accent="violet" style="--sw:#6A5F93;--sw-d:#B0A6DC"><i></i><span>Soft violet</span></button><button type="button" class="swatch" role="radio" aria-checked="false" data-accent="classic" style="--sw:#16201B;--sw-d:#E5ECE7"><i></i><span>Classic</span></button></div>
     <h3 id="lblFlash">Beat flash</h3>
     <div class="segc two" role="radiogroup" aria-labelledby="lblFlash" id="segFlash">
-      <button type="button" role="radio" aria-checked="false" data-flash="off">Off</button>
       <button type="button" role="radio" aria-checked="false" data-flash="on">On</button>
+      <button type="button" role="radio" aria-checked="false" data-flash="off">Off</button>
     </div>
     <h3 id="lblHelp">Help</h3>
     <button type="button" class="howto-btn" id="showTips"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6"/><path d="M12 16.8h.01"/></svg><span>Show tips again</span></button>
@@ -1234,7 +1235,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.08" data-build="20261028-201220" data-cache="violin-toolkit-test-"><span>Version 1.08-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.08" data-build="20261028-201700" data-cache="violin-toolkit-test-"><span>Version 1.08-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1291,7 +1292,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 
 <script>
 var APP = window.APP = { views: {}, a4: 442, onA4: [] };
-try { APP.flash = localStorage.getItem('violin-flash') === 'on'; } catch (e) { APP.flash = false; }
+try { APP.flash = localStorage.getItem('violin-flash') !== 'off'; } catch (e) { APP.flash = true; }   /* beat flash is on unless turned off */
 try {
   var savedA4 = +localStorage.getItem('violin-a4');
   if (savedA4 === 440 || savedA4 === 442) APP.a4 = savedA4;
@@ -2643,7 +2644,7 @@ function noteGate() {
   symSheet.addEventListener('click', function (e) { if (e.target === symSheet) closeSym(); });
 
   /* ---------- audio ---------- */
-  var ctx = null, timer = 0, nextT = 0, beatIdx = 0, queue = [], raf = 0, lastNow = -1;
+  var ctx = null, timer = 0, nextT = 0, beatIdx = 0, beatCount = 0, queue = [], raf = 0, lastNow = -1;
   function click(t, level) {
     if (level === 0) return;
     var o = ctx.createOscillator(), g = ctx.createGain();
@@ -2660,7 +2661,7 @@ function noteGate() {
     while (nextT < ctx.currentTime + 0.12) {
       var i = beatIdx % state.num;
       click(nextT, state.levels[i]);
-      queue.push({ t: nextT, i: i });
+      queue.push({ t: nextT, i: i, k: beatCount++ });
       nextT += 60 / state.bpm;
       beatIdx = (beatIdx + 1) % state.num;
     }
@@ -2672,24 +2673,31 @@ function noteGate() {
     Array.prototype.forEach.call(notesEl.children, function (n, k) { n.classList.toggle('now', k === i); });
   }
   /* Beat flash (Settings > Beat flash): wash the whole screen on each sounding beat, brighter on
-     accents. It runs from this loop, so it carries on while the fingerboard is open. Flashes are kept
-     at least 340 ms apart (under 3 a second, the safe limit for flashing content), so above 176 BPM
-     some beats don't flash. */
-  var flashEl = null, lastFlash = -1e9, flashAnim = null;
-  function flash(level) {
+     accents. It runs from this loop, so it carries on while the fingerboard is open. To stay under
+     3 flashes a second (the safe limit for flashing content) it flashes every beat up to 176 BPM and
+     every 2nd beat above that (counted from the start, so in 4/4 beats 1 and 3, and never two in a
+     row across a bar line in 3/4), so the pattern is steady rather than skipping beats at random. */
+  var flashEl = null, flashAnim = null;
+  function flashEvery() { return Math.max(1, Math.ceil(0.34 * state.bpm / 60 - 1e-9)); }
+  function flash(level, k) {
     if (!window.APP || !APP.flash || !level) return;
-    var now = performance.now();
-    if (now - lastFlash < 340) return;
-    lastFlash = now;
+    var n = flashEvery();
+    if (k % n) return;
     flashEl = flashEl || document.getElementById('beatFlash');
     if (!flashEl || !flashEl.animate) return;
     if (flashAnim) flashAnim.cancel();
+    /* cover the visible part of the page only while flashing, then leave the page as it was */
+    flashEl.style.top = window.scrollY + 'px';
+    flashEl.style.height = window.innerHeight + 'px';
+    flashEl.style.display = 'block';
     var peak = level === 3 ? 0.62 : level === 2 ? 0.45 : 0.32;
     flashAnim = flashEl.animate([{ opacity: peak }, { opacity: 0 }], { duration: Math.min(380, 0.6 * 60000 / state.bpm), easing: 'ease-out' });
+    var a = flashAnim;
+    a.onfinish = a.oncancel = function () { if (a === flashAnim && flashEl) flashEl.style.display = 'none'; };
   }
   function frame() {
     if (!playing) return;
-    while (queue.length && queue[0].t <= ctx.currentTime) { var q = queue.shift(); flash(state.levels[q.i]); paintNow(q.i); }
+    while (queue.length && queue[0].t <= ctx.currentTime) { var q = queue.shift(); flash(state.levels[q.i], q.k); paintNow(q.i); }
     raf = requestAnimationFrame(frame);
   }
   function start() {
@@ -2698,7 +2706,7 @@ function noteGate() {
     if (!AC) return;
     if (!ctx) ctx = new AC();
     if (ctx.state === 'suspended') ctx.resume();
-    playing = true; beatIdx = 0; queue = []; lastNow = -1;
+    playing = true; beatIdx = 0; beatCount = 0; queue = []; lastNow = -1;
     nextT = ctx.currentTime + 0.06;
     tick(); timer = setInterval(tick, 25);
     raf = requestAnimationFrame(frame);
@@ -2710,6 +2718,7 @@ function noteGate() {
     clearInterval(timer); cancelAnimationFrame(raf);
     queue = []; paintNow(-1);
     if (flashAnim) { flashAnim.cancel(); flashAnim = null; }
+    if (flashEl) flashEl.style.display = 'none';
     drawPlay();
   }
   function toggle() { playing ? stop() : start(); }
