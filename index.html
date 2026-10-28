@@ -720,6 +720,7 @@ h1 {
   animation: launch-in .25s ease-out;
 }
 .launch[hidden] { display: none; }
+.tab.launch-set { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 12px); }   /* Settings, so the language can be changed before choosing */
 .launch-card { width: min(100%, 720px); text-align: center; outline: none; }
 .launch h2 { margin: 0; font: 700 clamp(30px, 6vw, 44px)/1.1 var(--font-display); letter-spacing: -0.02em; }
 .launch-sub { margin: 8px 0 22px; font: 400 14px var(--font-mono); letter-spacing: .04em; color: var(--muted); }
@@ -1236,7 +1237,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.09" data-build="20261029-090713" data-cache="violin-toolkit-test-"><span>Version 1.09-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.09" data-build="20261029-093005" data-cache="violin-toolkit-test-"><span>Version 1.09-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1289,6 +1290,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" class="launch-btn" data-view="metronome"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3h5.6l3.4 18H5.8z"/><path d="M12 17.5L15.6 6.5"/><circle cx="14.2" cy="10.6" r="1.2" fill="currentColor"/><path d="M8 21h8" opacity=".0"/></svg><b>Metronome</b><span>Keep steady time at any tempo</span></button>
     </div>
   </div>
+  <button type="button" class="tab launch-set" id="launchSettings" aria-label="Settings" title="Settings" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
 </div>
 
 <script>
@@ -2848,10 +2850,11 @@ function noteGate() {
     Array.prototype.forEach.call(swatches.children, function (b) { b.setAttribute('aria-checked', b.dataset.accent === THEME.accent ? 'true' : 'false'); });
     Array.prototype.forEach.call(segFlash.children, function (b) { b.setAttribute('aria-checked', (b.dataset.flash === 'on') === APP.flash ? 'true' : 'false'); });
   }
+  var opener = openBtn;   /* the gear in the app bar, or the one on the start overlay */
   function closeSheet() {
     sheet.hidden = true;
     document.removeEventListener('keydown', onSheetKey);
-    try { openBtn.focus(); } catch (e) {}
+    try { opener.focus(); } catch (e) {}
   }
   function onSheetKey(e) {
     if (!document.getElementById('howto').hidden) return;
@@ -2924,11 +2927,14 @@ function noteGate() {
       if (secs >= 300 && ready && sheet.hidden && howto.hidden) { offer.hidden = false; clearInterval(timer); }
     }, 1000);
   })();
-  openBtn.addEventListener('click', function () {
+  function openSheet() {
+    opener = this;
     syncSheet(); sheet.hidden = false;
     document.addEventListener('keydown', onSheetKey);
     sheetCard.focus();
-  });
+  }
+  openBtn.addEventListener('click', openSheet);
+  document.getElementById('launchSettings').addEventListener('click', openSheet);
   segLang.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     I18N.set(b.dataset.lang); syncSheet();
@@ -3013,6 +3019,7 @@ function noteGate() {
     if (APP.coach) APP.coach.maybe(cur);   /* first-use tips wait until the start overlay is gone */
   }
   function onKey(e) {
+    if (!document.getElementById('sheet').hidden) return;   /* Settings is open on top */
     if (e.key === 'Escape') { closeLaunch(null); return; }
     if (e.key === 'Tab') {   /* keep focus inside the dialog */
       var els = Array.prototype.slice.call(launch.querySelectorAll('button'));
