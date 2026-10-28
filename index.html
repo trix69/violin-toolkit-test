@@ -811,6 +811,10 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 @keyframes offer-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .offer { animation: none; } }
 #howto { z-index: 120; }
+/* metronome beat flash (Settings > Beat flash): a full-screen wash on each beat, animated by met.js */
+.beat-flash { position: fixed; inset: 0; z-index: 130; pointer-events: none; opacity: 0; background: #B5E853; mix-blend-mode: multiply; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .beat-flash { background: #9BD449; mix-blend-mode: screen; } }
+:root[data-theme="dark"] .beat-flash { background: #9BD449; mix-blend-mode: screen; }
 #howto .sheet-card { width: min(100%, 440px); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto; }
 .howto-steps { margin: 14px 0 0; padding: 0; list-style: none; counter-reset: st; display: grid; gap: 10px; }
 .howto-steps li { counter-increment: st; display: flex; align-items: center; gap: 12px; font: 400 15px/1.4 var(--font-note); }
@@ -1171,6 +1175,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 
 </div>
 
+<div class="beat-flash" id="beatFlash" aria-hidden="true"></div>
 <div class="coach" id="coach" hidden>
   <div class="coach-hole" id="coachHole"></div>
   <div class="coach-tip" id="coachTip" role="dialog" aria-modal="true" aria-labelledby="coachTitle" aria-describedby="coachText">
@@ -1209,6 +1214,11 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
     </div>
     <h3 id="lblCol">Colour</h3>
     <div class="swatches" role="radiogroup" aria-labelledby="lblCol" id="swatches"><button type="button" class="swatch" role="radio" aria-checked="false" data-accent="teal" style="--sw:#2F7377;--sw-d:#6DBBC0"><i></i><span>Calm teal</span></button><button type="button" class="swatch" role="radio" aria-checked="false" data-accent="sage" style="--sw:#4F7A66;--sw-d:#86C2A5"><i></i><span>Sage green</span></button><button type="button" class="swatch" role="radio" aria-checked="false" data-accent="slate" style="--sw:#4D6F93;--sw-d:#8DB0D6"><i></i><span>Slate blue</span></button><button type="button" class="swatch" role="radio" aria-checked="false" data-accent="violet" style="--sw:#6A5F93;--sw-d:#B0A6DC"><i></i><span>Soft violet</span></button><button type="button" class="swatch" role="radio" aria-checked="false" data-accent="classic" style="--sw:#16201B;--sw-d:#E5ECE7"><i></i><span>Classic</span></button></div>
+    <h3 id="lblFlash">Beat flash</h3>
+    <div class="segc two" role="radiogroup" aria-labelledby="lblFlash" id="segFlash">
+      <button type="button" role="radio" aria-checked="false" data-flash="off">Off</button>
+      <button type="button" role="radio" aria-checked="false" data-flash="on">On</button>
+    </div>
     <h3 id="lblHelp">Help</h3>
     <button type="button" class="howto-btn" id="showTips"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6"/><path d="M12 16.8h.01"/></svg><span>Show tips again</span></button>
     <h3 id="lblOff">Offline</h3>
@@ -1226,7 +1236,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.08" data-build="20261028-060258" data-cache="violin-toolkit-test-"><span>Version 1.08-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.08" data-build="20261028-193624" data-cache="violin-toolkit-test-"><span>Version 1.08-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1283,6 +1293,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 
 <script>
 var APP = window.APP = { views: {}, a4: 442, onA4: [] };
+try { APP.flash = localStorage.getItem('violin-flash') === 'on'; } catch (e) { APP.flash = false; }
 try {
   var savedA4 = +localStorage.getItem('violin-a4');
   if (savedA4 === 440 || savedA4 === 442) APP.a4 = savedA4;
@@ -2662,9 +2673,25 @@ function noteGate() {
     Array.prototype.forEach.call(beatsEl.children, function (b, k) { b.classList.toggle('now', k === i); });
     Array.prototype.forEach.call(notesEl.children, function (n, k) { n.classList.toggle('now', k === i); });
   }
+  /* Beat flash (Settings > Beat flash): wash the whole screen on each sounding beat, brighter on
+     accents. It runs from this loop, so it carries on while the fingerboard is open. Flashes are kept
+     at least 340 ms apart (under 3 a second, the safe limit for flashing content), so above 176 BPM
+     some beats don't flash. */
+  var flashEl = null, lastFlash = -1e9, flashAnim = null;
+  function flash(level) {
+    if (!window.APP || !APP.flash || !level) return;
+    var now = performance.now();
+    if (now - lastFlash < 340) return;
+    lastFlash = now;
+    flashEl = flashEl || document.getElementById('beatFlash');
+    if (!flashEl || !flashEl.animate) return;
+    if (flashAnim) flashAnim.cancel();
+    var peak = level === 3 ? 0.62 : level === 2 ? 0.45 : 0.32;
+    flashAnim = flashEl.animate([{ opacity: peak }, { opacity: 0 }], { duration: Math.min(380, 0.6 * 60000 / state.bpm), easing: 'ease-out' });
+  }
   function frame() {
     if (!playing) return;
-    while (queue.length && queue[0].t <= ctx.currentTime) paintNow(queue.shift().i);
+    while (queue.length && queue[0].t <= ctx.currentTime) { var q = queue.shift(); flash(state.levels[q.i]); paintNow(q.i); }
     raf = requestAnimationFrame(frame);
   }
   function start() {
@@ -2684,6 +2711,7 @@ function noteGate() {
     playing = false;
     clearInterval(timer); cancelAnimationFrame(raf);
     queue = []; paintNow(-1);
+    if (flashAnim) { flashAnim.cancel(); flashAnim = null; }
     drawPlay();
   }
   function toggle() { playing ? stop() : start(); }
@@ -2743,6 +2771,7 @@ function noteGate() {
   var segNames = document.getElementById('segNames');
   var segA4 = document.getElementById('segA4');
   var segApp = document.getElementById('segApp'), swatches = document.getElementById('swatches');
+  var segFlash = document.getElementById('segFlash');
   var openBtn = document.getElementById('openSettings');
   function syncSheet() {
     Array.prototype.forEach.call(segNames.children, function (b) { b.setAttribute('aria-checked', b.dataset.names === I18N.names ? 'true' : 'false'); });
@@ -2750,6 +2779,7 @@ function noteGate() {
     Array.prototype.forEach.call(segA4.children, function (b) { b.setAttribute('aria-checked', +b.dataset.a4 === APP.a4 ? 'true' : 'false'); });
     Array.prototype.forEach.call(segApp.children, function (b) { b.setAttribute('aria-checked', b.dataset.mode === THEME.mode ? 'true' : 'false'); });
     Array.prototype.forEach.call(swatches.children, function (b) { b.setAttribute('aria-checked', b.dataset.accent === THEME.accent ? 'true' : 'false'); });
+    Array.prototype.forEach.call(segFlash.children, function (b) { b.setAttribute('aria-checked', (b.dataset.flash === 'on') === APP.flash ? 'true' : 'false'); });
   }
   function closeSheet() {
     sheet.hidden = true;
@@ -2839,6 +2869,12 @@ function noteGate() {
   segNames.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     I18N.setNames(b.dataset.names); syncSheet();
+  });
+  segFlash.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    APP.flash = b.dataset.flash === 'on';
+    try { localStorage.setItem('violin-flash', APP.flash ? 'on' : 'off'); } catch (err) {}
+    syncSheet();
   });
   segA4.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
@@ -3181,7 +3217,7 @@ function noteGate() {
     'Tune G · D · A · E with your microphone': '用麦克风为 G · D · A · E 调音',
     'Find and play notes in each position': '查找并弹奏各把位的音',
     'Keep steady time at any tempo': '以任意速度保持稳定节拍',
-    'Language': '语言', 'Appearance': '外观', 'Light': '浅色', 'Dark': '深色', 'Automatic': '自动', 'Colour': '颜色',
+    'Language': '语言', 'Beat flash': '节拍闪屏', 'Appearance': '外观', 'Light': '浅色', 'Dark': '深色', 'Automatic': '自动', 'Colour': '颜色',
     'Calm teal': '静谧青', 'Sage green': '鼠尾草绿', 'Slate blue': '石板蓝', 'Soft violet': '柔紫', 'Classic': '经典',
     /* fingerboard */
     'Violin fingerboard': '小提琴指板', 'Position': '把位',
