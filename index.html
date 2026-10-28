@@ -1236,7 +1236,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.09" data-build="20261029-065447" data-cache="violin-toolkit-test-"><span>Version 1.09-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.09" data-build="20261029-090713" data-cache="violin-toolkit-test-"><span>Version 1.09-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1294,6 +1294,21 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 <script>
 var APP = window.APP = { views: {}, a4: 442, onA4: [] };
 try { APP.flash = localStorage.getItem('violin-flash') !== 'off'; } catch (e) { APP.flash = true; }   /* beat flash is on unless turned off */
+/* iPhones and iPads on silent (the ring/silent switch) mute a page's sound. iOS 16.4+ lets it play like a
+   music app instead (Audio Session API). Asked for just before the first sound, not at load, so opening the
+   page doesn't stop other music; while a microphone is on it must be play-and-record (also not muted). */
+APP.sound = false; APP.mics = {};
+APP.session = function () {
+  try {
+    var s = navigator.audioSession, mic = false, k;
+    if (!s || !APP.sound) return;
+    for (k in APP.mics) if (APP.mics[k]) mic = true;
+    var t = mic ? 'play-and-record' : 'playback';
+    if (s.type !== t) s.type = t;
+  } catch (e) {}
+};
+APP.playThroughSilent = function () { APP.sound = true; APP.session(); };
+APP.mic = function (who, on) { APP.mics[who] = !!on; APP.session(); };
 try {
   var savedA4 = +localStorage.getItem('violin-a4');
   if (savedA4 === 440 || savedA4 === 442) APP.a4 = savedA4;
@@ -1647,6 +1662,7 @@ function noteGate() {
     }
     starting = true;
     stopTone();
+    APP.mic('tuner', true);
     setStatus('Requesting microphone…');
     try {
       try {
@@ -1654,6 +1670,7 @@ function noteGate() {
         stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
       } catch (e) {
         stream = null;
+        APP.mic('tuner', false);
         setStatus(auto ? 'Microphone was not enabled. Press Start tuning to try again, or allow it in your browser site settings.' : 'Microphone access was blocked. Allow it in your browser site settings and try again, or tune by ear with the reference tones below.', !auto);
         return;
       }
@@ -1692,6 +1709,7 @@ function noteGate() {
 
   function stopMic() {
     running = false;
+    APP.mic('tuner', false);
     if (src) { try { src.disconnect(); } catch (e) {} src = null; }
     if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
     an = null;
@@ -1724,6 +1742,7 @@ function noteGate() {
   async function playTone(i) {
     if (tone && tone.i === i) { stopTone(); return; }
     if (running) { stopMic(); setStatus('Microphone paused while a reference tone plays.'); setIdle(); }
+    APP.playThroughSilent();
     ensureCtx();
     try { await ctx.resume(); } catch (e) {}
     stopTone();
@@ -2286,6 +2305,7 @@ function noteGate() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       mic = null; pcStatus = 'microphone not available here'; updateSub(); return;
     }
+    APP.mic('pc', true);
     ensureCtx();   /* inside the tap, so the audio engine is allowed to run */
     navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
@@ -2303,7 +2323,7 @@ function noteGate() {
       updateSub();
       pcLoop(token);
     }).catch(function (err) {
-      if (mic === token) mic = null;
+      if (mic === token) { mic = null; APP.mic('pc', false); }
       pcStatus = (err && err.name === 'NotAllowedError') ? 'microphone blocked' : 'microphone not available here';
       updateSub();
     });
@@ -2312,6 +2332,7 @@ function noteGate() {
   function stopMic() {
     var m = mic;
     mic = null;
+    APP.mic('pc', false);
     if (pcRaf) { cancelAnimationFrame(pcRaf); pcRaf = 0; }
     if (m && m.stream) {
       m.stream.getTracks().forEach(function (t) { t.stop(); });
@@ -2382,6 +2403,7 @@ function noteGate() {
   function begin(el, id) {
     if (state.pos === 'pc') return;   /* Pitch Check listens instead of playing */
     if (voices.has(id)) return;
+    APP.playThroughSilent();
     if (!ensureCtx()) return;
     var nt = notes[+el.dataset.i];
     if (!nt) return;
@@ -2739,6 +2761,7 @@ function noteGate() {
     if (playing) return;
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
+    if (window.APP) APP.playThroughSilent();
     if (!ctx) ctx = new AC();
     if (ctx.state === 'suspended') ctx.resume();
     playing = true; beatIdx = 0; queue = []; lastNow = -1;
