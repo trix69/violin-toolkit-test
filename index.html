@@ -1236,7 +1236,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.09" data-build="20261028-233301" data-cache="violin-toolkit-test-"><span>Version 1.09-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.09" data-build="20261029-065447" data-cache="violin-toolkit-test-"><span>Version 1.09-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2715,6 +2715,8 @@ function noteGate() {
   function flash(level) {
     if (!window.APP || !APP.flash || !level) return;
     pulseTab(level);
+    /* Reduce motion: the tab pulse only, no full-screen wash (Trix, option b) */
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     flashEl = flashEl || document.getElementById('beatFlash');
     if (!flashEl || !flashEl.animate) return;
     if (flashAnim) flashAnim.cancel();
