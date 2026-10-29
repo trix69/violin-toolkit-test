@@ -1448,7 +1448,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.11" data-build="20261030-085724" data-cache="violin-toolkit-test-"><span>Version 1.11-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.11" data-build="20261030-090039" data-cache="violin-toolkit-test-"><span>Version 1.11-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2353,9 +2353,10 @@ function noteGate() {
   function updateSub() {
     var key = keyObj();
     /* no-break spaces inside each part, so a line that wraps breaks between parts (not "1st / position") */
-    subEl.textContent = key.label + '\u00a0' + key.mode + ' · ' +
-      (window.APP ? ({ just: 'Just', pyth: 'Pyth.' }[APP.temper && APP.temper.id] || 'Equal') + ' · ' : '') +   /* Settings > Intonation (Pyth. so it fits two lines on a 360 px phone) */
-      (state.pos === 'pc' ? 'Pitch\u00a0Check' + (pcStatus ? ' · ' + pcStatus : '') : POSITIONS[state.pos].name.replace(/ /g, '\u00a0'));
+    /* Pitch Check leaves its own name out (the position bar shows it), so its verdict fits in two lines */
+    subEl.textContent = [key.label + '\u00a0' + key.mode,
+      window.APP ? { just: 'Just', pyth: 'Pyth.' }[APP.temper && APP.temper.id] || 'Equal' : '',   /* Settings > Intonation (Pyth. so it fits two lines on a 360 px phone) */
+      state.pos === 'pc' ? pcStatus : POSITIONS[state.pos].name.replace(/ /g, '\u00a0')].filter(Boolean).join(' · ');
   }
 
   function paint() {
@@ -3961,7 +3962,7 @@ function noteGate() {
     [/^Version ([\d.]+(?:-test)?)$/, function (m, v) { return '版本 ' + v; }],
     [/^Updating to ([\d.]+)…$/, function (m, v) { return '正在更新到 ' + v + '…'; }],
     [/^(.+)[ \u00a0](major|minor) · (?:(Equal|Just|Pyth\.) · )?(1st|2nd|3rd)[ \u00a0]position$/, function (m, k, q, t, p) { return k + Q[q] + ' · ' + (t ? T[t] + ' · ' : '') + P[p]; }],
-    [/^(.+)[ \u00a0](major|minor) · (?:(Equal|Just|Pyth\.) · )?Pitch[ \u00a0]Check(?: · (.+))?$/, function (m, k, q, t, s) { return k + Q[q] + ' · ' + (t ? T[t] + ' · ' : '') + '音准检测' + (s ? ' · ' + s.split(' · ').map(pcPart).join(' · ') : ''); }],
+    [/^(.+)[ \u00a0](major|minor) · (Equal|Just|Pyth\.)(?: · (.+))?$/, function (m, k, q, t, s) { return k + Q[q] + ' · ' + T[t] + (s ? ' · ' + s.split(' · ').map(pcPart).join(' · ') : ''); }],   /* Pitch Check: key · intonation · status */
     [/^(.+) (major|minor) · (no ♯ or ♭|\d sharps?|\d flats?)$/, function (m, k, q, w) { return k + Q[q] + ' · ' + words(w); }],
     [/^(.+) (major|minor): (.+)$/, function (m, k, q, w) { return k + Q[q] + '：' + (words(w) || w); }],
     [/^(\S+) (major|minor)$/, function (m, k, q) { return k + Q[q]; }],
