@@ -1448,7 +1448,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.11" data-build="20261030-080129" data-cache="violin-toolkit-test-"><span>Version 1.11-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.11" data-build="20261030-083858" data-cache="violin-toolkit-test-"><span>Version 1.11-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1523,6 +1523,23 @@ APP.session = function () {
 };
 APP.playThroughSilent = function () { APP.sound = true; APP.session(); };
 APP.mic = function (who, on) { APP.mics[who] = !!on; APP.session(); };
+/* Leaving the app (another app, the home screen, a locked phone): iOS interrupts the page's audio, and a
+   context resumed afterwards can stay silent until the app is force-quit. So while hidden the audio session
+   is let go, and each tool starts a fresh AudioContext for its first sound afterwards: APP.made() stamps a
+   new context, APP.renew() closes one from before the page was last hidden and says to make another. */
+APP.audioGen = 0;
+APP.made = function (ctx) { if (ctx) ctx.vtGen = APP.audioGen; return ctx; };
+APP.renew = function (ctx) {
+  if (!ctx) return true;
+  if (ctx.state !== 'closed' && ctx.vtGen === APP.audioGen) return false;
+  try { var p = ctx.close(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  return true;
+};
+(function () {
+  function away() { APP.audioGen++; APP.sound = false; APP.session(); }
+  document.addEventListener('visibilitychange', function () { if (document.hidden) away(); });
+  window.addEventListener('pagehide', away);
+})();
 try {
   var savedA4 = +localStorage.getItem('violin-a4');
   if (savedA4 === 440 || savedA4 === 442) APP.a4 = savedA4;
@@ -1845,7 +1862,9 @@ function noteGate() {
   var goBtn = $('go');
 
   function ensureCtx() {
-    if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; ctx = new AC({ latencyHint: 'interactive' }); }
+    /* a fresh context after the app was left (iOS), unless the microphone is using this one */
+    if (ctx && window.APP && APP.renew && !running && !tone && APP.renew(ctx)) { ctx = null; wave = null; }
+    if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; ctx = new AC({ latencyHint: 'interactive' }); if (window.APP && APP.made) APP.made(ctx); }
     return ctx;
   }
 
@@ -2067,6 +2086,13 @@ function noteGate() {
   mc.addEventListener('click', function () { setMode('chromatic'); });
 
   window.addEventListener('pagehide', function () { stopTone(); stopMic(); });
+  /* leaving the app: stop the tone and the microphone (iOS cuts it in the background); on return, listen
+     again if the tuner is on screen and was listening */
+  var wasListening = false;
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { wasListening = running; stopTone(); if (running) stopMic(); }
+    else if (wasListening && goBtn.offsetParent) { wasListening = false; startMic(true); }
+  });
 
   refreshStrings();
   refreshFoot();
@@ -2464,10 +2490,13 @@ function noteGate() {
   /* ---------- Audio ---------- */
   var ctx = null, master = null;
   function ensureCtx() {
+    /* a fresh context after the app was left (iOS), unless Pitch Check's microphone is using this one */
+    if (ctx && window.APP && !(mic && mic.stream) && APP.renew(ctx)) { ctx = null; master = null; }
     if (!ctx) {
       var AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return null;
       ctx = new AC();
+      if (window.APP) APP.made(ctx);
       master = ctx.createGain();
       master.gain.value = 0.7;
       var comp = ctx.createDynamicsCompressor();
@@ -2729,7 +2758,12 @@ function noteGate() {
     if (el) end('k' + el.dataset.i);
   });
   window.addEventListener('blur', stopAll);
-  document.addEventListener('visibilitychange', function () { if (document.hidden) stopAll(); });
+  /* iOS cuts the microphone while the app is in the background: let Pitch Check go when leaving and start it
+     again on return (its audio then resumes at the first tap, as after any start without a tap) */
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { stopAll(); if (mic) stopMic(); }
+    else if (state.pos === 'pc' && !mic && board.offsetParent) startMic();
+  });
   window.addEventListener('resize', layout);
   window.addEventListener('orientationchange', function () { setTimeout(layout, 200); });
   window.addEventListener('load', layout);
@@ -3095,8 +3129,9 @@ function noteGate() {
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     if (window.APP) APP.playThroughSilent();
-    if (!ctx) ctx = new AC();
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx && window.APP && APP.renew(ctx)) ctx = null;   /* a fresh context after the app was left (iOS) */
+    if (!ctx) { ctx = new AC(); if (window.APP) APP.made(ctx); }
+    if (ctx.state !== 'running') { try { var r = ctx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }   /* also 'interrupted' (iOS) */
     playing = true; beatIdx = 0; queue = []; lastNow = -1;
     nextT = ctx.currentTime + 0.06;
     tick(); timer = setInterval(tick, 25);
