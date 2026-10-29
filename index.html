@@ -1448,7 +1448,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.12" data-build="20261030-090356" data-cache="violin-toolkit-test-"><span>Version 1.12-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.12" data-build="20261030-103210" data-cache="violin-toolkit-test-"><span>Version 1.12-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2608,7 +2608,7 @@ function noteGate() {
     pcStatus = 'starting microphone…';
     updateSub();
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      mic = null; pcStatus = 'microphone not available here'; updateSub(); return;
+      mic = null; pcStatus = 'microphone unavailable'; updateSub(); return;
     }
     APP.mic('pc', true);
     ensureCtx();   /* inside the tap, so the audio engine is allowed to run */
@@ -2629,7 +2629,7 @@ function noteGate() {
       pcLoop(token);
     }).catch(function (err) {
       if (mic === token) { mic = null; APP.mic('pc', false); }
-      pcStatus = (err && err.name === 'NotAllowedError') ? 'microphone blocked' : 'microphone not available here';
+      pcStatus = (err && err.name === 'NotAllowedError') ? 'microphone blocked' : 'microphone unavailable';
       updateSub();
     });
   }
@@ -3679,7 +3679,7 @@ function noteGate() {
     'Violin fingerboard': '小提琴指板', 'Position': '把位',
     'Auto vibrato': '自动揉弦', 'On': '开', 'Off': '关', 'Major': '大调', 'Minor': '小调', 'Pitch Check': '音准检测',
     '1st position': '一把位', '2nd position': '二把位', '3rd position': '三把位',
-    'starting microphone…': '正在启动麦克风…', 'microphone not available here': '此处无法使用麦克风',
+    'starting microphone…': '正在启动麦克风…', 'microphone unavailable': '此处无法使用麦克风',
     'audio not supported': '不支持音频', 'listening…': '聆听中…', 'microphone blocked': '麦克风已被禁用',
     'in tune': '音准正确', 'off the board': '超出指板',
     'no sharps or flats': '无升降号', 'no ♯ or ♭': '无升降号',
