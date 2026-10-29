@@ -782,6 +782,8 @@ html[lang="zh-CN"] {
 .tab[aria-current="page"].live::after, .tab.pulsing::after { background: var(--on-accent); box-shadow: 0 0 0 2px var(--accent); }   /* .pulsing: the beat pulse fills the tab with --accent (Hermes R10.1) */
 .appsub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 480px) { .appsub { letter-spacing: -0.02em; font-size: 11px; } }
+/* the fingerboard's line (key · intonation · position or Pitch Check status) may take two lines, then ends in … */
+#sub { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 /* narrow Android phones (360 px): keep the title clear of the tool buttons */
 @media (max-width: 380px) { .appbar h1 { font-size: 23px; } .appbar { gap: 8px; } .tabs { gap: 4px; } }
 @media (max-width: 480px) { .tab { width: 40px; height: 40px; } .tabs { gap: 5px; } .tab svg { width: 22px; height: 22px; } }
@@ -1428,7 +1430,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.10" data-build="20261030-055304" data-cache="violin-toolkit-test-"><span>Version 1.10-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.10" data-build="20261030-061453" data-cache="violin-toolkit-test-"><span>Version 1.10-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2282,8 +2284,10 @@ function noteGate() {
 
   function updateSub() {
     var key = keyObj();
-    subEl.textContent = key.label + ' ' + key.mode + ' · ' +
-      (state.pos === 'pc' ? 'Pitch Check' + (pcStatus ? ' · ' + pcStatus : '') : POSITIONS[state.pos].name);
+    /* no-break spaces inside each part, so a line that wraps breaks between parts (not "1st / position") */
+    subEl.textContent = key.label + '\u00a0' + key.mode + ' · ' +
+      (window.APP ? (APP.just ? 'Just' : 'Equal') + ' · ' : '') +   /* Settings > Intonation */
+      (state.pos === 'pc' ? 'Pitch\u00a0Check' + (pcStatus ? ' · ' + pcStatus : '') : POSITIONS[state.pos].name.replace(/ /g, '\u00a0'));
   }
 
   function paint() {
@@ -2423,7 +2427,7 @@ function noteGate() {
     voices.forEach(applyVib);
   });
   APP.onA4.push(function (v) { state.tuning = v; tuningSel.textContent = '= ' + v + ' Hz'; render(); });
-  APP.onTemper.push(render);   /* just intonation moves the notes */
+  APP.onTemper.push(function () { render(); updateSub(); });   /* just intonation moves the notes */
 
   /* ---------- Audio ---------- */
   var ctx = null, master = null;
@@ -3841,6 +3845,7 @@ function noteGate() {
                   'open': '空弦', 'above': '高于', 'below': '低于', 'harm.': '泛音', 'octave': '八度' }]
   ];
   var Q = { major: '大调', minor: '小调' };
+  var T = { Equal: '平均律', Just: '纯律' };   /* Settings > Intonation, in the fingerboard subtitle */
   var SW = { sharp: '升号', sharps: '升号', flat: '降号', flats: '降号' };
   function words(w) {
     if (DICT[w]) return DICT[w];
@@ -3855,8 +3860,8 @@ function noteGate() {
   var RX = [
     [/^Version ([\d.]+(?:-test)?)$/, function (m, v) { return '版本 ' + v; }],
     [/^Updating to ([\d.]+)…$/, function (m, v) { return '正在更新到 ' + v + '…'; }],
-    [/^(.+) (major|minor) · (1st|2nd|3rd) position$/, function (m, k, q, p) { return k + Q[q] + ' · ' + P[p]; }],
-    [/^(.+) (major|minor) · Pitch Check(?: · (.+))?$/, function (m, k, q, s) { return k + Q[q] + ' · 音准检测' + (s ? ' · ' + s.split(' · ').map(pcPart).join(' · ') : ''); }],
+    [/^(.+)[ \u00a0](major|minor) · (?:(Equal|Just) · )?(1st|2nd|3rd)[ \u00a0]position$/, function (m, k, q, t, p) { return k + Q[q] + ' · ' + (t ? T[t] + ' · ' : '') + P[p]; }],
+    [/^(.+)[ \u00a0](major|minor) · (?:(Equal|Just) · )?Pitch[ \u00a0]Check(?: · (.+))?$/, function (m, k, q, t, s) { return k + Q[q] + ' · ' + (t ? T[t] + ' · ' : '') + '音准检测' + (s ? ' · ' + s.split(' · ').map(pcPart).join(' · ') : ''); }],
     [/^(.+) (major|minor) · (no ♯ or ♭|\d sharps?|\d flats?)$/, function (m, k, q, w) { return k + Q[q] + ' · ' + words(w); }],
     [/^(.+) (major|minor): (.+)$/, function (m, k, q, w) { return k + Q[q] + '：' + (words(w) || w); }],
     [/^(\S+) (major|minor)$/, function (m, k, q) { return k + Q[q]; }],
