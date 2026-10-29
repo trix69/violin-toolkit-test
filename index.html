@@ -1448,7 +1448,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.11" data-build="20261030-083858" data-cache="violin-toolkit-test-"><span>Version 1.11-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.11" data-build="20261030-084023" data-cache="violin-toolkit-test-"><span>Version 1.11-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1572,7 +1572,9 @@ APP.setA4 = function (v) {
     pyth: { id: 'pyth', open: open, cents: function (midi, key) {
       var alt = ((key.root - NAT[key.letter]) % 12 + 18) % 12 - 6;   /* the tonic's ♯ (+1) or ♭ (-1) */
       return (LETTER[key.letter] + 7 * alt + PY[d(midi, key.root)]) * FIFTH;
-    } }
+    },
+      /* a note by its name: letter 0-6 (C-B) and accidentals (+1 per ♯, -1 per ♭) */
+      chain: function (letter, acc) { return (LETTER[letter] + 7 * acc) * FIFTH; } }
   };
   APP.temper = null; APP.onTemper = [];
   try { APP.temper = T[localStorage.getItem('violin-temper')] || null; } catch (e) {}
@@ -2206,7 +2208,15 @@ function noteGate() {
      its equal-tempered place. */
   function J() { return window.APP && APP.temper; }
   function openCents(s) { return J() ? J().open(s.midi) : 0; }
-  function stopCents(midi) { return J() ? J().cents(midi, keyObj()) : 0; }
+  function stopCents(midi) {
+    var j = J();
+    if (!j) return 0;
+    if (!j.chain) return j.cents(midi, keyObj());
+    /* Pythagorean: from the name the note is shown with, so a grey D♯ in G major is a D♯, not an E♭ (Hermes R16.1) */
+    var nm = noteName(midi, false), acc = 0, i;
+    for (i = 1; i < nm.length; i++) acc += nm[i] === '♯' ? 1 : nm[i] === '♭' ? -1 : 0;
+    return j.chain('CDEFGAB'.indexOf(nm[0]), acc);
+  }
   function noteCents(nt) { return nt.n === 0 || nt.n === MAXN ? openCents(nt.s) : stopCents(nt.midi); }
   function noteFreq(nt) { return midiFreq(nt.midi) * Math.pow(2, noteCents(nt) / 1200); }
   function noteN(nt) { return nt.n === 0 || nt.n === MAXN ? nt.n : nt.n + (noteCents(nt) - openCents(nt.s)) / 100; }   /* semitones from its open string */
