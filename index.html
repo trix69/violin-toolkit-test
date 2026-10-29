@@ -629,9 +629,16 @@ h1 {
 #symbols .sym-grid li.pressing { background: color-mix(in srgb, var(--accent) 16%, transparent); }
 #symbols .sym-grid li:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 /* the explanation shown while a symbol is held */
-#symTip { position: fixed; inset: 0; z-index: 2; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.35); }
+/* the card floats over the symbols without blocking them: a tap outside it reaches the symbol underneath */
+#symTip { position: fixed; inset: 0; z-index: 2; display: grid; place-items: center; padding: 20px; pointer-events: none; }
+#symTip { align-items: end; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); }
+#symTip.up { align-items: start; padding-top: calc(env(safe-area-inset-top, 0px) + 20px); }
+#symTip .sym-tip-card { pointer-events: auto; animation: symTipIn .12s ease-out; transition: opacity .4s ease-in; }
+#symTip.fading .sym-tip-card { opacity: 0; }
+@keyframes symTipIn { from { opacity: 0; transform: scale(.97); } }
+@media (prefers-reduced-motion: reduce) { #symTip .sym-tip-card { animation: none; } }
 #symTip[hidden] { display: none; }
-#symTip .sym-tip-card { box-sizing: border-box; width: min(100%, 340px); max-height: calc(100dvh - 40px); overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 18px 50px rgba(0,0,0,.3); outline: none; }
+#symTip .sym-tip-card { box-sizing: border-box; width: min(100%, 340px); max-height: calc(100dvh - 40px); overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 18px 50px rgba(0,0,0,.35), 0 0 0 100vmax rgba(0,0,0,.12); outline: none; }
 #symTip .sym-tip-head { display: grid; justify-items: center; gap: 4px; text-align: center; }
 #symbols #symTip .sym { height: 84px; }
 #symbols #symTip .sym svg { height: 84px; }
@@ -1285,7 +1292,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
         </ul>
         <button type="button" class="sheet-done" id="symDone">Done</button>
       </div>
-      <div class="sym-tip" id="symTip" role="dialog" aria-modal="true" aria-labelledby="symTipName" hidden>
+      <div class="sym-tip" id="symTip" role="dialog" aria-labelledby="symTipName" hidden>
         <div class="sym-tip-card" id="symTipCard" tabindex="-1"><div class="sym-tip-head" id="symTipHead"></div><p id="symTipText"></p></div>
       </div>
     </div>
@@ -1430,7 +1437,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.10" data-build="20261030-061631" data-cache="violin-toolkit-test-"><span>Version 1.10-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.10" data-build="20261030-062340" data-cache="violin-toolkit-test-"><span>Version 1.10-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2903,7 +2910,7 @@ function noteGate() {
     if (!tip.hidden) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'Tab') { e.preventDefault(); closeTip(); } return; }
     var t = e.target;
     if (e.key === 'Escape') closeSym();
-    else if ((e.key === 'Enter' || e.key === ' ') && t.hasAttribute && t.hasAttribute('data-tip')) { e.preventDefault(); openTip(t); }
+    else if ((e.key === 'Enter' || e.key === ' ') && t.hasAttribute && t.hasAttribute('data-tip')) { e.preventDefault(); openTip(t, 0); }
     else if (e.key === 'Tab') {   /* keep focus in the window: the symbols, then Done */
       var f = symSheet.querySelectorAll('li[data-tip], #symDone'), first = f[0], last = f[f.length - 1];
       if (e.shiftKey ? (t === first || t === $('symCard')) : t === last) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
@@ -2911,39 +2918,64 @@ function noteGate() {
   }
   symBtn.addEventListener('click', function () { symSheet.hidden = false; document.addEventListener('keydown', onSymKey); $('symCard').focus(); });
   $('symDone').addEventListener('click', closeSym);
-  symSheet.addEventListener('click', function (e) { if (e.target === symSheet && tip.hidden) closeSym(); });
+  symSheet.addEventListener('click', function (e) { if (e.target === symSheet && tip.hidden && !downClosed) closeSym(); downClosed = false; });
 
-  /* press and hold a symbol (or Enter on it) for a fuller explanation; a tap anywhere closes it */
-  var tip = $('symTip'), tipFrom = null, holdT = 0, holdLi = null, holdX = 0, holdY = 0, held = false, quietUntil = 0;
-  function openTip(li) {
+  /* A tap on a symbol shows its explanation at once and fades it out after a reading time; holding the
+     symbol keeps it up while held and for twice as long after release. Enter/Space opens it with no fade, until Esc. Tapping anywhere else closes it, and a tap
+     on another symbol shows that one. */
+  var tip = $('symTip'), tipCard = $('symTipCard'), tipFrom = null, tipT = 0;
+  var holdT = 0, holdLi = null, holdX = 0, holdY = 0, held = false, quietUntil = 0, downClosed = false;
+  function readMs(li, f) { return Math.min(5000, 1500 + 25 * li.getAttribute('data-tip').length) * f; }
+  function openTip(li, ms) {
     var head = $('symTipHead');
+    clearTimeout(tipT);
     head.textContent = '';
     Array.prototype.forEach.call(li.children, function (c) { head.appendChild(c.cloneNode(true)); });
     head.querySelector('b').id = 'symTipName';
     $('symTipText').textContent = li.getAttribute('data-tip');
-    tipFrom = li; tip.hidden = false; $('symTipCard').focus();
+    tipFrom = li;
+    /* in the half of the screen away from the symbol, so the symbol stays in sight (and can be held) */
+    var r = li.getBoundingClientRect();
+    tip.classList.toggle('up', r.top + r.height / 2 > window.innerHeight / 2);
+    tip.classList.remove('fading'); tip.hidden = false;
+    try { tipCard.focus({ preventScroll: true }); } catch (e) {}
+    if (ms) fadeLater(ms);
+  }
+  function fadeLater(ms) {
+    clearTimeout(tipT);
+    tipT = setTimeout(function () { tip.classList.add('fading'); tipT = setTimeout(closeTip, 400); }, ms);
   }
   function closeTip() {
+    clearTimeout(tipT);
     if (tip.hidden) return;
-    tip.hidden = true;
-    if (tipFrom) try { tipFrom.focus({ preventScroll: true }); } catch (e) {}
+    tip.hidden = true; tip.classList.remove('fading');
+    if (tipFrom && (document.activeElement === tipCard || document.activeElement === document.body)) try { tipFrom.focus({ preventScroll: true }); } catch (e) {}
     tipFrom = null;
   }
   function endHold() { clearTimeout(holdT); if (holdLi) holdLi.classList.remove('pressing'); holdLi = null; }
   symSheet.addEventListener('pointerdown', function (e) {
+    downClosed = false;
+    if (!tip.hidden && !tipCard.contains(e.target)) { closeTip(); downClosed = true; }
     var li = e.target.closest && e.target.closest('li[data-tip]');
-    if (!li || e.button > 0 || !tip.hidden) return;
+    if (!li || e.button > 0) return;
     endHold(); holdLi = li; holdX = e.clientX; holdY = e.clientY; li.classList.add('pressing');
-    holdT = setTimeout(function () { var l = holdLi; endHold(); held = true; openTip(l); }, 450);
+    holdT = setTimeout(function () { var l = holdLi; endHold(); held = true; openTip(l, 0); }, 450);
   });
   symSheet.addEventListener('pointermove', function (e) { if (holdLi && Math.abs(e.clientX - holdX) + Math.abs(e.clientY - holdY) > 10) endHold(); });
   ['pointerup', 'pointercancel'].forEach(function (ev) {
-    symSheet.addEventListener(ev, function () { endHold(); if (held) { held = false; quietUntil = Date.now() + 600; } });
+    symSheet.addEventListener(ev, function () {
+      endHold();
+      if (held) { held = false; quietUntil = Date.now() + 600; if (tipFrom) fadeLater(readMs(tipFrom, 2)); }
+    });
   });
-  /* the click that follows the release which opened it (it can come late after a touch) must not close it */
+  /* the click that follows the release of a hold (it can come late after a touch) is not a tap */
   symSheet.addEventListener('click', function (e) { if (held || Date.now() < quietUntil) { quietUntil = 0; e.stopPropagation(); e.preventDefault(); } }, true);
+  symSheet.addEventListener('click', function (e) {
+    var li = e.target.closest && e.target.closest('li[data-tip]');
+    if (li) { downClosed = false; openTip(li, readMs(li, 1)); }
+  });
   symSheet.addEventListener('contextmenu', function (e) { if (e.target.closest && e.target.closest('li[data-tip]')) e.preventDefault(); });
-  tip.addEventListener('click', closeTip);
+  tipCard.addEventListener('click', closeTip);
 
   /* ---------- audio ---------- */
   var ctx = null, timer = 0, nextT = 0, beatIdx = 0, queue = [], raf = 0, lastNow = -1;
