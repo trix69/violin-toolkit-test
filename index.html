@@ -1454,7 +1454,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.12" data-build="20261030-224046" data-cache="violin-toolkit-test-"><span>Version 1.12-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.12" data-build="20261030-225422" data-cache="violin-toolkit-test-"><span>Version 1.12-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3481,10 +3481,10 @@ function noteGate() {
     if (s.indexOf(v) < 0) s.push(v);
     try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
   }
-  /* wait while anything else is on top: the start overlay, the offline tip, Settings, Use offline, Symbols */
+  /* wait while anything else is on top: the start overlay, Settings, Use offline, Symbols */
   function busy() {
-    var l = document.getElementById('launch'), off = document.getElementById('offer');
-    if ((l && !l.hidden) || (off && !off.hidden)) return true;
+    var l = document.getElementById('launch');
+    if (l && !l.hidden) return true;
     return Array.prototype.some.call(document.querySelectorAll('.sheet'), function (s) { return !s.hidden; });
   }
 
@@ -3892,7 +3892,6 @@ function noteGate() {
     'Click Install to confirm.': '点击“安装”确认。',
     'Open it from its new icon once while you have internet.': '在有网络时，从新图标打开一次。',
     'No install icon? Open the browser menu and choose Install Violin Toolkit. In Safari on a Mac, use File, then Add to Dock. Firefox cannot install apps, but the page still opens offline in a browser tab after one visit.': '没有安装图标？打开浏览器菜单，选择“安装小提琴工具箱”。在 Mac 的 Safari 中，请使用“文件”→“添加到 Dock”。Firefox 无法安装应用，但访问一次后，页面仍可在浏览器标签页中离线打开。',
-    'Save Violin Toolkit for offline use.': '保存小提琴工具箱，离线也能用。', 'Show me how': '查看方法', 'Dismiss': '关闭', 'Offline use': '离线使用',
     'Offline': '离线使用', 'Use offline on your phone': '在手机上离线使用', 'Use offline': '离线使用',
     'iPhone / iPad': 'iPhone / iPad', 'Android': 'Android',
     'Open this page in Safari.': '用 Safari 打开此页面。',
