@@ -949,7 +949,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 
 <script>
 (function () {
-  var ACC = ['teal', 'sage', 'slate', 'violet', 'classic'], mode = 'auto', acc = 'teal';
+  var ACC = ['teal', 'sage', 'slate', 'violet', 'classic'], mode = 'light', acc = 'teal';   /* new users start in light; a saved choice wins */
   try {
     var s = JSON.parse(localStorage.getItem('violin-theme') || '{}');
     if (['light', 'dark', 'auto'].indexOf(s.mode) >= 0) mode = s.mode;
@@ -1455,7 +1455,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.13" data-build="20261031-003251" data-cache="violin-toolkit-test-"><span>Version 1.13-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.13" data-build="20261031-055403" data-cache="violin-toolkit-test-"><span>Version 1.13-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
