@@ -245,16 +245,37 @@ h1 {
   font: 600 18px var(--font-note);
   pointer-events: none;
 }
-#view-board .keyfold {
-  display: inline-flex; align-items: center; gap: 10px; align-self: flex-start;
+#view-board .keybar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+#view-board .keybar[hidden] { display: none; }
+#view-board .keyfold,
+#view-board .tempsel select {
+  flex: 1 1 0; min-width: 0;
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 8px;
   height: 44px; padding: 0 12px 0 16px;
   border: 1px solid var(--line); border-radius: 12px;
   background: var(--panel); color: var(--fg);
   font: 600 18px var(--font-note); cursor: pointer; touch-action: manipulation;
 }
-#view-board .keyfold[hidden] { display: none; }
-#view-board .keyfold svg { width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+#view-board .keyfold span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#view-board .tempsel { position: relative; flex: 1 1 0; min-width: 0; display: flex; }
+#view-board .tempsel select { width: 100%; -webkit-appearance: none; appearance: none; padding-right: 38px; text-overflow: ellipsis; }
+#view-board .tempsel svg { position: absolute; right: 12px; top: 13px; pointer-events: none; }
+@media (max-width: 380px) {
+#view-board .keyfold,
+#view-board .tempsel select { font-size: 16px; padding-left: 12px; }
+#view-board .keyfold { padding-right: 8px; }
+#view-board .tempsel select { padding-right: 30px; }
+#view-board .tempsel svg { right: 8px; }
+}
+@media (max-width: 340px) {
+#view-board .keybar { gap: 8px; }
+#view-board .keyfold,
+#view-board .tempsel select { font-size: 15px; }
+}
+#view-board .keyfold svg,
+#view-board .tempsel svg { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 #view-board .keyfold:focus-visible,
+#view-board .tempsel select:focus-visible,
 #view-board .keypop .keys button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 #view-board .keypop {
   position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: 20px;
@@ -1098,7 +1119,14 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
     </div>
   </div>
 
-  <button type="button" class="keyfold" id="keyFold" aria-haspopup="dialog" hidden><span id="keyFoldName"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
+  <div class="keybar" id="keyBar" hidden>
+    <button type="button" class="keyfold" id="keyFold" aria-haspopup="dialog"><span id="keyFoldName"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
+    <label class="tempsel"><span class="visually-hidden">Intonation</span><select id="temperSel">
+      <option value="equal">Equal</option>
+      <option value="just">Just</option>
+      <option value="pyth">Pythagorean</option>
+    </select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></label>
+  </div>
   <div class="keypop" id="keyPop" hidden><div class="keypop-card" id="keyCard" role="dialog" aria-modal="true" aria-label="Choose a key" tabindex="-1"></div></div>
 
   <div class="stage">
@@ -1490,7 +1518,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.14" data-build="20261031-164645" data-cache="violin-toolkit-test-"><span>Version 1.14-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.14" data-build="20261031-165316" data-cache="violin-toolkit-test-"><span>Version 1.14-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2522,13 +2550,15 @@ function noteGate() {
 
   /* Settings > Key list: Folded (default) moves the two rows into a window opened from one button
      showing the chosen key; All keys puts them back above the board */
-  var keyrowsEl = document.getElementById('keyrows'), keyFold = document.getElementById('keyFold');
+  var keyrowsEl = document.getElementById('keyrows'), keyFold = document.getElementById('keyFold'), keyBar = document.getElementById('keyBar');
+  var temperSel = document.getElementById('temperSel');
   var keyPop = document.getElementById('keyPop'), keyCard = document.getElementById('keyCard');
   function setKeysAll() {
     var all = !!(window.APP && APP.keysAll);
     closeKeys(true);
-    if (all) keyFold.parentNode.insertBefore(keyrowsEl, keyFold); else keyCard.appendChild(keyrowsEl);
-    keyFold.hidden = all;
+    if (all) keyBar.parentNode.insertBefore(keyrowsEl, keyBar); else keyCard.appendChild(keyrowsEl);
+    keyBar.hidden = all;
+    syncTemperSel();
     showChosenKey();
   }
   function openKeys() {
@@ -2550,6 +2580,10 @@ function noteGate() {
       else if (!e.shiftKey && (i === last || i < 0)) { e.preventDefault(); keyButtons[0].focus(); }
     }
   }
+  function syncTemperSel() { temperSel.value = (window.APP && APP.temper) ? APP.temper.id : 'equal'; }
+  temperSel.addEventListener('change', function () { if (window.APP && APP.setTemper) APP.setTemper(temperSel.value); });
+  if (window.APP && APP.onTemper) APP.onTemper.push(syncTemperSel);
+  else temperSel.parentNode.hidden = true;   /* no Intonation outside the toolkit */
   keyFold.addEventListener('click', openKeys);
   keyPop.addEventListener('click', function (e) { if (e.target === keyPop) closeKeys(); });
   if (window.APP) APP.setKeysAll = setKeysAll;
