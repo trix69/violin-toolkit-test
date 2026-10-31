@@ -1530,7 +1530,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.16" data-build="20261031-181304" data-cache="violin-toolkit-test-"><span>Version 1.16-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.16" data-build="20261031-181813" data-cache="violin-toolkit-test-"><span>Version 1.16-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2848,12 +2848,13 @@ function noteGate() {
     var rec = { el: el, v: startVoice(noteFreq(nt)), t0: performance.now(), vibOn: false, timer: 0, open: nt.n === 0 || nt.n === MAXN };   /* open strings and harmonics stay steady */
     voices.set(id, rec);
     rec.timer = setTimeout(function () { applyVib(rec); }, 200);   /* vibrato starts after 200 ms of holding */
-    rec.latchT = setTimeout(function () { rec.latched = true; el.classList.add('latched'); applyVib(rec); showHz(rec, nt); }, 3000);   /* held 3 s: keep playing after release */
+    rec.latchT = setTimeout(function () { rec.latched = true; el.classList.add('latched'); applyVib(rec); }, 3000);   /* held 3 s: keep playing after release */
     el.classList.add('down');
+    showHz(rec, nt);
     followPosition(nt);
   }
   var latchN = 0;
-  /* the latched note's name and frequency on the right, level with the note */
+  /* a sounding note's name and frequency on the right, level with the note, while it plays (Trix) */
   function showHz(rec, nt) {
     var st = stage, r = rec.el.getBoundingClientRect(), sr = st.getBoundingClientRect();
     var d = document.createElement('div');
