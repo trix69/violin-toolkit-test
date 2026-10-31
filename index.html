@@ -1583,7 +1583,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.19" data-build="20261101-074111" data-cache="violin-toolkit-test-"><span>Version 1.19-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.19" data-build="20261101-074604" data-cache="violin-toolkit-test-"><span>Version 1.19-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1647,7 +1647,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 </div>
 
 <script>
-var APP = window.APP = { views: {}, a4: 442, onA4: [] };
+var APP = window.APP = { views: {}, a4: 442, onA4: [], busy: [] };   /* busy: functions, true while a tool is running (practice time) */
 try { APP.flash = localStorage.getItem('violin-flash') !== 'off'; } catch (e) { APP.flash = true; }   /* beat flash is on unless turned off */
 try { APP.keysAll = localStorage.getItem('violin-keys') === 'all'; } catch (e) { APP.keysAll = false; }   /* fingerboard keys folded into one button unless set to All */
 /* iPhones and iPads on silent (the ring/silent switch) mute a page's sound. iOS 16.4+ lets it play like a
@@ -2003,6 +2003,7 @@ function noteGate() {
 
   /* ---------- audio engine ---------- */
   var ctx = null, stream = null, src = null, an = null, buf = null, running = false;
+  if (window.APP && APP.busy) APP.busy.push(function () { return running; });   /* a listening tuner counts as practice time */
   var hist = [], lastVoiced = 0, frame = 0, raf = 0, gate = noteGate();
   var goBtn = $('go');
 
@@ -2794,6 +2795,7 @@ function noteGate() {
     buttons.forEach(function (b) { b.classList.remove('heard'); });
   }
 
+  if (window.APP && APP.busy) APP.busy.push(function () { return !!(mic && mic.stream); });   /* Pitch Check listening counts as practice time */
   function startMic() {
     if (mic) return;
     var token = {};
@@ -3067,6 +3069,7 @@ function noteGate() {
 
   /* ---------- drawing ---------- */
   var playing = false;
+  if (window.APP && APP.busy) APP.busy.push(function () { return playing; });   /* a running metronome counts as practice time */
   function drawBeats() {
     beatsEl.innerHTML = '';
     state.levels.forEach(function (lv, i) {
@@ -3493,7 +3496,8 @@ function noteGate() {
   }
   var opener = openBtn;   /* the gear in the app bar, or the one on the start overlay */
   /* Practice time, per local day: in each visit, the time from the first tap or key press to the
-     last one. A visit ends when the page is hidden or closed, so time away is never counted.
+     last one, where a running metronome, listening tuner or Pitch Check counts as a press every 5 s
+     (APP.busy). A visit ends when the page is hidden or closed, so time away is never counted.
      Kept on this device only (violin-usage: { "YYYY-MM-DD": seconds }, every day kept, ~20 bytes
      each, so "Practised on N days" counts them all; a day needs a minute). Pending seconds are added
      to what is stored at save time, so two open tabs don't overwrite each other. */
@@ -3524,6 +3528,9 @@ function noteGate() {
     document.addEventListener('visibilitychange', function () { if (document.hidden) end(); });
     window.addEventListener('pagehide', end);
     setInterval(save, 15000);
+    setInterval(function () {
+      if (!document.hidden && (APP.busy || []).some(function (f) { try { return f(); } catch (e) { return false; } })) touch();
+    }, 5000);
     function series(n) {   /* [{ d: Date, s: seconds }] for the n days up to today, oldest first */
       save();
       var o = load(), d = new Date(), out = [];
