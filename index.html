@@ -270,7 +270,9 @@ h1 {
 @media (max-width: 340px) {
 #view-board .keybar { gap: 8px; }
 #view-board .keyfold,
-#view-board .tempsel select { font-size: 15px; }
+#view-board .tempsel select { font-size: 15px; padding-left: 10px; }
+#view-board .tempsel select { padding-right: 26px; }
+#view-board .tempsel svg { right: 6px; }
 }
 #view-board .keyfold svg,
 #view-board .tempsel svg { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
@@ -1518,7 +1520,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.14" data-build="20261031-165719" data-cache="violin-toolkit-test-"><span>Version 1.14-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.14" data-build="20261031-170546" data-cache="violin-toolkit-test-"><span>Version 1.14-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2552,7 +2554,7 @@ function noteGate() {
      showing the chosen key; All keys puts them back above the board */
   var keyrowsEl = document.getElementById('keyrows'), keyFold = document.getElementById('keyFold'), keyBar = document.getElementById('keyBar');
   var temperSel = document.getElementById('temperSel');
-  var keyPop = document.getElementById('keyPop'), keyCard = document.getElementById('keyCard');
+  var keyPop = document.getElementById('keyPop'), keyCard = document.getElementById('keyCard'), keyInert = [];
   function setKeysAll() {
     var all = !!(window.APP && APP.keysAll);
     closeKeys(true);
@@ -2563,12 +2565,19 @@ function noteGate() {
   }
   function openKeys() {
     keyPop.hidden = false;
+    /* the rest of the page is out of reach while it is open: siblings of the window and of each ancestor (Hermes R18.2) */
+    for (var el = keyPop; el.parentNode && el !== document.body; el = el.parentNode) {
+      Array.prototype.forEach.call(el.parentNode.children, function (sib) {
+        if (sib !== el && !sib.inert && sib.tagName !== 'SCRIPT') { sib.inert = true; keyInert.push(sib); }
+      });
+    }
     document.addEventListener('keydown', onKeysKey, true);
     (keyButtons.filter(function (x) { return x.dataset.id === state.key; })[0] || keyCard).focus();
   }
   function closeKeys(quiet) {
     if (keyPop.hidden) return;
     keyPop.hidden = true;
+    keyInert.forEach(function (el) { el.inert = false; }); keyInert = [];
     document.removeEventListener('keydown', onKeysKey, true);
     if (!quiet) keyFold.focus();
   }
