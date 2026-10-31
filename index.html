@@ -1461,7 +1461,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.13" data-build="20261031-141440" data-cache="violin-toolkit-test-"><span>Version 1.13-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.13" data-build="20261031-153656" data-cache="violin-toolkit-test-"><span>Version 1.13-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2710,7 +2710,7 @@ function noteGate() {
   var voices = new Map();
 
   function applyVib(rec) {
-    var want = state.vibrato && state.pos !== 'pc' && !rec.open && (performance.now() - rec.t0 >= 190);
+    var want = state.vibrato && state.pos !== 'pc' && !rec.open && !rec.latched && (performance.now() - rec.t0 >= 190);   /* a latched note plays steady, like a tuning fork */
     if (want !== rec.vibOn) {
       rec.vibOn = want;
       if (rec.v.vib) rec.v.vib(want);
@@ -2727,7 +2727,7 @@ function noteGate() {
     var rec = { el: el, v: startVoice(noteFreq(nt)), t0: performance.now(), vibOn: false, timer: 0, open: nt.n === 0 || nt.n === MAXN };   /* open strings and harmonics stay steady */
     voices.set(id, rec);
     rec.timer = setTimeout(function () { applyVib(rec); }, 200);   /* vibrato starts after 200 ms of holding */
-    rec.latchT = setTimeout(function () { rec.latched = true; el.classList.add('latched'); }, 5000);   /* held 5 s: keep playing after release */
+    rec.latchT = setTimeout(function () { rec.latched = true; el.classList.add('latched'); applyVib(rec); }, 5000);   /* held 5 s: keep playing after release */
     el.classList.add('down');
     followPosition(nt);
   }
