@@ -2,7 +2,7 @@
    A new release is saved as soon as it is out, but the page shown stays the one the user is on until
    they choose Update (Settings version line, or the "new version" popup): the page writes that build
    stamp to META 'current'. So Later, or Settings > Automatic update check Off, keeps the old version. */
-const VERSION = 'violin-toolkit-test-20261103-220534';
+const VERSION = 'violin-toolkit-test-20261103-221010';
 const PREFIX = 'violin-toolkit-test-', META = PREFIX + 'meta';
 /* only this site's saved copies: production and test share trix69.github.io, so never touch the other's */
 const MINE = k => /^violin-toolkit-test-\d{8}-\d{6}$/.test(k);
@@ -14,16 +14,14 @@ self.addEventListener('install', e => {
     await Promise.all(CORE.filter(u => u !== 'index.html').map(u => c.add(new Request(u, { cache: 'reload' })).catch(() => {})));
   }).then(() => self.skipWaiting()));
 });
-/* the saved copy to show: the one chosen, else (first run of this worker) the newest older copy
-   already on the phone, so an update still waits to be accepted, else this release */
+/* the saved copy to show: the one chosen, else this release (first install, or a phone coming from
+   1.20 or earlier, whose page never records a choice) */
 async function chosen() {
   const m = await caches.open(META), r = await m.match('current');
   const cur = r ? PREFIX + (await r.text()) : null;
   if (cur && await caches.has(cur)) return cur;
-  const older = (await caches.keys()).filter(k => MINE(k) && k < VERSION).sort().pop();
-  const pick = older || VERSION;
-  await m.put('current', new Response(pick.slice(PREFIX.length)));
-  return pick;
+  await m.put('current', new Response(VERSION.slice(PREFIX.length)));
+  return VERSION;
 }
 self.addEventListener('activate', e => {
   e.waitUntil(chosen().then(keep => caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== keep && MINE(k)).map(k => caches.delete(k)))))
