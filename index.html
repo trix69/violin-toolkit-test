@@ -881,6 +881,63 @@ h1 {
 #symbols .sym-grid b, #symbols .sym-grid small { max-width: 100%; overflow-wrap: anywhere; }
 @media (max-width: 359px) { #symbols .sym-grid b, #symbols .sym-grid small { hyphens: auto; -webkit-hyphens: auto; } #symbols .sym.w, #symbols .sym.r { font-size: 16px; } #symbols .sym.n { font-size: 14px; } #symbols .sym-grid b { font-size: 13px; } }
 
+/* ---- midi player ---- */
+/* MIDI player: the score and tune picker above, the fingerboard (#view-board in player mode) below, the
+   controls in a bar at the bottom where the position bar usually is */
+#view-midi { color: var(--fg); font-family: var(--font-note); }
+.mp-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mp-row { display: flex; gap: 8px; }
+.mp-song { position: relative; flex: 1; min-width: 0; }
+.mp-song select { width: 100%; height: 44px; padding: 0 36px 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--fg); font: 600 16px var(--font-note); -webkit-appearance: none; appearance: none; text-overflow: ellipsis; }
+.mp-song svg { position: absolute; right: 12px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.mp-import { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--fg); font: 600 15px var(--font-note); cursor: pointer; }
+.mp-import svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.mp-song select:focus-visible, .mp-import:focus-visible, .mp-btn:focus-visible, .mp-play:focus-visible, #mpSeek:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.mp-msg { margin: 8px 2px 0; font: 400 13px/1.4 var(--font-note); color: var(--muted); }
+.mp-msg[hidden] { display: none; }
+/* the score strip: dark like the board, the playhead a third of the way in */
+.mp-score { position: relative; margin-top: 10px; height: 104px; overflow: hidden; border-radius: 14px; background: var(--board, #46524C); color: #E9E2D2; }
+.mp-score svg { position: absolute; left: 0; top: 4px; will-change: transform; }
+/* the clef and key at the left: the board colour, fading out over the notes passing underneath */
+.mp-score .mp-key { left: 0; z-index: 1; background: linear-gradient(90deg, var(--board, #46524C) calc(100% - 14px), color-mix(in srgb, var(--board, #46524C) 0%, transparent)); }
+.mp-head { position: absolute; z-index: 2; top: 10px; bottom: 10px; left: 33%; width: 2px; margin-left: -1px; border-radius: 1px; background: color-mix(in srgb, #E9E2D2 35%, transparent); pointer-events: none; }
+.mp-score .sl { stroke: color-mix(in srgb, currentColor 55%, transparent); stroke-width: 1; }
+.mp-score .bl { stroke: color-mix(in srgb, currentColor 70%, transparent); stroke-width: 1.2; }
+.mp-score .bl.end { stroke-width: 3.5; }
+.mp-score .ledger { stroke: color-mix(in srgb, currentColor 70%, transparent); stroke-width: 1.2; }
+.mp-score .acc { fill: currentColor; font: 400 15px 'Times New Roman', 'Noto Serif', Georgia, serif; text-anchor: middle; }
+.mp-score .ts { fill: currentColor; font: 700 19px 'Times New Roman', 'Noto Serif', Georgia, serif; text-anchor: middle; }
+.mp-n { color: #E9E2D2; transition: color .15s, opacity .3s; }
+.mp-n .head, .mp-n .flag, .mp-n .dot { fill: currentColor; }
+.mp-n .head.hollow { fill: none; stroke: currentColor; stroke-width: 1.8; }
+.mp-n .stem { stroke: currentColor; stroke-width: 1.3; }
+.mp-n .acc { fill: currentColor; }
+.mp-n.done { opacity: .5; }
+/* the note sounding: in its string colour and glowing, like the board */
+.mp-n.on { color: var(--hue); opacity: 1; filter: drop-shadow(0 0 3px var(--hue)) drop-shadow(0 0 7px var(--hue)); }
+@media (prefers-reduced-motion: reduce) { .mp-n { transition: none; } .mp-n.on { filter: none; } }
+/* controls: progress, then back / slower / play / faster / speed */
+.mp-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 8px 16px calc(env(safe-area-inset-bottom, 0px) + 10px); background: color-mix(in srgb, var(--bg) 92%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-top: 1px solid var(--line); }
+.mp-bar > div { max-width: 688px; margin: 0 auto; }
+.mp-prog { display: flex; align-items: center; gap: 10px; }
+#mpSeek { flex: 1; min-width: 0; accent-color: var(--accent); height: 24px; }
+.mp-time { font: 500 12px var(--font-mono); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mp-ctl { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 4px; }
+.mp-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--fg); font: 500 24px/1 var(--font-note); cursor: pointer; }
+.mp-btn:disabled { opacity: .4; cursor: default; }
+.mp-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; fill: none; }
+.mp-play { width: 58px; height: 58px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+.mp-play svg { width: 26px; height: 26px; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
+.mp-play .i-pause, .mp-play.on .i-play { display: none; }
+.mp-play.on .i-pause { display: block; }
+.mp-speed { display: grid; justify-items: center; min-width: 52px; font: 600 15px var(--font-note); font-variant-numeric: tabular-nums; }
+.mp-speed small { font: 500 11px var(--font-mono); color: var(--muted); }
+/* the fingerboard in player mode: only the board, with room for the bar */
+.shell[data-view="midi"] #view-board .controls, .shell[data-view="midi"] #view-board .keyrows,
+.shell[data-view="midi"] #view-board .keybar, .shell[data-view="midi"] #view-board .posbar,
+.shell[data-view="midi"] #view-board .ksig, .shell[data-view="midi"] #view-board .forkhz { display: none !important; }
+.shell[data-view="midi"] #view-board { margin-top: 10px; padding-bottom: 130px; }
+
 /* ---- start overlay ---- */
 .launch {
   position: fixed; inset: 0; z-index: 100;
@@ -899,9 +956,10 @@ h1 {
 .launch-card { width: min(100%, 720px); text-align: center; outline: none; }
 .launch h2 { margin: 0; font: 700 clamp(30px, 6vw, 44px)/1.1 var(--font-display); letter-spacing: -0.02em; }
 .launch-sub { margin: 8px 0 22px; font: 400 14px var(--font-mono); letter-spacing: .04em; color: var(--muted); }
-.launch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 10px; }   /* four tools: 2 x 2 on phones */
+.launch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 10px; }   /* five tools: 2 x 2, the last across */
+.launch-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 @media (min-width: 640px) { .launch-grid { gap: 16px; } }
-@media (min-width: 900px) { .launch-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .launch-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } .launch-grid > :last-child:nth-child(odd) { grid-column: auto; } }
 @media (max-width: 480px) { .launch-btn { padding: 16px 10px; min-height: 0; gap: 6px; } .launch-btn b { font-size: 18px; } .launch-btn span { font-size: 13px; } }
 .launch-btn {
   display: grid; justify-items: center; gap: 8px; align-content: center;
@@ -945,11 +1003,15 @@ html[lang="zh-CN"] {
 @media (max-width: 380px) { .appbar h1 { font-size: 23px; } .appbar { gap: 8px; } .tabs { gap: 4px; } }
 @media (max-width: 480px) { .tab { width: 40px; height: 40px; } .tabs { gap: 5px; } .tab svg { width: 22px; height: 22px; } }
 @media (max-width: 350px) { .appbar { gap: 6px; } .tabs { gap: 3px; } .appbar h1 { font-size: 18px; letter-spacing: -0.02em; } }   /* "Fingerboard" clear of the tabs at 320 px (Hermes F11) */
-/* five buttons since Symbols became a tool (2026-11-06): smaller buttons and titles on phones so "Fingerboard" clears them */
-@media (max-width: 480px) { .tab { width: 36px; height: 36px; } .tabs { gap: 4px; } .tab svg { width: 21px; height: 21px; } }
-@media (max-width: 430px) { .appbar h1 { font-size: 24px; } }
-@media (max-width: 380px) { .appbar h1 { font-size: 21px; } }
-@media (max-width: 350px) { .appbar h1 { font-size: 17px; } .tab { width: 34px; height: 34px; } .tabs { gap: 3px; } .tab svg { width: 20px; height: 20px; } }
+/* six buttons since the MIDI player (2026-11-06): on phones they get their own row above the title */
+@media (max-width: 480px) {
+  .appbar { flex-wrap: wrap; row-gap: 10px; }
+  .tabs { order: -1; flex: 1 1 100%; justify-content: space-between; gap: 0; }
+  .tab { width: 44px; height: 44px; } .tab svg { width: 22px; height: 22px; } .tab-set { margin-left: 0; }
+  .appbar > div { flex: 1 1 100%; }
+  .appbar h1 { font-size: 26px; letter-spacing: -0.02em; }
+}
+@media (max-width: 350px) { .tab { width: 42px; height: 42px; } .appbar h1 { font-size: 24px; } }
 /* ---- settings sheet ---- */
 .tab-set { margin-left: 2px; }
 .sheet {
@@ -1205,16 +1267,46 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <h1>Symbols</h1>
       <p class="appsub">Tap for the meaning</p>
     </div>
+    <div id="ttl-midi" hidden>
+      <h1>MIDI Player</h1>
+      <p class="appsub" id="ttl-midi-sub"></p>
+    </div>
     <nav class="tabs" aria-label="Tools">
       <button type="button" class="tab" data-view="tuner" aria-label="Tuner" title="Tuner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 17.5a8.5 8.5 0 0 1 17 0"/><path d="M12 17.5l3.6-7"/><circle cx="12" cy="17.5" r="1.2"/><path d="M12 5.8v1.8M5.6 9l1.3 1.2M18.4 9l-1.3 1.2"/></svg></button>
       <button type="button" class="tab" data-view="board" aria-current="page" aria-label="Fingerboard" title="Fingerboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3h11"/><path d="M8.4 3.5L7.2 21M10.8 3.5l-.5 17.5M13.2 3.5l.5 17.5M15.6 3.5L16.8 21" opacity=".7"/><path d="M7.7 11h8.6M7.3 17h9.4" opacity=".7"/><circle cx="10.8" cy="7.3" r="1.3" fill="currentColor"/><circle cx="15.6" cy="14" r="1.3" fill="currentColor"/></svg></button>
       <button type="button" class="tab" data-view="metronome" aria-label="Metronome" title="Metronome"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3h5.6l3.4 18H5.8z"/><path d="M12 17.5L15.6 6.5"/><circle cx="14.2" cy="10.6" r="1.2" fill="currentColor"/><path d="M8 21h8" opacity=".0"/></svg></button>
       <button type="button" class="tab" data-view="symbols" aria-label="Symbols" title="Symbols"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3-1.2 6-1 8.5.8 2.5-1.8 5.5-2 8.5-.8v13.2c-3-1.2-6-1-8.5.8-2.5-1.8-5.5-2-8.5-.8z"/><path d="M12 6.3v13.2"/><path d="M16.2 9v5.2"/><ellipse cx="15.2" cy="14.4" rx="1.3" ry="1" fill="currentColor"/></svg></button>
+      <button type="button" class="tab" data-view="midi" aria-label="MIDI Player" title="MIDI Player"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12"/><ellipse cx="6.6" cy="17.6" rx="2.6" ry="2" fill="currentColor"/><ellipse cx="16.6" cy="15.6" rx="2.6" ry="2" fill="currentColor"/><path d="M9 9.5l10-2"/></svg></button>
       <button type="button" class="tab tab-set" id="openSettings" aria-label="Settings" title="Settings" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </nav>
   </header>
 
   <main id="main" tabindex="-1">
+  <section id="view-midi" aria-label="MIDI player" hidden>
+<div class="mp" id="mp">
+  <div class="mp-top" id="mpTop">
+    <div class="mp-row">
+      <label class="mp-song"><span class="mp-vh">Tune</span><select id="mpSong"></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></label>
+      <button type="button" class="mp-import" id="mpImport"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4"/><path d="M7.5 8.5L12 4l4.5 4.5"/><path d="M4.5 14.5v4a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-4"/></svg>Import</button>
+      <input type="file" id="mpFile" accept=".mid,.midi,audio/midi,audio/x-midi" hidden>
+    </div>
+    <p class="mp-msg" id="mpMsg" role="status" hidden></p>
+    <div class="mp-score" id="mpScore" aria-hidden="true" translate="no"><svg id="mpSvg" xmlns="http://www.w3.org/2000/svg"></svg><svg class="mp-key" id="mpKey" xmlns="http://www.w3.org/2000/svg"></svg><div class="mp-head" id="mpHead"></div></div>
+  </div>
+  <div class="mp-bar" id="mpBar">
+    <div class="mp-prog"><input type="range" id="mpSeek" min="0" max="1000" value="0" aria-label="Playback position"><span class="mp-time" id="mpTime">0:00 / 0:00</span></div>
+    <div class="mp-ctl">
+      <button type="button" class="mp-btn" id="mpStart" aria-label="Back to start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path d="M18 5.5v13L8.5 12z" fill="currentColor"/></svg></button>
+      <button type="button" class="mp-btn" id="mpSlower" aria-label="Slower">−</button>
+      <button type="button" class="mp-play" id="mpPlay" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13M16 5.5v13"/></svg></button>
+      <button type="button" class="mp-btn" id="mpFaster" aria-label="Faster">+</button>
+      <div class="mp-speed"><span id="mpSpeed">100%</span><small id="mpBpm" translate="no"></small></div>
+    </div>
+  </div>
+</div>
+
+  </section>
+
   <section id="view-board" aria-label="Violin fingerboard">
 <div class="app">
 
@@ -1651,7 +1743,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-085322" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-092542" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1720,6 +1812,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" class="launch-btn" data-view="board"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3h11"/><path d="M8.4 3.5L7.2 21M10.8 3.5l-.5 17.5M13.2 3.5l.5 17.5M15.6 3.5L16.8 21" opacity=".7"/><path d="M7.7 11h8.6M7.3 17h9.4" opacity=".7"/><circle cx="10.8" cy="7.3" r="1.3" fill="currentColor"/><circle cx="15.6" cy="14" r="1.3" fill="currentColor"/></svg><b>Fingerboard</b><span>Find and play notes in each position</span></button>
       <button type="button" class="launch-btn" data-view="metronome"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3h5.6l3.4 18H5.8z"/><path d="M12 17.5L15.6 6.5"/><circle cx="14.2" cy="10.6" r="1.2" fill="currentColor"/><path d="M8 21h8" opacity=".0"/></svg><b>Metronome</b><span>Keep steady time at any tempo</span></button>
       <button type="button" class="launch-btn" data-view="symbols"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3-1.2 6-1 8.5.8 2.5-1.8 5.5-2 8.5-.8v13.2c-3-1.2-6-1-8.5.8-2.5-1.8-5.5-2-8.5-.8z"/><path d="M12 6.3v13.2"/><path d="M16.2 9v5.2"/><ellipse cx="15.2" cy="14.4" rx="1.3" ry="1" fill="currentColor"/></svg><b>Symbols</b><span>Look up music signs and what they mean</span></button>
+      <button type="button" class="launch-btn" data-view="midi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12"/><ellipse cx="6.6" cy="17.6" rx="2.6" ry="2" fill="currentColor"/><ellipse cx="16.6" cy="15.6" rx="2.6" ry="2" fill="currentColor"/><path d="M9 9.5l10-2"/></svg><b>MIDI Player</b><span>Play a tune and watch it on the fingerboard</span></button>
     </div>
     <button type="button" class="launch-days" id="launchDays" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-4"/><path d="M12 16V7"/><path d="M17 16v-6"/></svg><span class="use-days">Practised on 0 days</span></button>
   </div>
@@ -2453,11 +2546,12 @@ function noteGate() {
   function layout() {
     var vh = window.innerHeight || 700;
     var barH = posbar.offsetHeight || 64;
-    var avail = vh - barH - 16 - 10;
-    var gap = mm(MAXN) - mm(MAXN - 1);
+    var avail = vh - barH - 16 - 10 - (playerOn && playerTop ? playerTop() : 0);   /* the MIDI player's score and controls sit above */
+    var N = playerOn ? playerN : MAXN;   /* the MIDI player shows only as far up the string as its tune goes */
+    var gap = mm(N) - mm(N - 1);
     var r = 19, K = 3, i;
     for (i = 0; i < 3; i++) {
-      K = Math.min(5, Math.max(1.4, (avail - (r + 4) - r - 10) / mm(MAXN)));
+      K = Math.min(5, Math.max(1.4, (avail - (r + 4) - r - 10) / mm(N)));
       r = Math.round(Math.min(26, Math.max(19, (gap * K - 3) / 2)));
     }
     var st = stage.style;
@@ -2465,7 +2559,7 @@ function noteGate() {
     st.setProperty('--head', (r + 4) + 'px');
     st.setProperty('--oy', (r + 4) + 'px');
     st.setProperty('--k', K.toFixed(3) + 'px');
-    st.setProperty('--span', Math.round(K * mm(MAXN)) + 'px');
+    st.setProperty('--span', Math.round(K * mm(N)) + 'px');
     st.setProperty('--fs', Math.round(r * 0.95) + 'px');
     curK = K; curR = r;
     hitAreas();
@@ -2594,7 +2688,7 @@ function noteGate() {
       var b = buttons[i];
       if (!b) return;
       /* Pitch Check colours the key's notes across both positions */
-      var on = nt.inKey && (pc || (nt.n >= P.lo && nt.n <= P.hi));
+      var on = !playerOn && nt.inKey && (pc || (nt.n >= P.lo && nt.n <= P.hi));   /* the MIDI player starts every note grey */
       b.classList.toggle('off', !on);
       b.classList.toggle('root', on && nt.midi % 12 === key.root);
       b.style.setProperty('--hue', on ? 'var(' + nt.s.v + ')' : 'var(--off)');
@@ -2616,6 +2710,10 @@ function noteGate() {
     board.classList.toggle('pcmode', pc);
     vibBtn.disabled = pc;   /* reference notes stay steady while checking pitch */
     if (pc) labels.innerHTML = PC_HTML;
+    if (playerOn) {
+      if (sp) sp.innerHTML = '';
+      labels.innerHTML = '<span style="--y:var(--oy)">open</span><span style="--y:' + yFor(MAXN) + '">harm.<small>octave</small></span>';
+    }
     pcShow(pc ? pcCur : null);
     updateSub();
     Array.prototype.forEach.call(posbar.children, function (b) {
@@ -2979,7 +3077,7 @@ function noteGate() {
   var voices = new Map();
 
   function applyVib(rec) {
-    var want = state.vibrato && state.pos !== 'pc' && !rec.open && !rec.latched && (performance.now() - rec.t0 >= 190);   /* a latched note plays steady, like a tuning fork */
+    var want = state.vibrato && (state.pos !== 'pc' || rec.player) && !rec.open && !rec.latched && (performance.now() - rec.t0 >= 190);   /* a latched note plays steady, like a tuning fork */
     if (want !== rec.vibOn) {
       rec.vibOn = want;
       if (rec.v.vib) rec.v.vib(want);
@@ -3096,8 +3194,57 @@ function noteGate() {
      again on return (its audio then resumes at the first tap, as after any start without a tap) */
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) { stopAll(); if (mic) stopMic(); }
-    else if (state.pos === 'pc' && !mic && board.offsetParent) startMic();
+    else if (state.pos === 'pc' && !mic && !playerOn && board.offsetParent) startMic();
   });
+  /* ---------- MIDI player (built page): this board with every note grey; the player lights and sounds the notes it plays ---------- */
+  var playerOn = false, playerTop = null, playerN = MAXN, pvoices = new Map();
+  /* where a pitch is played: the highest string that has it within the octave, so the lowest position (A4 = open A) */
+  function pick(midi) {
+    for (var si = STRINGS.length - 1; si >= 0; si--) {
+      var n = midi - STRINGS[si].midi;
+      if (n >= 0 && n <= MAXN) return si * (MAXN + 1) + n;   /* index into notes / buttons */
+    }
+    return -1;
+  }
+  function pOn(midi, id) {
+    if (window.APP && APP.playThroughSilent) APP.playThroughSilent();
+    if (!ensureCtx()) return;
+    var i = pick(midi), nt = notes[i], el = buttons[i];
+    var rec = { el: el, v: startVoice(midiFreq(midi)), t0: performance.now(), vibOn: false, player: true, open: !!nt && (nt.n === 0 || nt.n === MAXN) };
+    rec.timer = setTimeout(function () { applyVib(rec); }, 200);
+    if (el) {
+      el.classList.remove('off');
+      el.style.setProperty('--hue', 'var(' + nt.s.v + ')');
+      el.classList.add('down');
+      showWave(rec, nt);
+    }
+    pOff(id);
+    pvoices.set(id, rec);
+  }
+  function pOff(id) {
+    var rec = pvoices.get(id);
+    if (!rec) return;
+    pvoices.delete(id);
+    clearTimeout(rec.timer);
+    stopVoice(rec.v);
+    if (rec.fx) { rec.fx.forEach(function (d) { d.remove(); }); rec.fx = null; }
+    var still = false;
+    pvoices.forEach(function (r) { if (r.el === rec.el) still = true; });
+    if (rec.el && !still) {
+      rec.el.classList.remove('down');
+      if (playerOn) { rec.el.classList.add('off'); rec.el.style.setProperty('--hue', 'var(--off)'); }
+    }
+  }
+  function pAllOff() { Array.from(pvoices.keys()).forEach(pOff); }
+  if (window.APP) APP.board = {
+    /* on: player mode; top(): height of the player's own part above the board, so the board fits below it */
+    player: function (on, top, n) { pAllOff(); stopAll(); playerOn = on; playerTop = top || null; playerN = Math.max(4, Math.min(MAXN, n || MAXN)); paint(); layout(); },
+    on: pOn, off: pOff, allOff: pAllOff,
+    prime: function () { if (window.APP && APP.playThroughSilent) APP.playThroughSilent(); return !!ensureCtx(); },
+    where: function (midi) { return pick(midi) >= 0; },
+    name: function (midi) { return noteName(midi, true); }
+  };
+
   window.addEventListener('resize', layout);
   window.addEventListener('orientationchange', function () { setTimeout(layout, 200); });
   window.addEventListener('load', layout);
@@ -3541,9 +3688,312 @@ function noteGate() {
 </script>
 <script>
 (function () {
+  /* MIDI player (Trix, 2026-11-06): play a one-part violin MIDI file. The fingerboard below lights each note
+     as it sounds (APP.board, from board.html: every note grey, the played one in its string colour with the
+     string wobble and rings), and a one-line score scrolls past a playhead above it, like the video Trix
+     sent. Demo tunes are built in (src/midi/*.mid); a file can be imported (kept for this visit only). */
+  var $ = function (id) { return document.getElementById(id); };
+  var DEMOS = [{"title": "Twinkle, Twinkle, Little Star", "b64": "TVRoZAAAAAYAAAABAeBNVHJrAAABtwD/Ax1Ud2lua2xlLCBUd2lua2xlLCBMaXR0bGUgU3RhcgD/UQMJJ8AA/1gEBAIYCAD/WQIDAADAKACQRVSDSIBFABiQRVSDSIBFABiQTFSDSIBMABiQTFSDSIBMABiQTlSDSIBOABiQTlSDSIBOABiQTFSHKIBMABiQSlSDSIBKABiQSlSDSIBKABiQSVSDSIBJABiQSVSDSIBJABiQR1SDSIBHABiQR1SDSIBHABiQRVSHKIBFABiQTFSDSIBMABiQTFSDSIBMABiQSlSDSIBKABiQSlSDSIBKABiQSVSDSIBJABiQSVSDSIBJABiQR1SHKIBHABiQTFSDSIBMABiQTFSDSIBMABiQSlSDSIBKABiQSlSDSIBKABiQSVSDSIBJABiQSVSDSIBJABiQR1SHKIBHABiQRVSDSIBFABiQRVSDSIBFABiQTFSDSIBMABiQTFSDSIBMABiQTlSDSIBOABiQTlSDSIBOABiQTFSHKIBMABiQSlSDSIBKABiQSlSDSIBKABiQSVSDSIBJABiQSVSDSIBJABiQR1SDSIBHABiQR1SDSIBHABiQRVSHKIBFABj/LwA="}, {"title": "Ode to Joy", "b64": "TVRoZAAAAAYAAAABAeBNVHJrAAABOAD/AwpPZGUgdG8gSm95AP9RAwh6JAD/WAQEAhgIAP9ZAgIAAMAoAJBCVINIgEIAGJBCVINIgEIAGJBDVINIgEMAGJBFVINIgEUAGJBFVINIgEUAGJBDVINIgEMAGJBCVINIgEIAGJBAVINIgEAAGJA+VINIgD4AGJA+VINIgD4AGJBAVINIgEAAGJBCVINIgEIAGJBCVIU4gEIAGJBAVIFYgEAAGJBAVIcogEAAGJBCVINIgEIAGJBCVINIgEIAGJBDVINIgEMAGJBFVINIgEUAGJBFVINIgEUAGJBDVINIgEMAGJBCVINIgEIAGJBAVINIgEAAGJA+VINIgD4AGJA+VINIgD4AGJBAVINIgEAAGJBCVINIgEIAGJBAVIU4gEAAGJA+VIFYgD4AGJA+VIcogD4AGP8vAA=="}];
+  var top = $('mpTop'), bar = $('mpBar'), songSel = $('mpSong'), fileIn = $('mpFile'), msg = $('mpMsg');
+  var playBtn = $('mpPlay'), seek = $('mpSeek'), timeEl = $('mpTime'), speedEl = $('mpSpeed'), bpmEl = $('mpBpm');
+  var scoreEl = $('mpScore'), svg = $('mpSvg'), keySvg = $('mpKey'), headEl = $('mpHead'), subEl = $('ttl-midi-sub');
+  var songs = [], song = null, pos = 0, speed = 1, playing = false, ni = 0, active = [], last = 0, raf = 0, shown = false;
+
+  function fail(text) { var e = new Error(text); e.mine = true; return e; }
+
+  /* ---------- reading a MIDI file ---------- */
+  function parse(buf) {
+    var u8 = new Uint8Array(buf), p = 0;
+    function str(at, n) { var s = ''; for (var i = 0; i < n; i++) s += String.fromCharCode(u8[at + i]); return s; }
+    function u32(at) { return ((u8[at] << 24) | (u8[at + 1] << 16) | (u8[at + 2] << 8) | u8[at + 3]) >>> 0; }
+    function u16(at) { return (u8[at] << 8) | u8[at + 1]; }
+    function vlq() { var v = 0, b; do { b = u8[p++]; v = (v * 128) + (b & 0x7f); } while ((b & 0x80) && p < u8.length); return v; }
+    if (u8.length < 14 || str(0, 4) !== 'MThd') throw fail('This is not a MIDI file.');
+    var ntr = u16(10), tpq = u16(12);
+    if (tpq & 0x8000) throw fail('This MIDI file keeps time in a way the player can’t read.');
+    p = 8 + u32(4);
+    var tempos = [], sig = null, sf = null, tracks = [];
+    for (var t = 0; t < ntr && p + 8 <= u8.length; t++) {
+      var id = str(p, 4), end = Math.min(p + 8 + u32(p + 4), u8.length);
+      p += 8;
+      if (id !== 'MTrk') { p = end; continue; }
+      var tick = 0, rs = 0, open = {}, notes = [], chans = {};
+      while (p < end) {
+        tick += vlq();
+        var st = u8[p];
+        if (st & 0x80) { p++; if (st < 0xf0) rs = st; } else st = rs;   /* running status: the last channel status carries on */
+        if (st === 0xff) {
+          var ty = u8[p++], l = vlq();
+          if (ty === 0x51 && l >= 3) tempos.push({ tick: tick, us: (u8[p] << 16) | (u8[p + 1] << 8) | u8[p + 2] });
+          else if (ty === 0x58 && l >= 2 && !sig) sig = { num: u8[p], den: Math.pow(2, u8[p + 1]) };
+          else if (ty === 0x59 && l >= 1 && sf === null) sf = (u8[p] << 24) >> 24;
+          p += l;
+        } else if (st === 0xf0 || st === 0xf7) {
+          p += vlq();
+        } else if (st >= 0x80) {
+          var hi = st & 0xf0, ch = st & 15, a = u8[p++], b = (hi === 0xc0 || hi === 0xd0) ? 0 : u8[p++], k = ch + ':' + a;
+          if (hi === 0x90 && b > 0) (open[k] = open[k] || []).push(tick);
+          else if (hi === 0x80 || hi === 0x90) {
+            if (open[k] && open[k].length) { notes.push({ m: a, t0: open[k].shift(), t1: tick }); chans[ch] = 1; }
+          }
+        } else break;   /* a data byte with no status: the file is damaged, stop reading this track */
+      }
+      Object.keys(open).forEach(function (k) { open[k].forEach(function (t0) { notes.push({ m: +k.split(':')[1], t0: t0, t1: tick }); }); });
+      if (notes.length) tracks.push({ notes: notes, chans: Object.keys(chans).length || 1 });
+      p = end;
+    }
+    if (!tracks.length) throw fail('This file has no notes.');
+    var parts = tracks.length > 1 ? tracks.length : tracks[0].chans;
+    if (parts > 1) throw fail('This file has ' + parts + ' parts. The player plays one violin part: save just the violin part as its own MIDI file.');
+    return build(tracks[0].notes, tpq, tempos, sig || { num: 4, den: 4 }, sf || 0);
+  }
+
+  /* ticks to seconds through the tempo changes, and back */
+  function build(raw, tpq, tempos, sig, sf) {
+    tempos.sort(function (a, b) { return a.tick - b.tick; });
+    if (!tempos.length || tempos[0].tick > 0) tempos.unshift({ tick: 0, us: 500000 });
+    var segs = [], sec = 0;
+    tempos.forEach(function (tp, i) {
+      if (i) sec += (tp.tick - tempos[i - 1].tick) / tpq * tempos[i - 1].us / 1e6;
+      segs.push({ tick: tp.tick, sec: sec, spt: tp.us / 1e6 / tpq });
+    });
+    function toSec(tick) { var s = segs[0]; for (var i = 1; i < segs.length && segs[i].tick <= tick; i++) s = segs[i]; return s.sec + (tick - s.tick) * s.spt; }
+    raw.sort(function (a, b) { return a.t0 - b.t0 || a.m - b.m; });
+    var low = 0, high = 0;
+    var notes = raw.map(function (n) {
+      if (n.m < 55) low++; else if (!APP.board.where(n.m)) high++;
+      return { m: n.m, t: toSec(n.t0), e: toSec(Math.max(n.t1, n.t0 + 1)), b: n.t0 / tpq, own: (n.t1 - n.t0) / tpq };
+    }).filter(function (n) { return n.m >= 55; });   /* below the G string: left out */
+    if (!notes.length) throw fail('Every note in this file is below the violin’s G string.');
+    /* how long each note looks on the score: until the next note starts (a short breath between notes is
+       not a rest), else its own length; rounded to note values a beginner part uses */
+    var VALS = [4, 3, 2, 1.5, 1, 0.75, 0.5, 0.25];
+    notes.forEach(function (n, i) {
+      var j = i + 1; while (j < notes.length && notes[j].b <= n.b + 1e-6) j++;
+      var len = j < notes.length && notes[j].b - n.b <= n.own + 0.5 ? notes[j].b - n.b : n.own;
+      n.len = VALS.reduce(function (best, v) { return Math.abs(v - len) < Math.abs(best - len) ? v : best; }, 4);
+    });
+    var lastN = notes[notes.length - 1];
+    return {
+      notes: notes, sig: sig, sf: Math.max(-7, Math.min(7, sf)), bpm: Math.round(60e6 / tempos[0].us),   /* crotchets a minute */
+      end: Math.max.apply(null, notes.map(function (n) { return n.e; })), beats: lastN.b + lastN.len,
+      toBeat: function (s) {   /* seconds to beats, for scrolling the score */
+        var g = segs[0]; for (var i = 1; i < segs.length && segs[i].sec <= s; i++) g = segs[i];
+        return (g.tick + (s - g.sec) / g.spt) / tpq;
+      },
+      low: low, high: high
+    };
+  }
+
+  /* ---------- the score: one line that scrolls past the playhead ---------- */
+  var S = 9, Y0 = 34, PX = 46;             /* staff space, top line, pixels per beat */
+  var BOT = Y0 + 4 * S;                    /* bottom line, E4 */
+  var LET = 'CDEFGAB', SHARP_K = [3, 0, 4, 1, 5, 2, 6], FLAT_K = [6, 2, 5, 1, 4, 0, 3];   /* F C G D A E B / B E A D G C F as letter numbers */
+  var SHARP_P = [10, 7, 11, 8, 5, 9, 6], FLAT_P = [6, 9, 5, 8, 4, 7, 3];                 /* where they sit on the treble staff */
+  var SP_S = [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [3, 0], [3, 1], [4, 0], [4, 1], [5, 0], [5, 1], [6, 0]];
+  var SP_F = [[0, 0], [1, -1], [1, 0], [2, -1], [2, 0], [3, 0], [4, -1], [4, 0], [5, -1], [5, 0], [6, -1], [6, 0]];
+  var STR = [[76, '--e'], [69, '--a'], [62, '--d'], [55, '--g']];
+  function yOf(step) { return BOT - (step - 2) * S / 2; }   /* step: letters above C4 (E4 = 2, on the bottom line) */
+  function hueOf(m) { for (var i = 0; i < STR.length; i++) if (m >= STR[i][0] && m <= STR[i][0] + 12) return 'var(' + STR[i][1] + ')'; return 'var(--accent)'; }
+  var CLEF = '<g transform="translate(2 ' + (Y0 - 36) + ') scale(0.9)"><path fill="currentColor" transform="translate(-5.000 80.125) scale(0.0750 -0.0750)" d="M434 2Q464 -103 464 -170Q464 -223 427.0 -257.0Q390 -291 337 -291Q287 -291 250.0 -261.5Q213 -232 213 -190Q213 -160 233.5 -133.5Q254 -107 283.5 -107.0Q313 -107 331.5 -128.5Q350 -150 350 -178Q350 -240 280 -240Q298 -268 338 -268Q353 -268 368.5 -263.5Q384 -259 401.0 -248.0Q418 -237 428.5 -213.5Q439 -190 439 -157Q439 -136 411 -6Q389 -12 356 -12Q259 -12 189.5 60.0Q120 132 120 232Q120 267 131.5 303.0Q143 339 157.5 366.5Q172 394 200.5 428.5Q229 463 248.5 483.5Q268 504 303 539Q280 621 280 689Q280 779 313.0 839.5Q346 900 379 900Q389 900 401.5 887.0Q414 874 426.0 851.0Q438 828 446.5 790.5Q455 753 455 710Q455 551 342 447L368 329Q384 332 397 332Q458 332 500.0 282.5Q542 233 542 162Q542 44 434 2ZM426 746Q426 801 394 801Q358 801 333.0 748.0Q308 695 308 630Q308 588 321 557Q359 580 392.5 639.5Q426 699 426 746ZM498 128Q498 183 466.0 216.0Q434 249 383 249L428 23Q498 52 498 128ZM407 17 361 247Q334 241 311.5 214.0Q289 187 289 158Q289 143 295.0 128.5Q301 114 309.5 104.0Q318 94 327.0 86.0Q336 78 342.0 74.5Q348 71 348 71L340 66Q307 75 277.5 106.0Q248 137 248 184Q248 231 277.5 270.5Q307 310 343 323L325 430Q168 299 168 177Q168 104 223.0 55.0Q278 6 348 6Q365 6 407 17Z"/></g>';
+  var ACC = { '1': '♯', '-1': '♭', '0': '♮' };
+  var noteEls = [], X0 = 0, W = 0;
+
+  function drawScore() {
+    var sg = song, sharps = sg.sf >= 0, sp = sharps ? SP_S : SP_F, n = Math.abs(sg.sf), keyAcc = {};
+    for (var i = 0; i < n; i++) keyAcc[(sharps ? SHARP_K : FLAT_K)[i]] = sharps ? 1 : -1;
+    var out = [], x = 40;
+    for (i = 0; i < n; i++) out.push('<text class="acc" x="' + (x + i * 9) + '" y="' + (yOf((sharps ? SHARP_P : FLAT_P)[i]) + 4.5) + '">' + (sharps ? '♯' : '♭') + '</text>');
+    x += n * 9 + 6;
+    var head = n + 2;   /* key signature + the two time-signature numbers */
+    out.push('<text class="ts" x="' + x + '" y="' + (Y0 + 2 * S - 1) + '">' + sg.sig.num + '</text><text class="ts" x="' + x + '" y="' + (Y0 + 4 * S - 1) + '">' + sg.sig.den + '</text>');
+    X0 = x + 30;
+    var barBeats = sg.sig.num * 4 / sg.sig.den;
+    W = X0 + sg.beats * PX + 30;
+    for (var b = barBeats; b < sg.beats - 1e-6; b += barBeats) out.push('<path class="bl" d="M' + (X0 + b * PX - PX * 0.35) + ' ' + Y0 + 'V' + BOT + '"/>');
+    var endX = X0 + sg.beats * PX - PX * 0.35;
+    out.push('<path class="bl" d="M' + (endX - 4) + ' ' + Y0 + 'V' + BOT + '"/><path class="bl end" d="M' + endX + ' ' + Y0 + 'V' + BOT + '"/>');
+    /* accidentals hold to the end of the bar */
+    var barNo = -1, inBar = {};
+    sg.notes.forEach(function (nt, k) {
+      var bn = Math.floor(nt.b / barBeats + 1e-6);
+      if (bn !== barNo) { barNo = bn; inBar = {}; }
+      var spl = sp[nt.m % 12], L = spl[0], acc = spl[1], oct = Math.floor(nt.m / 12) - 1;
+      var step = L + 7 * (oct - 4), y = yOf(step), hx = X0 + nt.b * PX, id = L + '/' + oct;
+      var want = acc, have = id in inBar ? inBar[id] : (keyAcc[L] || 0), g = [];
+      if (want !== have) { g.push('<text class="acc" x="' + (hx - 15) + '" y="' + (y + 4.5) + '">' + ACC[String(want)] + '</text>'); inBar[id] = want; }
+      for (var l = 0; l >= step; l -= 2) g.push('<path class="ledger" d="M' + (hx - 9) + ' ' + yOf(l) + 'h18"/>');
+      for (l = 12; l <= step; l += 2) g.push('<path class="ledger" d="M' + (hx - 9) + ' ' + yOf(l) + 'h18"/>');
+      var len = nt.len, hollow = len >= 2, stem = len < 4, dotted = len === 3 || len === 1.5 || len === 0.75;
+      var flags = len <= 0.25 ? 2 : len <= 0.75 && len < 1 ? 1 : 0, up = step < 6;
+      g.push('<ellipse class="' + (hollow ? 'head hollow' : 'head') + '" cx="' + hx + '" cy="' + y + '" rx="5.4" ry="3.9" transform="rotate(-20 ' + hx + ' ' + y + ')"/>');
+      if (stem) {
+        var sx = up ? hx + 4.9 : hx - 4.9, sy = up ? y - 3.4 * S : y + 3.4 * S;
+        g.push('<path class="stem" d="M' + sx + ' ' + (y + (up ? -1 : 1)) + 'V' + sy + '"/>');
+        for (var f = 0; f < flags; f++) {
+          var fy = sy + (up ? 1 : -1) * f * 7, d = up ? 1 : -1;
+          g.push('<path class="flag" d="M' + sx + ' ' + fy + 'c1 ' + (5 * d) + ' 8 ' + (7 * d) + ' 6 ' + (15 * d) + 'c1 ' + (-6 * d) + ' -3 ' + (-9 * d) + ' -6 ' + (-10 * d) + 'z"/>');
+        }
+      }
+      if (dotted) g.push('<circle class="dot" cx="' + (hx + 9) + '" cy="' + (step % 2 === 0 ? y - S / 2 : y) + '" r="1.7"/>');
+      out.push('<g class="mp-n" data-k="' + k + '" style="--hue:' + hueOf(nt.m) + '">' + g.join('') + '</g>');
+    });
+    var lines = '';
+    for (i = 0; i < 5; i++) lines += '<path class="sl" d="M0 ' + (Y0 + i * S) + 'H' + W + '"/>';
+    svg.setAttribute('width', W); svg.setAttribute('height', BOT + 34);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + (BOT + 34));
+    svg.innerHTML = lines + out.slice(head).join('');
+    /* the clef, key and time signature stay at the left while the notes scroll under them */
+    var kw = X0 - 12, kl = '';
+    for (i = 0; i < 5; i++) kl += '<path class="sl" d="M0 ' + (Y0 + i * S) + 'H' + kw + '"/>';
+    keySvg.setAttribute('width', kw + 14); keySvg.setAttribute('height', BOT + 34);
+    keySvg.setAttribute('viewBox', '0 0 ' + (kw + 14) + ' ' + (BOT + 34));
+    keySvg.innerHTML = kl + CLEF + out.slice(0, head).join('');
+    noteEls = Array.prototype.slice.call(svg.querySelectorAll('.mp-n'));
+  }
+  /* the playhead sits a third of the way across; the score slides under it */
+  function scroll() {
+    if (!song) return;
+    var beat = song.toBeat(pos), w = scoreEl.clientWidth, x = X0 + beat * PX, hx = Math.max(w * 0.36, X0 + 50);
+    headEl.style.left = hx + 'px';
+    /* half a beat early, so a note glows while it passes through the playhead rather than after it */
+    svg.style.transform = 'translateX(' + Math.round(Math.min(0, hx - x + PX / 2)) + 'px)';
+  }
+
+  /* ---------- playing ---------- */
+  function fmt(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
+  function ui() {
+    var end = song ? song.end : 0;
+    timeEl.textContent = fmt(pos / speed) + ' / ' + fmt(end / speed);
+    if (document.activeElement !== seek) seek.value = end ? Math.round(pos / end * 1000) : 0;
+    speedEl.textContent = Math.round(speed * 100) + '%';
+    bpmEl.textContent = song ? '♩ = ' + Math.round(song.bpm * speed) : '';
+    playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    playBtn.classList.toggle('on', playing);
+    $('mpSlower').disabled = speed <= 0.5 + 1e-9;
+    $('mpFaster').disabled = speed >= 1.5 - 1e-9;
+  }
+  function allOff() {
+    active.forEach(function (k) { APP.board.off('n' + k); });
+    active = [];
+    noteEls.forEach(function (el) { el.classList.remove('on'); });
+  }
+  function seekTo(p) {
+    allOff();
+    pos = Math.max(0, Math.min(p, song ? song.end : 0));
+    ni = 0;
+    if (song) while (ni < song.notes.length && song.notes[ni].t < pos - 1e-6) ni++;
+    noteEls.forEach(function (el, k) { el.classList.toggle('done', k < ni); });
+    scroll(); ui();
+  }
+  function frame(now) {
+    if (!playing) return;
+    pos += (now - last) / 1000 * speed;
+    last = now;
+    var ns = song.notes;
+    active = active.filter(function (k) {   /* notes ending first, so a repeated note sounds twice */
+      if (ns[k].e > pos) return true;
+      APP.board.off('n' + k); noteEls[k].classList.remove('on'); noteEls[k].classList.add('done');
+      return false;
+    });
+    while (ni < ns.length && ns[ni].t <= pos) {
+      APP.board.on(ns[ni].m, 'n' + ni);
+      noteEls[ni].classList.add('on');
+      active.push(ni); ni++;
+    }
+    scroll(); ui();
+    if (pos >= song.end && !active.length) { pause(); seekTo(song.end); return; }
+    raf = requestAnimationFrame(frame);
+  }
+  function play() {
+    if (!song || playing) return;
+    if (!APP.board.prime()) return;   /* the sound engine starts inside the tap (iPhone) */
+    if (pos >= song.end - 0.01) seekTo(0);
+    playing = true; last = performance.now();
+    raf = requestAnimationFrame(frame);
+    ui();
+  }
+  function pause() {
+    playing = false;
+    cancelAnimationFrame(raf);
+    allOff();
+    ui();
+  }
+
+  /* ---------- tunes ---------- */
+  function say(text) { msg.textContent = text || ''; msg.hidden = !text; }
+  function load(i) {
+    pause();
+    song = songs[i].song;
+    subEl.textContent = songs[i].title;
+    drawScore();
+    seekTo(0);
+    var warn = [];
+    if (song.low) warn.push(song.low + (song.low > 1 ? ' notes are' : ' note is') + ' below the violin’s G string and left out.');
+    if (song.high) warn.push(song.high + (song.high > 1 ? ' notes are' : ' note is') + ' above the fingerboard shown: heard, not lit.');
+    say(warn.join(' '));
+    if (shown) fit();
+  }
+  function addSong(title, buf, imported) {
+    var sg = parse(buf);
+    songs.push({ title: title, song: sg, imported: imported });
+    var o = document.createElement('option');
+    o.value = songs.length - 1; o.textContent = title;
+    if (imported) o.setAttribute('translate', 'no');   /* a file name stays as it is in 中文 */
+    songSel.appendChild(o);
+    return songs.length - 1;
+  }
+  DEMOS.forEach(function (d) {
+    var bin = atob(d.b64), u8 = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    addSong(d.title, u8.buffer, false);
+  });
+  songSel.addEventListener('change', function () { load(+songSel.value); });
+  $('mpImport').addEventListener('click', function () { fileIn.value = ''; fileIn.click(); });
+  fileIn.addEventListener('change', function () {
+    var f = fileIn.files && fileIn.files[0];
+    if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        var i = addSong(f.name.replace(/\.(mid|midi|smf)$/i, ''), rd.result, true);
+        songSel.value = i; load(i);
+      } catch (e) { say(e.mine ? e.message : 'This MIDI file could not be read.'); }
+    };
+    rd.onerror = function () { say('This MIDI file could not be read.'); };
+    rd.readAsArrayBuffer(f);
+  });
+
+  playBtn.addEventListener('click', function () { if (playing) pause(); else play(); });
+  $('mpStart').addEventListener('click', function () { seekTo(0); });
+  function setSpeed(d) { speed = Math.max(0.5, Math.min(1.5, Math.round((speed + d) * 10) / 10)); ui(); }
+  $('mpSlower').addEventListener('click', function () { setSpeed(-0.1); });
+  $('mpFaster').addEventListener('click', function () { setSpeed(0.1); });
+  seek.addEventListener('input', function () { if (song) seekTo(seek.value / 1000 * song.end); });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && playing) pause(); });
+  window.addEventListener('resize', scroll);
+  if (APP.busy) APP.busy.push(function () { return playing; });   /* playing along counts as practice time */
+
+  /* the board fits below the app bar, the score and the controls */
+  function topH() { var a = document.querySelector('.appbar'); return (a ? a.offsetHeight + 10 : 0) + top.offsetHeight + 20 + Math.max(0, bar.offsetHeight - 64); }   /* + the board's own margin and padding */
+  function reach() {   /* semitones above the open string, on the string the board plays each note on */
+    var top = 7;
+    if (song) song.notes.forEach(function (n) { for (var i = 0; i < STR.length; i++) if (n.m >= STR[i][0] && n.m <= STR[i][0] + 12) { top = Math.max(top, n.m - STR[i][0] + 1); break; } });
+    return top;
+  }
+  function fit() { APP.board.player(true, topH, reach()); scroll(); }
+  APP.views.midi = {
+    show: function () { shown = true; fit(); },
+    hide: function () { shown = false; pause(); APP.board.player(false); }
+  };
+  load(0);
+})();
+</script>
+<script>
+(function () {
   /* Each tool registers APP.views[name] = { show, hide } and has a #view-name section,
      a #ttl-name heading block and a .tab button with data-view="name". */
-  var names = ['tuner', 'board', 'metronome', 'symbols'];
+  var names = ['tuner', 'board', 'metronome', 'symbols', 'midi'];
   var shell = document.getElementById('shell');
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab[data-view]'));
   var cur = null;
@@ -3557,7 +4007,7 @@ function noteGate() {
     if (name === 'tuner' && APP.views.metronome && APP.views.metronome.stop) APP.views.metronome.stop();
     names.forEach(function (n) {
       var v = document.getElementById('view-' + n), t = document.getElementById('ttl-' + n);
-      if (v) v.hidden = n !== name;
+      if (v) v.hidden = n !== name && !(name === 'midi' && n === 'board');   /* the MIDI player shows the fingerboard below its own part */
       if (t) t.hidden = n !== name;
     });
     tabs.forEach(function (b) {
@@ -3916,8 +4366,8 @@ function noteGate() {
   sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
 
   var h = (location.hash || '').replace('#', '').split(/[,&;]/).map(function (t) { return t.trim().toLowerCase(); })
-    .filter(function (t) { return ['fingerboard', 'board', 'tuner', 'metronome', 'symbols'].indexOf(t) >= 0; })[0] || '';
-  var map = { fingerboard: 'board', board: 'board', tuner: 'tuner', metronome: 'metronome', symbols: 'symbols' };
+    .filter(function (t) { return ['fingerboard', 'board', 'tuner', 'metronome', 'symbols', 'midi'].indexOf(t) >= 0; })[0] || '';
+  var map = { fingerboard: 'board', board: 'board', tuner: 'tuner', metronome: 'metronome', symbols: 'symbols', midi: 'midi' };
   show(map[h] || 'board');
 
   /* start overlay: asked once per load unless the link already names a tool (#tuner, #metronome, #fingerboard) */
@@ -4227,7 +4677,7 @@ function noteGate() {
     'in tune': '音准正确', 'off the board': '超出指板',
     'no sharps or flats': '无升降号', 'no ♯ or ♭': '无升降号',
     /* metronome */
-    'Symbols': '符号', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
+    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Tune': '曲目', 'Back to start': '回到开头', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
     'Quaver (eighth note)': '八分音符', 'Crotchet (quarter note)': '四分音符', 'Minim (half note)': '二分音符', 'Semibreve (whole note)': '全音符',
     '½ beat in 4/4': '4/4 拍中占半拍', '1 beat in 4/4': '4/4 拍中占 1 拍', '2 beats in 4/4': '4/4 拍中占 2 拍', '4 beats in 4/4': '4/4 拍中占 4 拍',
     'Up bow': '上弓', 'Push, tip to frog': '推弓：弓尖到弓根', 'Down bow': '下弓', 'Pull, frog to tip': '拉弓：弓根到弓尖',
@@ -4510,6 +4960,9 @@ function noteGate() {
     [/^(\d+) h (\d+) min$/, function (m, h, n) { return h + ' 小时 ' + n + ' 分'; }],
     [/^Version ([\d.]+(?:-test)?)$/, function (m, v) { return '版本 ' + v; }],
     [/^Version ([\d.]+(?:-test)?) is ready\. Update now\?$/, function (m, v) { return '版本 ' + v + ' 已推出，现在更新吗？'; }],
+    [/^This file has (\d+) parts\. The player plays one violin part: save just the violin part as its own MIDI file\.$/, function (m, n) { return '这个文件有 ' + n + ' 个声部。播放器只播放一个小提琴声部：请把小提琴声部单独存成一个 MIDI 文件。'; }],
+    [/^(\d+) notes? (?:is|are) below the violin’s G string and left out\.(?: (\d+) notes? (?:is|are) above the fingerboard shown: heard, not lit\.)?$/, function (m, a, b) { return a + ' 个音低于小提琴的 G 弦，已略去。' + (b ? b + ' 个音高于所显示的指板：只播放声音，不点亮。' : ''); }],
+    [/^(\d+) notes? (?:is|are) above the fingerboard shown: heard, not lit\.$/, function (m, b) { return b + ' 个音高于所显示的指板：只播放声音，不点亮。'; }],
     [/^Updating to ([\d.]+)…$/, function (m, v) { return '正在更新到 ' + v + '…'; }],
     [/^(.+)[ \u00a0](major|minor) · (?:(Equal|Just|Pyth\.) · )?(1st|2nd|3rd)[ \u00a0]position$/, function (m, k, q, t, p) { return k + Q[q] + ' · ' + (t ? T[t] + ' · ' : '') + P[p]; }],
     [/^(.+)[ \u00a0](major|minor) · (Equal|Just|Pyth\.)(?: · (.+))?$/, function (m, k, q, t, s) { return k + Q[q] + ' · ' + T[t] + (s ? ' · ' + s.split(' · ').map(pcPart).join(' · ') : ''); }],   /* Pitch Check: key · intonation · status */
