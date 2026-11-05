@@ -728,73 +728,6 @@ h1 {
 #view-metronome .bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 #view-metronome .symbtn { display: inline-flex; align-items: center; gap: 8px; }
 #view-metronome .symico { font: 400 18px/1 'Times New Roman', 'Noto Serif', Georgia, serif; letter-spacing: 1px; }
-/* Symbols overlay: violin notation at a glance */
-#symbols h3:first-of-type { margin-top: 4px; }
-/* search: stays at the top while the list scrolls; matches the name, the subtitle and the explanation */
-#symbols .symsearch { position: sticky; top: 0; z-index: 5; margin: 0 -4px 6px; padding: 4px; background: var(--panel); }
-/* the card's top padding stays a gap above it: covered in the panel colour, with a fade below, so symbols scroll out of sight */
-#symbols .symsearch::before, #symbols .symsearch::after { content: ''; position: absolute; left: -16px; right: -16px; pointer-events: none; }
-#symbols .symsearch::before { bottom: 100%; height: 20px; background: var(--panel); }
-#symbols .symsearch::after { top: 100%; height: 18px; background: linear-gradient(var(--panel), color-mix(in srgb, var(--panel) 0%, transparent)); }
-#symbols .symsearch svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; pointer-events: none; }
-#symbols .symsearch input {
-  width: 100%; height: 44px; padding: 0 12px 0 40px; margin: 0;
-  border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg);
-  font: 400 16px var(--font-note);   /* 16 px: iOS doesn't zoom in on focus */
-  -webkit-appearance: none; appearance: none; -webkit-user-select: text; user-select: text;
-}
-#symbols .symsearch input::placeholder { color: var(--muted); }
-#symbols .symsearch input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
-#symbols .symnone { margin: 14px 0 4px; text-align: center; color: var(--muted); font: 400 14px var(--font-note); }
-#symbols .sym-grid[hidden], #symbols .sym-grid li[hidden], #symbols h3[hidden], #symbols .symnone[hidden] { display: none; }
-#symbols .sym-grid { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(var(--c), minmax(0, 1fr)); gap: 8px; }
-#symbols .sym-grid li { display: grid; justify-items: center; align-content: start; gap: 2px; padding: 6px 4px 8px; border: 1px solid var(--line); border-radius: 12px; text-align: center; }
-#symbols .sym { display: grid; place-items: center; height: 40px; color: var(--fg); }
-#symbols .sym svg { height: 40px; width: auto; fill: currentColor; }
-#symbols b { font: 600 14px/1.25 var(--font-note); }
-#symbols small { font: 400 12px/1.35 var(--font-note); color: var(--muted); }
-#symbols .sym-grid li[data-tip] { cursor: pointer; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; transition: background-color .45s ease-in; }
-#symbols .sym-grid li.pressing { background: color-mix(in srgb, var(--accent) 16%, transparent); }
-/* the symbol whose explanation is showing, in the Settings colour */
-#symbols .sym-grid li.selected { position: relative; z-index: 3; background-color: var(--panel); background-image: linear-gradient(color-mix(in srgb, var(--accent) 12%, transparent), color-mix(in srgb, var(--accent) 12%, transparent));   /* 12 %: the muted subtitle keeps 4.5:1 (Hermes F10) */ border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
-#symbols .sym-grid li.selected .sym { color: var(--accent); }
-#symbols .sheet-done { z-index: 4; }   /* above a selected symbol scrolled under it */
-#symbols .sym-grid li:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-/* the explanation shown while a symbol is held */
-/* the card floats over the symbols without blocking them: a tap outside it reaches the symbol underneath */
-#symTip { position: fixed; inset: 0; z-index: 2; display: grid; place-items: center; padding: 20px; pointer-events: none; }
-#symTip { align-items: end; }   /* padding-bottom keeps it above Done (met.js) */
-#symTip.up { align-items: start; padding-top: calc(env(safe-area-inset-top, 0px) + 20px); }
-#symTip .sym-tip-card { pointer-events: auto; animation: symTipIn .12s ease-out; }
-@keyframes symTipIn { from { opacity: 0; transform: scale(.97); } }
-@media (prefers-reduced-motion: reduce) { #symTip .sym-tip-card { animation: none; } }
-#symTip[hidden] { display: none; }
-#symTip .sym-tip-card { box-sizing: border-box; width: min(100%, 340px); overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 18px 50px rgba(0,0,0,.35), 0 0 0 100vmax rgba(0,0,0,.12); outline: none; }
-#symTip .sym-tip-head { display: grid; justify-items: center; gap: 4px; text-align: center; }
-#symbols #symTip .sym { height: 84px; }
-#symbols #symTip .sym svg { height: 84px; }
-#symbols #symTip .sym.w, #symbols #symTip .sym.r { font-size: 36px; }
-#symbols #symTip .sym.dyn { font-size: 54px; }
-#symbols #symTip .sym.n { font-size: 30px; }
-#symbols #symTip b { font-size: 19px; }
-#symbols #symTip small { font-size: 14px; }
-#symTip p { margin: 12px 0 0; font: 400 15px/1.5 var(--font-note); color: var(--fg); }
-@media (max-height: 700px) {   /* short phones: a smaller symbol so the card fits beside the tapped one */
-  #symbols #symTip .sym, #symbols #symTip .sym svg { height: 56px; }
-  #symbols #symTip .sym.w, #symbols #symTip .sym.r { font-size: 28px; }
-  #symbols #symTip .sym.dyn { font-size: 40px; }
-  #symTip .sym-tip-card { padding: 16px; }
-  #symTip p { margin-top: 8px; }
-}
-/* symbols printed as words (pizz., dolce), letters (D.C., WB) or dynamics (pp, sfz), in a score's serif */
-#symbols .sym.w, #symbols .sym.r, #symbols .sym.dyn { font-family: 'Times New Roman', 'Noto Serif', Georgia, serif; white-space: nowrap; }
-#symbols .sym.w { font-size: 19px; font-style: italic; }
-#symbols .sym.r { font-size: 19px; font-weight: 700; }
-#symbols .sym.dyn { font-size: 27px; font-style: italic; font-weight: 700; letter-spacing: -1px; }
-#symbols .sym.n { font: 500 17px/1 var(--font-note); white-space: pre; word-spacing: 2px; }
-#symbols .sym-grid + .sym-grid { margin-top: 8px; }
-#symbols .sym-grid b, #symbols .sym-grid small { max-width: 100%; overflow-wrap: anywhere; }
-@media (max-width: 359px) { #symbols .sym-grid b, #symbols .sym-grid small { hyphens: auto; -webkit-hyphens: auto; } #symbols .sym.w, #symbols .sym.r { font-size: 16px; } #symbols .sym.n { font-size: 14px; } #symbols .sym-grid b { font-size: 13px; } }
 /* small staves: the clef and time signature (a box the size of a beat), and the note that clicks (beside the tempo).
    Staff lines are drawn around the vertical centre, --sp apart. */
 #view-metronome .staff {
@@ -879,6 +812,75 @@ h1 {
 #view-tuner .panel > .actions { margin: 0 0 8px; }
 @media (min-width: 640px) { #view-tuner #gauge { width: 84%; max-width: none; } }
 
+/* ---- symbols ---- */
+/* Symbols page: violin notation at a glance (its own tool since 2026-11-06; was a window on the metronome) */
+#view-symbols { color: var(--fg); font-family: var(--font-note); padding-bottom: 32px; overflow-x: clip; }   /* the search bar's fades reach past the edges; clip (not hidden) keeps it sticky */
+#symbols h3 { margin: 18px 0 8px; font: 500 12px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+#symbols h3:first-of-type { margin-top: 4px; }
+/* search: stays at the top while the list scrolls; matches the name, the subtitle and the explanation */
+#symbols .symsearch { position: sticky; top: 0; z-index: 5; margin: 0 -4px 6px; padding: 8px 4px 4px; background: var(--bg); }
+/* a fade below it, so symbols scroll out of sight */
+#symbols .symsearch::after { content: ''; position: absolute; left: -16px; right: -16px; pointer-events: none; }
+#symbols .symsearch::after { top: 100%; height: 18px; background: linear-gradient(var(--bg), color-mix(in srgb, var(--bg) 0%, transparent)); }
+#symbols .symsearch svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; pointer-events: none; }
+#symbols .symsearch input {
+  width: 100%; height: 44px; padding: 0 12px 0 40px; margin: 0;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg);
+  font: 400 16px var(--font-note);   /* 16 px: iOS doesn't zoom in on focus */
+  -webkit-appearance: none; appearance: none; -webkit-user-select: text; user-select: text;
+}
+#symbols .symsearch input::placeholder { color: var(--muted); }
+#symbols .symsearch input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+#symbols .symnone { margin: 14px 0 4px; text-align: center; color: var(--muted); font: 400 14px var(--font-note); }
+#symbols .sym-grid[hidden], #symbols .sym-grid li[hidden], #symbols h3[hidden], #symbols .symnone[hidden] { display: none; }
+#symbols .sym-grid { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(var(--c), minmax(0, 1fr)); gap: 8px; }
+#symbols .sym-grid li { display: grid; justify-items: center; align-content: start; gap: 2px; padding: 6px 4px 8px; border: 1px solid var(--line); border-radius: 12px; text-align: center; }
+#symbols .sym { display: grid; place-items: center; height: 40px; color: var(--fg); }
+#symbols .sym svg { height: 40px; width: auto; fill: currentColor; }
+#symbols b { font: 600 14px/1.25 var(--font-note); }
+#symbols small { font: 400 12px/1.35 var(--font-note); color: var(--muted); }
+#symbols .sym-grid li[data-tip] { cursor: pointer; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; transition: background-color .45s ease-in; }
+#symbols .sym-grid li.pressing { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+/* the symbol whose explanation is showing, in the Settings colour */
+#symbols .sym-grid li.selected { position: relative; z-index: 3; background-color: var(--panel); background-image: linear-gradient(color-mix(in srgb, var(--accent) 12%, transparent), color-mix(in srgb, var(--accent) 12%, transparent));   /* 12 %: the muted subtitle keeps 4.5:1 (Hermes F10) */ border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+#symbols .sym-grid li.selected .sym { color: var(--accent); }
+#symbols .sym-grid li:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* the explanation shown while a symbol is held */
+/* the card floats over the symbols without blocking them: a tap outside it reaches the symbol underneath */
+#symTip { position: fixed; inset: 0; z-index: 2; display: grid; place-items: center; padding: 20px; pointer-events: none; }
+#symTip { align-items: end; }   /* padding-bottom keeps it above Done (met.js) */
+#symTip.up { align-items: start; padding-top: calc(env(safe-area-inset-top, 0px) + 20px); }
+#symTip .sym-tip-card { pointer-events: auto; animation: symTipIn .12s ease-out; }
+@keyframes symTipIn { from { opacity: 0; transform: scale(.97); } }
+@media (prefers-reduced-motion: reduce) { #symTip .sym-tip-card { animation: none; } }
+#symTip[hidden] { display: none; }
+#symTip .sym-tip-card { box-sizing: border-box; width: min(100%, 340px); overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 18px 50px rgba(0,0,0,.35), 0 0 0 100vmax rgba(0,0,0,.12); outline: none; }
+#symTip .sym-tip-head { display: grid; justify-items: center; gap: 4px; text-align: center; }
+#symbols #symTip .sym { height: 84px; }
+#symbols #symTip .sym svg { height: 84px; }
+#symbols #symTip .sym.w, #symbols #symTip .sym.r { font-size: 36px; }
+#symbols #symTip .sym.dyn { font-size: 54px; }
+#symbols #symTip .sym.n { font-size: 30px; }
+#symbols #symTip b { font-size: 19px; }
+#symbols #symTip small { font-size: 14px; }
+#symTip p { margin: 12px 0 0; font: 400 15px/1.5 var(--font-note); color: var(--fg); }
+@media (max-height: 700px) {   /* short phones: a smaller symbol so the card fits beside the tapped one */
+  #symbols #symTip .sym, #symbols #symTip .sym svg { height: 56px; }
+  #symbols #symTip .sym.w, #symbols #symTip .sym.r { font-size: 28px; }
+  #symbols #symTip .sym.dyn { font-size: 40px; }
+  #symTip .sym-tip-card { padding: 16px; }
+  #symTip p { margin-top: 8px; }
+}
+/* symbols printed as words (pizz., dolce), letters (D.C., WB) or dynamics (pp, sfz), in a score's serif */
+#symbols .sym.w, #symbols .sym.r, #symbols .sym.dyn { font-family: 'Times New Roman', 'Noto Serif', Georgia, serif; white-space: nowrap; }
+#symbols .sym.w { font-size: 19px; font-style: italic; }
+#symbols .sym.r { font-size: 19px; font-weight: 700; }
+#symbols .sym.dyn { font-size: 27px; font-style: italic; font-weight: 700; letter-spacing: -1px; }
+#symbols .sym.n { font: 500 17px/1 var(--font-note); white-space: pre; word-spacing: 2px; }
+#symbols .sym-grid + .sym-grid { margin-top: 8px; }
+#symbols .sym-grid b, #symbols .sym-grid small { max-width: 100%; overflow-wrap: anywhere; }
+@media (max-width: 359px) { #symbols .sym-grid b, #symbols .sym-grid small { hyphens: auto; -webkit-hyphens: auto; } #symbols .sym.w, #symbols .sym.r { font-size: 16px; } #symbols .sym.n { font-size: 14px; } #symbols .sym-grid b { font-size: 13px; } }
+
 /* ---- start overlay ---- */
 .launch {
   position: fixed; inset: 0; z-index: 100;
@@ -897,8 +899,10 @@ h1 {
 .launch-card { width: min(100%, 720px); text-align: center; outline: none; }
 .launch h2 { margin: 0; font: 700 clamp(30px, 6vw, 44px)/1.1 var(--font-display); letter-spacing: -0.02em; }
 .launch-sub { margin: 8px 0 22px; font: 400 14px var(--font-mono); letter-spacing: .04em; color: var(--muted); }
-.launch-grid { display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: 1fr; gap: 12px; }
-@media (min-width: 640px) { .launch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 16px; } }
+.launch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 10px; }   /* four tools: 2 x 2 on phones */
+@media (min-width: 640px) { .launch-grid { gap: 16px; } }
+@media (min-width: 900px) { .launch-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .launch-btn { padding: 16px 10px; min-height: 0; gap: 6px; } .launch-btn b { font-size: 18px; } .launch-btn span { font-size: 13px; } }
 .launch-btn {
   display: grid; justify-items: center; gap: 8px; align-content: center;
   padding: 22px 16px; min-height: 150px; width: 100%; box-sizing: border-box; min-width: 0;
@@ -941,6 +945,11 @@ html[lang="zh-CN"] {
 @media (max-width: 380px) { .appbar h1 { font-size: 23px; } .appbar { gap: 8px; } .tabs { gap: 4px; } }
 @media (max-width: 480px) { .tab { width: 40px; height: 40px; } .tabs { gap: 5px; } .tab svg { width: 22px; height: 22px; } }
 @media (max-width: 350px) { .appbar { gap: 6px; } .tabs { gap: 3px; } .appbar h1 { font-size: 18px; letter-spacing: -0.02em; } }   /* "Fingerboard" clear of the tabs at 320 px (Hermes F11) */
+/* five buttons since Symbols became a tool (2026-11-06): smaller buttons and titles on phones so "Fingerboard" clears them */
+@media (max-width: 480px) { .tab { width: 36px; height: 36px; } .tabs { gap: 4px; } .tab svg { width: 21px; height: 21px; } }
+@media (max-width: 430px) { .appbar h1 { font-size: 24px; } }
+@media (max-width: 380px) { .appbar h1 { font-size: 21px; } }
+@media (max-width: 350px) { .appbar h1 { font-size: 17px; } .tab { width: 34px; height: 34px; } .tabs { gap: 3px; } .tab svg { width: 20px; height: 20px; } }
 /* ---- settings sheet ---- */
 .tab-set { margin-left: 2px; }
 .sheet {
@@ -1192,10 +1201,15 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <h1>Metronome</h1>
       <p class="appsub" id="ttl-metronome-sub">80 BPM · 4/4</p>
     </div>
+    <div id="ttl-symbols" hidden>
+      <h1>Symbols</h1>
+      <p class="appsub">Tap for the meaning</p>
+    </div>
     <nav class="tabs" aria-label="Tools">
       <button type="button" class="tab" data-view="tuner" aria-label="Tuner" title="Tuner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 17.5a8.5 8.5 0 0 1 17 0"/><path d="M12 17.5l3.6-7"/><circle cx="12" cy="17.5" r="1.2"/><path d="M12 5.8v1.8M5.6 9l1.3 1.2M18.4 9l-1.3 1.2"/></svg></button>
       <button type="button" class="tab" data-view="board" aria-current="page" aria-label="Fingerboard" title="Fingerboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3h11"/><path d="M8.4 3.5L7.2 21M10.8 3.5l-.5 17.5M13.2 3.5l.5 17.5M15.6 3.5L16.8 21" opacity=".7"/><path d="M7.7 11h8.6M7.3 17h9.4" opacity=".7"/><circle cx="10.8" cy="7.3" r="1.3" fill="currentColor"/><circle cx="15.6" cy="14" r="1.3" fill="currentColor"/></svg></button>
       <button type="button" class="tab" data-view="metronome" aria-label="Metronome" title="Metronome"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3h5.6l3.4 18H5.8z"/><path d="M12 17.5L15.6 6.5"/><circle cx="14.2" cy="10.6" r="1.2" fill="currentColor"/><path d="M8 21h8" opacity=".0"/></svg></button>
+      <button type="button" class="tab" data-view="symbols" aria-label="Symbols" title="Symbols"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3-1.2 6-1 8.5.8 2.5-1.8 5.5-2 8.5-.8v13.2c-3-1.2-6-1-8.5.8-2.5-1.8-5.5-2-8.5-.8z"/><path d="M12 6.3v13.2"/><path d="M16.2 9v5.2"/><ellipse cx="15.2" cy="14.4" rx="1.3" ry="1" fill="currentColor"/></svg></button>
       <button type="button" class="tab tab-set" id="openSettings" aria-label="Settings" title="Settings" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </nav>
   </header>
@@ -1293,12 +1307,15 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" class="step up" id="mUp" aria-label="Faster">+</button>
     </div>
     <div class="bottom">
-      <button type="button" class="tap symbtn" id="mSym" aria-haspopup="dialog"><span class="symico" aria-hidden="true">♩♯</span>Symbols</button>
+      <button type="button" class="tap symbtn" id="mSym"><span class="symico" aria-hidden="true">♩♯</span>Symbols</button>
       <button type="button" class="tap" id="mTap">Tap</button>
     </div>
-    <div class="sheet" id="symbols" role="dialog" aria-modal="true" aria-labelledby="symTitle" hidden>
-      <div class="sheet-card" id="symCard" tabindex="-1">
-        <h2 id="symTitle">Symbols</h2>
+    </div>
+
+  </section>
+
+  <section id="view-symbols" aria-label="Music symbols" hidden>
+<div class="sympage" id="symbols">
         <div class="symsearch"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg><input type="search" id="symQ" placeholder="Search" aria-label="Search symbols" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div>
         <p class="symnone" id="symNone" role="status" hidden>No symbols match.</p>
         <h3>Notes</h3>
@@ -1477,12 +1494,9 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
           <li role="button" aria-haspopup="dialog" tabindex="0" data-tip="Attacca: start the next movement without a pause."><span class="sym w" translate="no" aria-hidden="true">attacca</span><b>Go straight on</b><small>No break</small></li>
           <li role="button" aria-haspopup="dialog" tabindex="0" data-tip="Volti subito: turn the page quickly, the music carries straight on."><span class="sym r" translate="no" aria-hidden="true">V.S.</span><b>Turn quickly</b></li>
         </ul>
-        <button type="button" class="sheet-done" id="symDone">Done</button>
-      </div>
       <div class="sym-tip" id="symTip" role="dialog" aria-labelledby="symTipName" hidden>
         <div class="sym-tip-card" id="symTipCard" tabindex="-1"><div class="sym-tip-head" id="symTipHead"></div><p id="symTipText"></p></div>
-      </div>
-    </div>
+</div>
 
   </section>
 
@@ -1637,7 +1651,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-081549" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-085322" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -1705,6 +1719,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" class="launch-btn" data-view="tuner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 17.5a8.5 8.5 0 0 1 17 0"/><path d="M12 17.5l3.6-7"/><circle cx="12" cy="17.5" r="1.2"/><path d="M12 5.8v1.8M5.6 9l1.3 1.2M18.4 9l-1.3 1.2"/></svg><b>Tuner</b><span>Tune G · D · A · E with your microphone</span></button>
       <button type="button" class="launch-btn" data-view="board"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3h11"/><path d="M8.4 3.5L7.2 21M10.8 3.5l-.5 17.5M13.2 3.5l.5 17.5M15.6 3.5L16.8 21" opacity=".7"/><path d="M7.7 11h8.6M7.3 17h9.4" opacity=".7"/><circle cx="10.8" cy="7.3" r="1.3" fill="currentColor"/><circle cx="15.6" cy="14" r="1.3" fill="currentColor"/></svg><b>Fingerboard</b><span>Find and play notes in each position</span></button>
       <button type="button" class="launch-btn" data-view="metronome"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3h5.6l3.4 18H5.8z"/><path d="M12 17.5L15.6 6.5"/><circle cx="14.2" cy="10.6" r="1.2" fill="currentColor"/><path d="M8 21h8" opacity=".0"/></svg><b>Metronome</b><span>Keep steady time at any tempo</span></button>
+      <button type="button" class="launch-btn" data-view="symbols"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3-1.2 6-1 8.5.8 2.5-1.8 5.5-2 8.5-.8v13.2c-3-1.2-6-1-8.5.8-2.5-1.8-5.5-2-8.5-.8z"/><path d="M12 6.3v13.2"/><path d="M16.2 9v5.2"/><ellipse cx="15.2" cy="14.4" rx="1.3" ry="1" fill="currentColor"/></svg><b>Symbols</b><span>Look up music signs and what they mean</span></button>
     </div>
     <button type="button" class="launch-days" id="launchDays" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-4"/><path d="M12 16V7"/><path d="M17 16v-6"/></svg><span class="use-days">Practised on 0 days</span></button>
   </div>
@@ -3287,100 +3302,6 @@ function noteGate() {
     if (taps.length >= 2) setBpm(60000 / ((taps[taps.length - 1] - taps[0]) / (taps.length - 1)));
   });
 
-  /* ---------- symbols overlay ---------- */
-  var symSheet = $('symbols'), symBtn = $('mSym');
-  function closeSym() { closeTip(); symSheet.hidden = true; document.removeEventListener('keydown', onSymKey); try { symBtn.focus(); } catch (e) {} }
-  function onSymKey(e) {
-    if (!tip.hidden) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'Tab') { e.preventDefault(); closeTip(); } return; }
-    var t = e.target;
-    if (e.key === 'Escape') closeSym();
-    else if ((e.key === 'Enter' || e.key === ' ') && t.hasAttribute && t.hasAttribute('data-tip')) { e.preventDefault(); openTip(t); }
-    else if (e.key === 'Tab') {   /* keep focus in the window: the symbols, then Done */
-      var f = Array.prototype.filter.call(symSheet.querySelectorAll('#symQ, li[data-tip], #symDone'), function (el) { return el.getClientRects().length; }), first = f[0], last = f[f.length - 1];
-      if (e.shiftKey ? (t === first || t === $('symCard')) : t === last) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
-    }
-  }
-  /* search: every word typed must appear in a symbol's name, subtitle or printed sign; only when nothing matches
-     there, the explanations are searched too. Accents ignored (detache finds détaché) */
-  var symQ = $('symQ');
-  function fold(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
-  function filterSym() {
-    var words = fold(symQ.value).split(/\s+/).filter(Boolean), lis = symSheet.querySelectorAll('li[data-tip]');
-    function match(deep) {
-      return Array.prototype.filter.call(lis, function (li) {
-        var text = fold(li.textContent + (deep ? ' ' + li.getAttribute('data-tip') : ''));
-        return words.every(function (w) { return text.indexOf(w) >= 0; });
-      });
-    }
-    var hits = match(false);
-    if (!hits.length) hits = match(true);
-    Array.prototype.forEach.call(lis, function (li) { li.hidden = hits.indexOf(li) < 0; });
-    Array.prototype.forEach.call(symSheet.querySelectorAll('.sym-grid'), function (ul) {
-      ul.hidden = !ul.querySelector('li[data-tip]:not([hidden])');
-      ul.previousElementSibling.hidden = ul.hidden;   /* its heading */
-    });
-    $('symNone').hidden = hits.length > 0;
-  }
-  symQ.addEventListener('input', filterSym);
-  symBtn.addEventListener('click', function () { symQ.value = ''; filterSym(); symSheet.hidden = false; document.addEventListener('keydown', onSymKey); $('symCard').focus(); });
-  $('symDone').addEventListener('click', closeSym);
-  symSheet.addEventListener('click', function (e) { if (e.target === symSheet && tip.hidden && !downClosed) closeSym(); downClosed = false; });
-
-  /* A tap on a symbol (or a hold, or Enter/Space) shows its explanation at once; it stays until a tap
-     anywhere else, Esc, or a tap on the card. A tap on another symbol shows that one. */
-  var tip = $('symTip'), tipCard = $('symTipCard'), tipFrom = null;
-  var holdT = 0, holdLi = null, holdX = 0, holdY = 0, held = false, quietUntil = 0, downClosed = false;
-  function openTip(li) {
-    var head = $('symTipHead');
-    head.textContent = '';
-    Array.prototype.forEach.call(li.children, function (c) { head.appendChild(c.cloneNode(true)); });
-    head.querySelector('b').id = 'symTipName';
-    $('symTipText').textContent = li.getAttribute('data-tip');
-    if (tipFrom) tipFrom.classList.remove('selected');
-    tipFrom = li; li.classList.add('selected');
-    /* in the half of the screen away from the symbol, so the symbol stays in sight (and can be held) */
-    var r = li.getBoundingClientRect(), up = r.top + r.height / 2 > window.innerHeight / 2;
-    tip.classList.toggle('up', up);
-    /* and never over the Done button at the bottom of the sheet; on a short screen the card scrolls
-       rather than reach over the symbol */
-    var done = $('symDone').getBoundingClientRect(), bottom = done.height ? Math.max(20, window.innerHeight - done.top + 10) : 20;
-    tip.style.paddingBottom = bottom + 'px';
-    tipCard.style.maxHeight = Math.max(120, up ? r.top - 30 : window.innerHeight - bottom - r.bottom - 10) + 'px';
-    tip.hidden = false;
-    try { tipCard.focus({ preventScroll: true }); } catch (e) {}
-  }
-  function closeTip() {
-    if (tip.hidden) return;
-    tip.hidden = true;
-    if (tipFrom) tipFrom.classList.remove('selected');
-    if (tipFrom && (document.activeElement === tipCard || document.activeElement === document.body)) try { tipFrom.focus({ preventScroll: true }); } catch (e) {}
-    tipFrom = null;
-  }
-  function endHold() { clearTimeout(holdT); if (holdLi) holdLi.classList.remove('pressing'); holdLi = null; }
-  symSheet.addEventListener('pointerdown', function (e) {
-    downClosed = false;
-    if (!tip.hidden && !tipCard.contains(e.target)) { closeTip(); downClosed = true; }
-    var li = e.target.closest && e.target.closest('li[data-tip]');
-    if (!li || e.button > 0) return;
-    endHold(); holdLi = li; holdX = e.clientX; holdY = e.clientY; li.classList.add('pressing');
-    holdT = setTimeout(function () { var l = holdLi; endHold(); held = true; openTip(l); }, 450);
-  });
-  symSheet.addEventListener('pointermove', function (e) { if (holdLi && Math.abs(e.clientX - holdX) + Math.abs(e.clientY - holdY) > 10) endHold(); });
-  ['pointerup', 'pointercancel'].forEach(function (ev) {
-    symSheet.addEventListener(ev, function () {
-      endHold();
-      if (held) { held = false; quietUntil = Date.now() + 600; }
-    });
-  });
-  /* the click that follows the release of a hold (it can come late after a touch) is not a tap */
-  symSheet.addEventListener('click', function (e) { if (held || Date.now() < quietUntil) { quietUntil = 0; e.stopPropagation(); e.preventDefault(); } }, true);
-  symSheet.addEventListener('click', function (e) {
-    var li = e.target.closest && e.target.closest('li[data-tip]');
-    if (li) { downClosed = false; openTip(li); }
-  });
-  symSheet.addEventListener('contextmenu', function (e) { if (e.target.closest && e.target.closest('li[data-tip]')) e.preventDefault(); });
-  tipCard.addEventListener('click', closeTip);
-
   /* ---------- audio ---------- */
   var ctx = null, timer = 0, nextT = 0, beatIdx = 0, queue = [], raf = 0, lastNow = -1;
   function click(t, level) {
@@ -3521,9 +3442,108 @@ function noteGate() {
 </script>
 <script>
 (function () {
+  /* Symbols: a page of violin notation (its own tool since Trix asked, 2026-11-06; it was a window on the
+     metronome). Tap a symbol for its explanation; search by name, subtitle, printed sign, then explanation. */
+  var $ = function (id) { return document.getElementById(id); };
+  var symSheet = $('symbols');
+  /* search: every word typed must appear in a symbol's name, subtitle or printed sign; only when nothing matches
+     there, the explanations are searched too. Accents ignored (detache finds détaché) */
+  var symQ = $('symQ');
+  function fold(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function filterSym() {
+    var words = fold(symQ.value).split(/\s+/).filter(Boolean), lis = symSheet.querySelectorAll('li[data-tip]');
+    function match(deep) {
+      return Array.prototype.filter.call(lis, function (li) {
+        var text = fold(li.textContent + (deep ? ' ' + li.getAttribute('data-tip') : ''));
+        return words.every(function (w) { return text.indexOf(w) >= 0; });
+      });
+    }
+    var hits = match(false);
+    if (!hits.length) hits = match(true);
+    Array.prototype.forEach.call(lis, function (li) { li.hidden = hits.indexOf(li) < 0; });
+    Array.prototype.forEach.call(symSheet.querySelectorAll('.sym-grid'), function (ul) {
+      ul.hidden = !ul.querySelector('li[data-tip]:not([hidden])');
+      ul.previousElementSibling.hidden = ul.hidden;   /* its heading */
+    });
+    $('symNone').hidden = hits.length > 0;
+  }
+  symQ.addEventListener('input', filterSym);
+  symQ.addEventListener('input', filterSym);
+  /* keys: Enter / Space on a symbol shows its explanation; while it shows, Esc, Enter, Space or Tab closes it */
+  symSheet.addEventListener('keydown', function (e) {
+    var t = e.target;
+    if (!tip.hidden) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'Tab') { e.preventDefault(); closeTip(); } return; }
+    if ((e.key === 'Enter' || e.key === ' ') && t.hasAttribute && t.hasAttribute('data-tip')) { e.preventDefault(); openTip(t); }
+  });
+  /* a tap outside the page (app bar, tabs) also closes the explanation */
+  document.addEventListener('pointerdown', function (e) { if (!tip.hidden && !symSheet.contains(e.target)) closeTip(); }, true);
+
+  /* A tap on a symbol (or a hold, or Enter/Space) shows its explanation at once; it stays until a tap
+     anywhere else, Esc, or a tap on the card. A tap on another symbol shows that one. */
+  var tip = $('symTip'), tipCard = $('symTipCard'), tipFrom = null;
+  var holdT = 0, holdLi = null, holdX = 0, holdY = 0, held = false, quietUntil = 0, downClosed = false;
+  function openTip(li) {
+    var head = $('symTipHead');
+    head.textContent = '';
+    Array.prototype.forEach.call(li.children, function (c) { head.appendChild(c.cloneNode(true)); });
+    head.querySelector('b').id = 'symTipName';
+    $('symTipText').textContent = li.getAttribute('data-tip');
+    if (tipFrom) tipFrom.classList.remove('selected');
+    tipFrom = li; li.classList.add('selected');
+    /* in the half of the screen away from the symbol, so the symbol stays in sight (and can be held) */
+    var r = li.getBoundingClientRect(), up = r.top + r.height / 2 > window.innerHeight / 2;
+    tip.classList.toggle('up', up);
+    /* on a short screen the card scrolls rather than reach over the symbol */
+    var bottom = 20;
+    tip.style.paddingBottom = bottom + 'px';
+    tipCard.style.maxHeight = Math.max(120, up ? r.top - 30 : window.innerHeight - bottom - r.bottom - 10) + 'px';
+    tip.hidden = false;
+    try { tipCard.focus({ preventScroll: true }); } catch (e) {}
+  }
+  function closeTip() {
+    if (tip.hidden) return;
+    tip.hidden = true;
+    if (tipFrom) tipFrom.classList.remove('selected');
+    if (tipFrom && (document.activeElement === tipCard || document.activeElement === document.body)) try { tipFrom.focus({ preventScroll: true }); } catch (e) {}
+    tipFrom = null;
+  }
+  function endHold() { clearTimeout(holdT); if (holdLi) holdLi.classList.remove('pressing'); holdLi = null; }
+  symSheet.addEventListener('pointerdown', function (e) {
+    downClosed = false;
+    if (!tip.hidden && !tipCard.contains(e.target)) { closeTip(); downClosed = true; }
+    var li = e.target.closest && e.target.closest('li[data-tip]');
+    if (!li || e.button > 0) return;
+    endHold(); holdLi = li; holdX = e.clientX; holdY = e.clientY; li.classList.add('pressing');
+    holdT = setTimeout(function () { var l = holdLi; endHold(); held = true; openTip(l); }, 450);
+  });
+  symSheet.addEventListener('pointermove', function (e) { if (holdLi && Math.abs(e.clientX - holdX) + Math.abs(e.clientY - holdY) > 10) endHold(); });
+  ['pointerup', 'pointercancel'].forEach(function (ev) {
+    symSheet.addEventListener(ev, function () {
+      endHold();
+      if (held) { held = false; quietUntil = Date.now() + 600; }
+    });
+  });
+  /* the click that follows the release of a hold (it can come late after a touch) is not a tap */
+  symSheet.addEventListener('click', function (e) { if (held || Date.now() < quietUntil) { quietUntil = 0; e.stopPropagation(); e.preventDefault(); } }, true);
+  symSheet.addEventListener('click', function (e) {
+    var li = e.target.closest && e.target.closest('li[data-tip]');
+    if (li) { downClosed = false; openTip(li); }
+  });
+  symSheet.addEventListener('contextmenu', function (e) { if (e.target.closest && e.target.closest('li[data-tip]')) e.preventDefault(); });
+  tipCard.addEventListener('click', closeTip);
+
+
+  APP.views.symbols = {
+    show: function () {},
+    hide: function () { closeTip(); endHold(); }
+  };
+})();
+</script>
+<script>
+(function () {
   /* Each tool registers APP.views[name] = { show, hide } and has a #view-name section,
      a #ttl-name heading block and a .tab button with data-view="name". */
-  var names = ['tuner', 'board', 'metronome'];
+  var names = ['tuner', 'board', 'metronome', 'symbols'];
   var shell = document.getElementById('shell');
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab[data-view]'));
   var cur = null;
@@ -3553,6 +3573,10 @@ function noteGate() {
   tabs.forEach(function (b) {
     b.addEventListener('click', function () { show(b.dataset.view); });
   });
+  APP.show = show;
+  /* the metronome's Symbols button opens the Symbols page (Trix: keep the button, no window) */
+  var mSym = document.getElementById('mSym');
+  if (mSym) mSym.addEventListener('click', function () { show('symbols'); window.scrollTo(0, 0); });
 
   /* settings sheet */
   var sheet = document.getElementById('sheet'), sheetCard = document.getElementById('sheetCard');
@@ -3892,8 +3916,8 @@ function noteGate() {
   sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
 
   var h = (location.hash || '').replace('#', '').split(/[,&;]/).map(function (t) { return t.trim().toLowerCase(); })
-    .filter(function (t) { return ['fingerboard', 'board', 'tuner', 'metronome'].indexOf(t) >= 0; })[0] || '';
-  var map = { fingerboard: 'board', board: 'board', tuner: 'tuner', metronome: 'metronome' };
+    .filter(function (t) { return ['fingerboard', 'board', 'tuner', 'metronome', 'symbols'].indexOf(t) >= 0; })[0] || '';
+  var map = { fingerboard: 'board', board: 'board', tuner: 'tuner', metronome: 'metronome', symbols: 'symbols' };
   show(map[h] || 'board');
 
   /* start overlay: asked once per load unless the link already names a tool (#tuner, #metronome, #fingerboard) */
@@ -4203,7 +4227,7 @@ function noteGate() {
     'in tune': '音准正确', 'off the board': '超出指板',
     'no sharps or flats': '无升降号', 'no ♯ or ♭': '无升降号',
     /* metronome */
-    'Symbols': '符号', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
+    'Symbols': '符号', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
     'Quaver (eighth note)': '八分音符', 'Crotchet (quarter note)': '四分音符', 'Minim (half note)': '二分音符', 'Semibreve (whole note)': '全音符',
     '½ beat in 4/4': '4/4 拍中占半拍', '1 beat in 4/4': '4/4 拍中占 1 拍', '2 beats in 4/4': '4/4 拍中占 2 拍', '4 beats in 4/4': '4/4 拍中占 4 拍',
     'Up bow': '上弓', 'Push, tip to frog': '推弓：弓尖到弓根', 'Down bow': '下弓', 'Pull, frog to tip': '拉弓：弓根到弓尖',
