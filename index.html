@@ -462,17 +462,17 @@ h1 {
   transform: translateX(-50%); border-radius: 2px; pointer-events: none;
   background: color-mix(in srgb, var(--hue) 55%, white);
   box-shadow: 0 0 3px 1px var(--hue), 0 0 10px 2px color-mix(in srgb, var(--hue) 55%, transparent);
-  animation: vibShake 60ms linear infinite alternate;
+  animation: vibShake 50ms linear infinite alternate;
 }
 #view-board .vib::before {
   
-  content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 5px; transform: translateX(-50%);
-  background: var(--hue); opacity: .3; border-radius: 3px; filter: blur(1px);
+  content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 9px; transform: translateX(-50%);
+  background: var(--hue); opacity: .45; border-radius: 5px; filter: blur(1px);
   -webkit-mask: linear-gradient(transparent, #000 35%, #000 65%, transparent); mask: linear-gradient(transparent, #000 35%, #000 65%, transparent);
-  animation: vibBand 120ms ease-in-out infinite alternate;
+  animation: vibBand 100ms ease-in-out infinite alternate;
 }
-@keyframes vibShake { from { transform: translateX(calc(-50% - .6px)); } to { transform: translateX(calc(-50% + .6px)); } }
-@keyframes vibBand { from { transform: translateX(-50%) scaleX(.6); } to { transform: translateX(-50%) scaleX(1.1); } }
+@keyframes vibShake { from { transform: translateX(calc(-50% - 1.6px)); } to { transform: translateX(calc(-50% + 1.6px)); } }
+@keyframes vibBand { from { transform: translateX(-50%) scaleX(.35); } to { transform: translateX(-50%) scaleX(1.25); } }
 #view-board .waves {
   position: absolute; left: var(--x); top: var(--y); width: calc(var(--r) * 2 + 8px); height: calc(var(--r) * 2 + 8px);
   transform: translate(-50%, -50%); pointer-events: none; border-radius: 50%;
@@ -483,12 +483,12 @@ h1 {
 #view-board .waves::before,
 #view-board .waves::after {
   content: ''; position: absolute; inset: -2.5px; border-radius: 50%;
-  border: 1.5px solid var(--hue); box-shadow: 0 0 4px var(--hue);
-  opacity: 0; animation: wave 1.1s ease-out infinite;
+  border: 2.5px solid color-mix(in srgb, var(--hue) 75%, white); box-shadow: 0 0 6px 1px var(--hue);
+  opacity: 0; animation: wave 1s ease-out infinite;
 }
-#view-board .waves::after { animation-delay: .55s; }
+#view-board .waves::after { animation-delay: .5s; }
 @keyframes waveIn { from { transform: translate(-50%, -50%) scale(.85); opacity: 0; } }
-@keyframes wave { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.9); opacity: 0; } }
+@keyframes wave { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.6); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
 #view-board .vib,
 #view-board .vib::before,
@@ -1637,7 +1637,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.23" data-build="20261106-064512" data-cache="violin-toolkit-test-"><span>Version 1.23-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.23" data-build="20261106-080234" data-cache="violin-toolkit-test-"><span>Version 1.23-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
