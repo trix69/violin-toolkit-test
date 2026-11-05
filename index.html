@@ -1745,7 +1745,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-104014" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-104314" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2825,7 +2825,8 @@ function noteGate() {
     /* the rest of the page is out of reach while it is open: siblings of the window and of each ancestor (Hermes R18.2) */
     for (var el = keyPop; el.parentNode && el !== document.body; el = el.parentNode) {
       Array.prototype.forEach.call(el.parentNode.children, function (sib) {
-        if (sib !== el && !sib.inert && sib.tagName !== 'SCRIPT') { sib.inert = true; keyInert.push(sib); }
+        /* only what is on screen now: a dialog that appears later (update prompt, Settings) must stay usable (Hermes R18.4) */
+        if (sib !== el && !sib.inert && !sib.hidden && sib.tagName !== 'SCRIPT') { sib.inert = true; keyInert.push(sib); }
       });
     }
     document.addEventListener('keydown', onKeysKey, true);
@@ -2852,7 +2853,7 @@ function noteGate() {
   else temperSel.parentNode.hidden = true;   /* no Intonation outside the toolkit */
   keyFold.addEventListener('click', openKeys);
   keyPop.addEventListener('click', function (e) { if (e.target === keyPop) closeKeys(); });
-  if (window.APP) APP.setKeysAll = setKeysAll;
+  if (window.APP) { APP.setKeysAll = setKeysAll; APP.closeKeys = closeKeys; }   /* closed when the board is hidden (Hermes R18.4) */
   setKeysAll();
   Array.prototype.forEach.call(posbar.children, function (b) {
     b.addEventListener('click', function () {
@@ -3256,7 +3257,7 @@ function noteGate() {
 
   APP.views.board = {
     show: function () { layout(); if (state.pos === 'pc') startMic(); },
-    hide: function () { stopAll(); if (state.pos === 'pc') stopMic(); }
+    hide: function () { stopAll(); if (APP.closeKeys) APP.closeKeys(true); if (state.pos === 'pc') stopMic(); }
   };
 })();
 </script>
