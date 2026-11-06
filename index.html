@@ -972,9 +972,7 @@ h1 {
 .mp-ctl { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 4px; }
 .mp-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--fg); font: 500 24px/1 var(--font-note); cursor: pointer; }
 .mp-btn:disabled { opacity: .4; cursor: default; }
-.mp-metro svg { stroke-width: 1.6; stroke-linejoin: round; }
-.mp-metro[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-@media (max-width: 380px) { .mp-ctl { gap: 7px; } .mp-btn { width: 40px; height: 40px; } .mp-play { width: 52px; height: 52px; } .mp-speed { min-width: 44px; } }
+@media (max-width: 380px) { .mp-speed { min-width: 44px; } }   /* button sizes: the clamp() rules below */
 .mp-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; fill: none; }
 .mp-play { width: 58px; height: 58px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); cursor: pointer; }
 .mp-play svg { width: 26px; height: 26px; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
@@ -1006,7 +1004,6 @@ h1 {
 .mp-vol input { position: absolute; left: 50%; top: 50%; width: 150px; height: 44px; margin: 0; transform: translate(-50%, -50%) rotate(-90deg); accent-color: var(--accent); touch-action: none; }
 .mp-vol input:disabled { opacity: .4; }
 .mp-mixnone { grid-column: 1 / -1; margin: 0; max-width: 220px; text-align: center; font: 400 13px var(--font-body); color: var(--muted, inherit); }
-@media (max-width: 340px) { .mp-ctl { gap: 5px; } .mp-btn { width: 38px; height: 38px; } }   /* seven controls with the Mixer button at 320 px */
 /* controls stay perfect circles (Trix): they never shrink in the row; size and spacing follow the screen width */
 .mp-ctl { gap: clamp(3px, calc(2.2vw - 3px), 12px); }
 .mp-btn, .mp-play { flex: none; aspect-ratio: 1; height: auto; }
@@ -1023,6 +1020,7 @@ h1 {
 .mp-parts p { margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .mp-parts p + p { margin-top: 4px; }
 .mp-parts b { font: 600 13px var(--font-note); color: var(--accent); margin-right: 8px; }
+.mp-parts p[hidden] { display: none; }
 
 /* ---- start overlay ---- */
 .launch {
@@ -1382,7 +1380,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <input type="file" id="mpFile" accept=".mid,.midi,audio/midi,audio/x-midi" hidden>
     </div>
     <p class="mp-msg" id="mpMsg" role="status" hidden></p>
-    <div class="mp-score" id="mpScore" aria-hidden="true" translate="no"><div class="mp-strip" id="mpSvg"></div><svg class="mp-key" id="mpKey" xmlns="http://www.w3.org/2000/svg"></svg><div class="mp-head" id="mpHead"></div><div class="mp-count" id="mpCount" aria-hidden="true" hidden></div><div class="mp-parts" id="mpParts" hidden><p><b id="mpPartsLV">Violin</b><span id="mpPartsV"></span></p><p><b id="mpPartsLA">Accompaniment</b><span id="mpPartsA"></span></p></div></div>
+    <div class="mp-score" id="mpScore" aria-hidden="true" translate="no"><div class="mp-strip" id="mpSvg"></div><svg class="mp-key" id="mpKey" xmlns="http://www.w3.org/2000/svg"></svg><div class="mp-head" id="mpHead"></div><div class="mp-count" id="mpCount" aria-hidden="true" hidden></div><div class="mp-parts" id="mpParts" hidden><p><b id="mpPartsLV">Violin</b><span id="mpPartsV"></span></p><p><b id="mpPartsLA">Accompaniment</b><span id="mpPartsA"></span></p><p><b id="mpPartsLD">Left out</b><span id="mpPartsD"></span></p></div></div>
     <p class="mp-vh" id="mpPartsSr" role="status"></p>
   </div>
   <div class="mp-bar" id="mpBar">
@@ -1842,7 +1840,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.35" data-build="20261107-092439" data-cache="violin-toolkit-test-"><span>Version 1.35-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.35" data-build="20261107-094300" data-cache="violin-toolkit-test-"><span>Version 1.35-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3988,7 +3986,7 @@ function noteGate() {
     var c = bus.context, now = c.currentTime;
     var t0 = now + Math.max(0, (from - pos) / speed), t1 = now + Math.max(0.03, (n.e - pos) / speed);
     if (t1 <= t0 + 0.02) return;
-    var o = c.createOscillator(), g = c.createGain(), pk = 0.16 * n.v, a4 = (window.APP && APP.a4) || 442;
+    var o = c.createOscillator(), g = c.createGain(), pk = 0.44 * n.v,   /* at 100 % as loud as the violin at 100 % (Trix: far too quiet; was 0.16, ~9 dB under) */ a4 = (window.APP && APP.a4) || 442;
     o.type = 'triangle'; o.frequency.value = a4 * Math.pow(2, (n.m - 69) / 12);
     g.gain.setValueAtTime(0, t0);
     g.gain.linearRampToValueAtTime(pk, t0 + 0.012);
@@ -4073,11 +4071,12 @@ function noteGate() {
     var DRUM = 9, VIOLIN = /violin|violín|小提琴/i, GM_VIOLIN = 40, solo, acc = [];
     /* also left out: a part named as drums or percussion, and channels set to General MIDI's percussive and
        sound-effect instruments (112-127: woodblock, taiko, synth drum…), which a pitched synth can't play */
-    var NOISE = /drum|perc|kit|鼓|打击/i;
-    tracks = tracks.filter(function (tr) { return !NOISE.test(tr.label); })
+    /* whole words only in Latin script (a "Violin (kit)" part is not drums: Hermes F27); Chinese has no spaces */
+    var NOISE = /(^|[^a-z])(drums?|drum ?kit|perc|percussion|kits?)([^a-z]|$)|鼓|打击/i, dropped = [];
+    tracks = tracks.filter(function (tr) { if (NOISE.test(tr.label) && !VIOLIN.test(tr.label)) {   /* a part named as a violin is never drums */ dropped.push(tr.name || tr.label.trim() || 'Drums'); return false; } return true; })
       .map(function (tr) { tr.notes = tr.notes.filter(function (n) { return n.ch !== DRUM && !(tr.prog[n.ch] >= 112); }); return tr; })
-      .filter(function (tr) { return tr.notes.length; });
-    if (!tracks.length) throw fail('This file has no notes.');
+      .filter(function (tr) { if (tr.notes.length) return true; dropped.push(tr.name || 'Drums'); return false; });
+    if (!tracks.length) throw fail('This file has only percussion.');   /* it has notes, all of them drums (Hermes F28) */
     var soloName = '', accNames = [];
     function gmViolin(tr) { return Object.keys(tr.prog).some(function (c) { return tr.prog[c] === GM_VIOLIN && tr.notes.some(function (n) { return n.ch === +c; }); }); }
     if (tracks.length === 1 && tracks[0].chans > 1) {
@@ -4111,6 +4110,7 @@ function noteGate() {
     sg.parts = tracks.length > 1 ? tracks.length : Object.keys(used).length;   /* channels that still play: drums not counted (Hermes R20.1) */
     sg.soloName = soloName || '';
     sg.accNames = accNames;
+    sg.dropped = dropped;   /* said in the parts flash (Hermes F27) */
     /* the accompaniment in seconds from the first bar kept, by start time */
     sg.acc = acc.map(function (n) { var t = sg.sec(n.t0); return { m: n.m, t: t, e: Math.max(t + 0.03, sg.sec(Math.max(n.t1, n.t0 + 1))), v: (n.v || 90) / 127 }; })
       .filter(function (n) { return n.e > 0; }).sort(function (a, b) { return a.t - b.t; });
@@ -4593,13 +4593,15 @@ function noteGate() {
   var partsEl = $('mpParts'), partsSr = $('mpPartsSr'), partsT = 0;
   function flashParts() {
     clearTimeout(partsT); partsEl.classList.remove('show'); partsEl.hidden = true; partsSr.textContent = '';
-    if (!song || !song.acc.length) return;
+    if (!song || (!song.acc.length && !song.dropped.length)) return;
     var zh = window.I18N && I18N.lang === 'zh', lv = zh ? '小提琴' : 'Violin', la = zh ? '伴奏' : 'Accompaniment';   /* the score is translate="no" */
     var v = song.soloName || (zh ? '第 1 声部' : 'Part 1'), a = song.accNames.join(zh ? '、' : ', ');
-    $('mpPartsLV').textContent = lv; $('mpPartsLA').textContent = la;
-    $('mpPartsV').textContent = v; $('mpPartsA').textContent = a;
+    var ld = zh ? '已略去' : 'Left out', d = song.dropped.join(zh ? '、' : ', ');
+    $('mpPartsLV').textContent = lv; $('mpPartsLA').textContent = la; $('mpPartsLD').textContent = ld;
+    $('mpPartsV').textContent = v; $('mpPartsA').textContent = a; $('mpPartsD').textContent = d;
+    $('mpPartsA').parentNode.hidden = !a; $('mpPartsD').parentNode.hidden = !d;
     partsEl.hidden = false; void partsEl.offsetWidth; partsEl.classList.add('show');
-    partsSr.textContent = lv + (zh ? '：' : ': ') + v + (zh ? '。' : '. ') + la + (zh ? '：' : ': ') + a;
+    partsSr.textContent = lv + (zh ? '：' : ': ') + v + (zh ? '。' : '. ') + (a ? la + (zh ? '：' : ': ') + a + (zh ? '。' : '. ') : '') + (d ? ld + (zh ? '：' : ': ') + d + (zh ? '。' : '.') : '');
     partsT = setTimeout(function () { partsEl.hidden = true; partsEl.classList.remove('show'); }, 5200);
   }
   function load(i) {
@@ -5484,7 +5486,7 @@ function noteGate() {
     'in tune': '音准正确', 'off the board': '超出指板',
     'no sharps or flats': '无升降号', 'no ♯ or ♭': '无升降号',
     /* metronome */
-    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'A Little Night Music': '小夜曲', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
+    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'A Little Night Music': '小夜曲', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only percussion.': '这个文件只有打击乐。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
     'Quaver (eighth note)': '八分音符', 'Crotchet (quarter note)': '四分音符', 'Minim (half note)': '二分音符', 'Semibreve (whole note)': '全音符',
     '½ beat in 4/4': '4/4 拍中占半拍', '1 beat in 4/4': '4/4 拍中占 1 拍', '2 beats in 4/4': '4/4 拍中占 2 拍', '4 beats in 4/4': '4/4 拍中占 4 拍',
     'Up bow': '上弓', 'Push, tip to frog': '推弓：弓尖到弓根', 'Down bow': '下弓', 'Pull, frog to tip': '拉弓：弓根到弓尖',
