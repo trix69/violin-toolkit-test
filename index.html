@@ -995,7 +995,7 @@ h1 {
 .mp-mix[aria-expanded="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .mp-mixpop { position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); width: auto; max-width: calc(100vw - 32px); box-sizing: border-box;
   padding: 12px 18px 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: var(--fg);
-  box-shadow: 0 10px 30px rgba(0,0,0,.18); z-index: 20; display: grid; grid-template-columns: repeat(3, auto); column-gap: 14px; row-gap: 6px; justify-items: center; }
+  box-shadow: 0 10px 30px rgba(0,0,0,.18); z-index: 20; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(360px, calc(100vw - 32px)); column-gap: 14px;   /* equal columns: the faders evenly spaced (Trix) */ row-gap: 6px; justify-items: center; }
 .mp-mixpop[hidden] { display: none; }
 /* vertical faders (Trix): level on top, the fader, the name below; a horizontal range turned a quarter turn
    (works the same in every browser; arrow keys and touch drags follow it) */
@@ -1832,7 +1832,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.35" data-build="20261107-085114" data-cache="violin-toolkit-test-"><span>Version 1.35-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.35" data-build="20261107-085747" data-cache="violin-toolkit-test-"><span>Version 1.35-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
