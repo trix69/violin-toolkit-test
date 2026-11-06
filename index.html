@@ -948,6 +948,9 @@ h1 {
 .mp-ctl { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 4px; }
 .mp-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--fg); font: 500 24px/1 var(--font-note); cursor: pointer; }
 .mp-btn:disabled { opacity: .4; cursor: default; }
+.mp-metro svg { stroke-width: 1.6; stroke-linejoin: round; }
+.mp-metro[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+@media (max-width: 380px) { .mp-ctl { gap: 7px; } .mp-btn { width: 40px; height: 40px; } .mp-play { width: 52px; height: 52px; } .mp-speed { min-width: 44px; } }
 .mp-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; fill: none; }
 .mp-play { width: 58px; height: 58px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); cursor: pointer; }
 .mp-play svg { width: 26px; height: 26px; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
@@ -1331,6 +1334,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" class="mp-btn" id="mpSlower" aria-label="Slower">−</button>
       <button type="button" class="mp-play" id="mpPlay" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13M16 5.5v13"/></svg></button>
       <button type="button" class="mp-btn" id="mpFaster" aria-label="Faster">+</button>
+      <button type="button" class="mp-btn mp-metro" id="mpMetro" aria-pressed="false" aria-label="Metronome" title="Metronome"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3h5.6l3.4 18H5.8z"/><path d="M12 17.5L15.6 6.5"/><circle cx="14.2" cy="10.6" r="1.2" fill="currentColor"/></svg></button>
       <div class="mp-speed"><span id="mpSpeed">100%</span><small id="mpBpm" translate="no"></small></div>
     </div>
   </div>
@@ -1774,7 +1778,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.25" data-build="20261106-131027" data-cache="violin-toolkit-test-"><span>Version 1.25-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.25" data-build="20261106-131352" data-cache="violin-toolkit-test-"><span>Version 1.25-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3794,7 +3798,11 @@ function noteGate() {
   var playBtn = $('mpPlay'), seek = $('mpSeek'), timeEl = $('mpTime'), speedEl = $('mpSpeed'), bpmEl = $('mpBpm');
   var scoreEl = $('mpScore'), svg = $('mpSvg'), keySvg = $('mpKey'), headEl = $('mpHead'), subEl = $('ttl-midi-sub');
   var songs = [], song = null, pos = 0, speed = 1, playing = false, ni = 0, active = [], last = 0, raf = 0, shown = false;
-  var loop = false, loopBtn = $('mpLoop');   /* Loop: start again from the top at the end (Trix), remembered */
+  var loop = false, loopBtn = $('mpLoop');
+  /* Metronome (Trix): clicks with the tune, on its own beats (time signature, tempo, speed), the first of each bar
+     stronger; remembered */
+  var metro = false, metroBtn = $('mpMetro'), lastTick = -1;
+  try { metro = localStorage.getItem('violin-midi-metro') === 'on'; } catch (e) {}   /* Loop: start again from the top at the end (Trix), remembered */
   try { loop = localStorage.getItem('violin-midi-loop') === 'on'; } catch (e) {}
 
   function fail(text) { var e = new Error(text); e.mine = true; return e; }
@@ -4105,6 +4113,7 @@ function noteGate() {
     playBtn.setAttribute('aria-label', playing || counting ? 'Pause' : 'Play');
     playBtn.classList.toggle('on', playing || counting);
     loopBtn.setAttribute('aria-pressed', loop ? 'true' : 'false');
+    metroBtn.setAttribute('aria-pressed', metro ? 'true' : 'false');
     $('mpSlower').disabled = speed <= 0.5 + 1e-9;
     $('mpFaster').disabled = speed >= 1.5 - 1e-9;
   }
@@ -4119,11 +4128,17 @@ function noteGate() {
     ni = 0;
     if (song) while (ni < song.notes.length && song.notes[ni].t < pos - 1e-6) ni++;
     noteEls.forEach(function (el, k) { el.classList.toggle('done', k < ni); });
+    /* the metronome clicks from the next beat on (on the first one when starting from the top) */
+    lastTick = !song || pos < 0.01 ? -1 : Math.floor(song.toBeat(pos) / (4 / song.sig.den) + 1e-6);
     scroll(); ui();
   }
   function frame(now) {
     if (!playing) return;
     pos += (now - last) / 1000 * speed;
+    if (metro) {
+      var k = Math.floor(song.toBeat(pos) / (4 / song.sig.den) + 1e-6);
+      if (k > lastTick) { lastTick = k; if (pos < song.end) APP.board.click(k % song.sig.num === 0); }
+    }
     last = now;
     var ns = song.notes;
     active = active.filter(function (k) {   /* notes ending first, so a repeated note sounds twice */
@@ -4265,6 +4280,12 @@ function noteGate() {
 
   playBtn.addEventListener('click', function () { if (playing || counting) pause(); else play(); });
   $('mpStart').addEventListener('click', function () { seekTo(0); });
+  metroBtn.addEventListener('click', function () {
+    metro = !metro;
+    if (song) lastTick = pos < 0.01 && !playing ? -1 : Math.floor(song.toBeat(pos) / (4 / song.sig.den) + 1e-6);   /* from the next beat (the first, at the top) */
+    try { localStorage.setItem('violin-midi-metro', metro ? 'on' : 'off'); } catch (e) {}
+    ui();
+  });
   loopBtn.addEventListener('click', function () {
     loop = !loop;
     try { localStorage.setItem('violin-midi-loop', loop ? 'on' : 'off'); } catch (e) {}
@@ -4752,7 +4773,7 @@ function noteGate() {
     ],
     midi: [
       { sel: '#mpSong', title: 'Pick a tune', text: 'Choose a built-in tune from this list: Twinkle, Twinkle, Little Star, Ode to Joy, In the Hall of the Mountain King, Canon, A Little Night Music or Winter (1st movement). They are ready to play, so you can try the player straight away.' },
-      { sel: '#mpSeek, #mpTime, #mpLoop, #mpStart, #mpSlower, #mpPlay, #mpFaster, .mp-speed', title: 'Play and follow along', text: 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over.' },
+      { sel: '#mpSeek, #mpTime, #mpLoop, #mpStart, #mpSlower, #mpPlay, #mpFaster, .mp-speed', title: 'Play and follow along', text: 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over; the metronome button clicks along with it.' },
       { sel: '#mpImport', title: 'Import your own', text: 'Tap Import and choose a MIDI file (.mid) from your phone or computer. It stays in the list for next time; the bin button next to the list deletes it.' },
       { sel: '#mpImport', title: 'Which files work', text: 'The file must have one part only: the violin. A file with piano or other parts is refused, so save just the violin part as its own MIDI file. Notes below the G string are left out; very high notes are heard but not lit on the board.' }
     ]
@@ -5223,7 +5244,7 @@ function noteGate() {
     'Hold for a steady tone': '长按得到持续音', 'Hold a note for 3 seconds and it keeps sounding after you let go, steady with no vibrato, like a tuning fork. Tap anywhere to stop it.': '按住一个音 3 秒，松手后它会继续响，平稳无揉弦，像音叉一样。点任意处即可停止。',
     'Choose a key': '选择调',
     'Pick a tune': '选择乐曲', 'Choose a built-in tune from this list: Twinkle, Twinkle, Little Star, Ode to Joy, In the Hall of the Mountain King, Canon, A Little Night Music or Winter (1st movement). They are ready to play, so you can try the player straight away.': '从这个列表选择内置乐曲：《小星星》、《欢乐颂》、《在山魔王的宫殿里》、《卡农》、《小夜曲》或《冬》第一乐章。它们可以直接播放，马上就能试用播放器。',
-    'Play and follow along': '播放并跟着看', 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over.': '点播放：先数一小节（3/4 拍数 3 2 1，4/4 拍数 4 3 2 1），然后每个音会在指板上以所在弦的颜色亮起，上方的乐谱随之滚过，并标出要用的手指。− 和 + 调慢或调快；第一个按钮回到开头。时间旁边的循环按钮会让乐曲反复播放。',
+    'Play and follow along': '播放并跟着看', 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over; the metronome button clicks along with it.': '点播放：先数一小节（3/4 拍数 3 2 1，4/4 拍数 4 3 2 1），然后每个音会在指板上以所在弦的颜色亮起，上方的乐谱随之滚过，并标出要用的手指。− 和 + 调慢或调快；第一个按钮回到开头。时间旁边的循环按钮会让乐曲反复播放；节拍器按钮会跟着乐曲打拍子。',
     'Import your own': '导入自己的文件', 'Tap Import and choose a MIDI file (.mid) from your phone or computer. It stays in the list for next time; the bin button next to the list deletes it.': '点导入，从手机或电脑选择一个 MIDI 文件（.mid）。它会留在列表里，下次还能用；点列表旁的垃圾桶按钮可以删除。',
     'Which files work': '哪些文件可以用', 'The file must have one part only: the violin. A file with piano or other parts is refused, so save just the violin part as its own MIDI file. Notes below the G string are left out; very high notes are heard but not lit on the board.': '文件只能有一个声部：小提琴。含有钢琴或其他声部的文件会被拒绝，请把小提琴声部单独存成一个 MIDI 文件。低于 G 弦的音会略去；很高的音只播放声音，不在指板上亮起。', 'Tap here to pick a major or minor key. Notes in the key are coloured, the others are greyed out.': '点这里选择大调或小调。调内的音是彩色的，其他的是灰色。',
     'Equal is tuned like a piano. Just makes the intervals in the key pure. Pythagorean builds every note from pure fifths. The notes on the board move to match.': '平均律和钢琴的调音一样。纯律让调内的音程纯净。五度相生律用纯五度推出每个音。指板上的音会随之移动。',
