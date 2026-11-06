@@ -1778,7 +1778,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.25" data-build="20261106-131352" data-cache="violin-toolkit-test-"><span>Version 1.25-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.25" data-build="20261106-131837" data-cache="violin-toolkit-test-"><span>Version 1.25-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3273,21 +3273,23 @@ function noteGate() {
     }
     return -1;
   }
-  function pOn(midi, id, fx, si, grp) {   /* si: the string to use (a double stop's two strings); grp: its chord */   /* fx false: light the note only, no string wobble or rings */
-    if (window.APP && APP.playThroughSilent) APP.playThroughSilent();
-    if (!ensureCtx()) return;
+  function pOn(midi, id, fx, si, grp, quiet) {   /* si: the string to use (a double stop's two strings); grp: its chord; fx false: no wobble or rings; quiet: shown, not sounded (paused) */
+    if (!quiet) {
+      if (window.APP && APP.playThroughSilent) APP.playThroughSilent();
+      if (!ensureCtx()) return;
+    }
     var i = -1, n0 = si >= 0 ? midi - STRINGS[si].midi : -1;
     if (n0 >= 0 && n0 <= TOPN) i = si * (TOPN + 1) + n0; else i = pick(midi);
     var nt = notes[i], el = buttons[i];
     /* a string sounds one note at a time: a new note on it replaces the one before (overlapping legato in the file) */
     if (nt) pvoices.forEach(function (r, k) { if (r.si === nt.si && k !== id && (grp === undefined || r.grp !== grp)) pOff(k); });
-    var rec = { el: el, grp: grp, si: nt ? nt.si : -1, v: startVoice(midiFreq(midi), false, 0.02), t0: performance.now(), vibOn: false, player: true, open: !!nt && (nt.n === 0 || nt.n === MAXN) };
-    rec.timer = setTimeout(function () { applyVib(rec); }, 200);
+    var rec = { el: el, grp: grp, si: nt ? nt.si : -1, v: quiet ? null : startVoice(midiFreq(midi), false, 0.02), t0: performance.now(), vibOn: false, player: true, open: !!nt && (nt.n === 0 || nt.n === MAXN) };
+    if (!quiet) rec.timer = setTimeout(function () { applyVib(rec); }, 200);
     if (el) {
       el.classList.remove('off');
       el.style.setProperty('--hue', 'var(' + nt.s.v + ')');
       el.classList.add('down');
-      showWave(rec, nt, fx === false);   /* a short note: the string lights, without the wobble and rings (Trix) */
+      showWave(rec, nt, fx === false || quiet);   /* a short note: the string lights, without the wobble and rings (Trix) */
       follow();
     }
     pOff(id);
@@ -3312,7 +3314,7 @@ function noteGate() {
     if (!rec) return;
     pvoices.delete(id);
     clearTimeout(rec.timer);
-    stopVoice(rec.v, 0.04);
+    if (rec.v) stopVoice(rec.v, 0.04);
     if (rec.fx) { rec.fx.forEach(function (d) { d.remove(); }); rec.fx = null; }
     var still = false;
     pvoices.forEach(function (r) { if (r.el === rec.el) still = true; });
@@ -4130,6 +4132,7 @@ function noteGate() {
     noteEls.forEach(function (el, k) { el.classList.toggle('done', k < ni); });
     /* the metronome clicks from the next beat on (on the first one when starting from the top) */
     lastTick = !song || pos < 0.01 ? -1 : Math.floor(song.toBeat(pos) / (4 / song.sig.den) + 1e-6);
+    if (!playing && !counting) showAt();   /* moving the slider while paused shows what sounds there */
     scroll(); ui();
   }
   function frame(now) {
@@ -4189,7 +4192,29 @@ function noteGate() {
     })();
   }
   function stopCount() { counting = false; clearTimeout(countT); countEl.hidden = true; }
+  /* paused: the notes sounding at this point stay lit, silent and still (Trix) */
+  function showAt() {
+    allOff();
+    if (!song || pos < 0.01) return;   /* at the top nothing has sounded yet */
+    var ns = song.notes, show = [], k, lastB = null;
+    for (k = Math.max(0, ni - 64); k < ns.length && ns[k].t <= pos + 1e-6; k++) if (ns[k].e > pos) show.push(k);
+    /* in the short break between two notes: the one just played */
+    if (!show.length) for (k = Math.min(ni, ns.length) - 1; k >= 0 && (lastB === null || ns[k].b === lastB); k--) { lastB = ns[k].b; show.push(k); }
+    show.forEach(function (k) {
+      APP.board.on(ns[k].m, 'n' + k, false, ns[k].si, ns[k].b, true);
+      noteEls[k].classList.add('on'); noteEls[k].classList.add('quick');
+      active.push(k);
+    });
+  }
   function go() {
+    /* resuming: the notes held over the pause sound again */
+    var held = active.slice();
+    allOff();
+    held.forEach(function (k) {
+      var nt = song.notes[k];
+      APP.board.on(nt.m, 'n' + k, (nt.e - nt.t) / speed >= 0.25, nt.si, nt.b);
+      noteEls[k].classList.add('on'); active.push(k);
+    });
     playing = true; last = performance.now();
     raf = requestAnimationFrame(frame);
     ui();
@@ -4204,7 +4229,7 @@ function noteGate() {
     stopCount();
     playing = false;
     cancelAnimationFrame(raf);
-    allOff();
+    showAt();
     ui();
   }
 
