@@ -1790,7 +1790,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.28" data-build="20261106-170735" data-cache="violin-toolkit-test-"><span>Version 1.28-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.28" data-build="20261106-171537" data-cache="violin-toolkit-test-"><span>Version 1.28-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -4374,8 +4374,9 @@ function noteGate() {
     [0, 2, 4, 5, 7, 9, 11].forEach(function (i) { set[(root + i) % 12] = true; });
     set.tonic = song.minor ? (root + 9) % 12 : root;   /* the key note, ringed as on the fingerboard */
     set.minor = !!song.minor;   /* so Just intonation tunes to the tune's key, not the fingerboard's */
-    /* a tune that stays in 1st position (nothing above the 4th finger, 7 semitones up) colours only that far (Trix) */
-    set.top = reach() <= 8 ? 7 : Infinity;
+    /* colour key notes only as high up the strings as the tune itself plays (Trix: Twinkle never needs the 4th finger) */
+    set.top = 0;
+    song.notes.forEach(function (n) { if (n.si >= 0) set.top = Math.max(set.top, n.m - OPEN[n.si]); });
     return set;
   }
   function fit() { APP.board.player(true, topH, reach(), keySet(), song && song.sf < 0); scroll(); }
