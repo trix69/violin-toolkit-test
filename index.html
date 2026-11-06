@@ -835,7 +835,7 @@ h1 {
   -webkit-appearance: none; appearance: none; -webkit-user-select: text; user-select: text;
 }
 #symbols .symsearch input::placeholder { color: var(--muted); }
-#symbols .symsearch input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+#symbols .symsearch input:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }   /* drawn inside: outside it was cut off at the page edges (Trix) */
 #symbols .symnone { margin: 14px 0 4px; text-align: center; color: var(--muted); font: 400 14px var(--font-note); }
 #symbols .sym-grid[hidden], #symbols .sym-grid li[hidden], #symbols h3[hidden], #symbols .symnone[hidden] { display: none; }
 #symbols .sym-grid { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(var(--c), minmax(0, 1fr)); gap: 8px; }
@@ -1791,7 +1791,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.27" data-build="20261106-162418" data-cache="violin-toolkit-test-"><span>Version 1.27-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.27" data-build="20261106-163349" data-cache="violin-toolkit-test-"><span>Version 1.27-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
