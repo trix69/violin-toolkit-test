@@ -995,7 +995,7 @@ h1 {
 .mp-mix[aria-expanded="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .mp-mixpop { position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); width: auto; max-width: calc(100vw - 32px); box-sizing: border-box;
   padding: 12px 18px 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: var(--fg);
-  box-shadow: 0 10px 30px rgba(0,0,0,.18); z-index: 20; display: grid; grid-template-columns: repeat(2, minmax(96px, auto)); column-gap: 12px; row-gap: 6px; justify-items: center; }
+  box-shadow: 0 10px 30px rgba(0,0,0,.18); z-index: 20; display: grid; grid-template-columns: repeat(3, auto); column-gap: 14px; row-gap: 6px; justify-items: center; }
 .mp-mixpop[hidden] { display: none; }
 /* vertical faders (Trix): level on top, the fader, the name below; a horizontal range turned a quarter turn
    (works the same in every browser; arrow keys and touch drags follow it) */
@@ -1013,6 +1013,7 @@ h1 {
 .mp-btn { width: clamp(33px, 9.6vw, 44px); }
 .mp-play { width: clamp(44px, 12.5vw, 58px); }
 .mp-speed { flex: none; }
+@media (max-width: 380px) { .mp-mixpop { column-gap: 6px; padding: 12px 10px; } .mp-vol { font-size: 13px; } }   /* three faders at 320 px */
 
 /* ---- start overlay ---- */
 .launch {
@@ -1378,6 +1379,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
     <div class="mp-mixpop" id="mpMixPop" role="group" aria-label="Mixer" hidden>
       <label class="mp-vol"><span>Violin</span><span class="mp-fader"><input type="range" id="mpVolV" min="0" max="100" step="5" aria-label="Violin volume"></span><output id="mpVolVOut" translate="no"></output></label>
       <label class="mp-vol"><span>Accompaniment</span><span class="mp-fader"><input type="range" id="mpVolA" min="0" max="100" step="5" aria-label="Accompaniment volume"></span><output id="mpVolAOut" translate="no"></output></label>
+      <label class="mp-vol"><span>Metronome</span><span class="mp-fader"><input type="range" id="mpVolM" min="0" max="100" step="5" aria-label="Metronome volume"></span><output id="mpVolMOut" translate="no"></output></label>
       <p class="mp-mixnone" id="mpMixNone" hidden>This tune has no accompaniment.</p>
     </div>
     <div class="mp-prog"><input type="range" id="mpSeek" min="0" max="1000" value="0" aria-label="Playback position"><span class="mp-time" id="mpTime">0:00 / 0:00</span><button type="button" class="mp-loop" id="mpLoop" aria-pressed="false" aria-label="Loop" title="Loop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button></div>
@@ -1386,7 +1388,6 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" class="mp-btn" id="mpSlower" aria-label="Slower">−</button>
       <button type="button" class="mp-play" id="mpPlay" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13M16 5.5v13"/></svg></button>
       <button type="button" class="mp-btn" id="mpFaster" aria-label="Faster">+</button>
-      <button type="button" class="mp-btn mp-metro" id="mpMetro" aria-pressed="false" aria-label="Metronome" title="Metronome"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3h5.6l3.4 18H5.8z"/><path d="M12 17.5L15.6 6.5"/><circle cx="14.2" cy="10.6" r="1.2" fill="currentColor"/></svg></button>
       <button type="button" class="mp-btn mp-mix" id="mpMix" aria-expanded="false" aria-controls="mpMixPop" aria-label="Mixer" title="Mixer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M12 4v16M18 4v16"/><rect x="3.5" y="13" width="5" height="3" rx="1" fill="currentColor"/><rect x="9.5" y="7" width="5" height="3" rx="1" fill="currentColor"/><rect x="15.5" y="11" width="5" height="3" rx="1" fill="currentColor"/></svg></button>
       <div class="mp-speed"><span id="mpSpeed">100%</span><small id="mpBpm" translate="no"></small></div>
     </div>
@@ -1831,7 +1832,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.35" data-build="20261107-084742" data-cache="violin-toolkit-test-"><span>Version 1.35-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.35" data-build="20261107-085114" data-cache="violin-toolkit-test-"><span>Version 1.35-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3479,12 +3480,12 @@ function noteGate() {
       renderedEvenly = null; layout(); if (renderedEvenly === null) { renderedEvenly = false; render(); layout(); }
     },
     on: pOn, off: pOff, allOff: pAllOff, has: function (id) { return pvoices.has(id); },
-    click: function (strong) {   /* the MIDI player's count-in: a metronome-like tick, the first one stronger */
+    click: function (strong, vol) {   /* the MIDI player's count-in and metronome: a tick, the first one stronger; vol 0-1 (the Mixer) */
       if (!ensureCtx()) return;
       var t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
       o.type = 'triangle'; o.frequency.value = strong ? 1760 : 1320;
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(strong ? 0.8 : 0.5, t + 0.002);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, (strong ? 0.8 : 0.5) * (vol === undefined ? 1 : vol)), t + 0.002);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
       o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.09);
     },
@@ -3953,12 +3954,12 @@ function noteGate() {
   var loop = false, loopBtn = $('mpLoop');
   /* Metronome (Trix): clicks with the tune, on its own beats (time signature, tempo, speed), the first of each bar
      stronger; remembered */
-  var metro = false, metroBtn = $('mpMetro'), lastTick = -1;
-  try { metro = localStorage.getItem('violin-midi-metro') === 'on'; } catch (e) {}   /* Loop: start again from the top at the end (Trix), remembered */
+  var lastTick = -1;   /* since the Mixer (Trix): no button; it clicks when its fader is above 0 */   /* Loop: start again from the top at the end (Trix), remembered */
   try { loop = localStorage.getItem('violin-midi-loop') === 'on'; } catch (e) {}
   /* Mixer (Trix): violin and accompaniment levels, 0-1, remembered */
-  var mix = { v: 1, a: 0.8 };
-  try { var mj = JSON.parse(localStorage.getItem('violin-midi-mix') || 'null'); if (mj && isFinite(mj.v) && isFinite(mj.a)) mix = { v: Math.max(0, Math.min(1, mj.v)), a: Math.max(0, Math.min(1, mj.a)) }; } catch (e) {}
+  var mix = { v: 1, a: 0.8, m: 0 };   /* the metronome starts silent (Trix) */
+  function lv(x, d) { return isFinite(x) ? Math.max(0, Math.min(1, +x)) : d; }
+  try { var mj = JSON.parse(localStorage.getItem('violin-midi-mix') || 'null'); if (mj) mix = { v: lv(mj.v, 1), a: lv(mj.a, 0.8), m: lv(mj.m, 0) }; } catch (e) {}
 
   /* ---------- the accompaniment: every part but the solo, on a soft synth (triangle through a low-pass), scheduled
      a quarter of a second ahead on the audio clock; it follows play, pause, seek, speed and loop ---------- */
@@ -4445,7 +4446,6 @@ function noteGate() {
     playBtn.classList.toggle('on', playing || counting);
     scoreEl.classList.toggle('playing', playing || counting);   /* tap-a-note only while paused */
     loopBtn.setAttribute('aria-pressed', loop ? 'true' : 'false');
-    metroBtn.setAttribute('aria-pressed', metro ? 'true' : 'false');
     $('mpSlower').disabled = speed <= 0.5 + 1e-9;
     $('mpFaster').disabled = speed >= 1.5 - 1e-9;
   }
@@ -4469,10 +4469,8 @@ function noteGate() {
   function frame(now) {
     if (!playing) return;
     pos += (now - last) / 1000 * speed;
-    if (metro) {
-      var k = Math.floor(song.toBeat(pos) / (4 / song.sig.den) + 1e-6);
-      if (k > lastTick) { lastTick = k; if (pos < song.end) APP.board.click(k % song.sig.num === 0); }
-    }
+    var k = Math.floor(song.toBeat(pos) / (4 / song.sig.den) + 1e-6);   /* the beat is tracked even at 0, so raising the fader clicks from the next beat */
+    if (k > lastTick) { lastTick = k; if (pos < song.end && mix.m > 0) APP.board.click(k % song.sig.num === 0, mix.m); }
     last = now;
     if (song.acc.length) accAhead();
     var ns = song.notes;
@@ -4666,14 +4664,15 @@ function noteGate() {
   });
 
   /* the mixer: a small panel above the controls with Violin and Accompaniment sliders */
-  var mixBtn = $('mpMix'), mixPop = $('mpMixPop'), volV = $('mpVolV'), volA = $('mpVolA');
+  var mixBtn = $('mpMix'), mixPop = $('mpMixPop'), volV = $('mpVolV'), volA = $('mpVolA'), volM = $('mpVolM');
   function mixUi() {
     var none = !song || !song.acc.length;
     /* a one-part tune (Trix): the accompaniment fader sits at 0 and is disabled; the violin's still works. The saved
        level is kept for tunes that have an accompaniment. */
     volV.value = Math.round(mix.v * 100); volA.value = none ? 0 : Math.round(mix.a * 100);
     volA.disabled = none; $('mpMixNone').hidden = !none;
-    $('mpVolVOut').textContent = volV.value + '%'; $('mpVolAOut').textContent = volA.value + '%';
+    volM.value = Math.round(mix.m * 100);
+    $('mpVolVOut').textContent = volV.value + '%'; $('mpVolAOut').textContent = volA.value + '%'; $('mpVolMOut').textContent = volM.value + '%';
     APP.board.soloVolume(mix.v);
     if (accBus) accBus.gain.setTargetAtTime(mix.a, accBus.context.currentTime, 0.03);
   }
@@ -4685,16 +4684,11 @@ function noteGate() {
   mixBtn.addEventListener('click', function (e) { e.stopPropagation(); setMixOpen(mixPop.hidden); });
   volV.addEventListener('input', function () { mix.v = volV.value / 100; mixUi(); saveMix(); });
   volA.addEventListener('input', function () { mix.a = volA.value / 100; mixUi(); saveMix(); });
+  volM.addEventListener('input', function () { mix.m = volM.value / 100; mixUi(); saveMix(); });
   document.addEventListener('pointerdown', function (e) { if (!mixPop.hidden && !mixPop.contains(e.target) && !mixBtn.contains(e.target)) setMixOpen(false); }, true);
   mixPop.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); setMixOpen(false); mixBtn.focus(); } });
   playBtn.addEventListener('click', function () { if (playing || counting) pause(); else play(); });
   $('mpStart').addEventListener('click', function () { seekTo(0); });
-  metroBtn.addEventListener('click', function () {
-    metro = !metro;
-    if (song) lastTick = pos < 0.01 && !playing ? -1 : Math.floor(song.toBeat(pos) / (4 / song.sig.den) + 1e-6);   /* from the next beat (the first, at the top) */
-    try { localStorage.setItem('violin-midi-metro', metro ? 'on' : 'off'); } catch (e) {}
-    ui();
-  });
   loopBtn.addEventListener('click', function () {
     loop = !loop;
     try { localStorage.setItem('violin-midi-loop', loop ? 'on' : 'off'); } catch (e) {}
@@ -5226,7 +5220,7 @@ function noteGate() {
     ],
     midi: [
       { sel: '#mpSong', title: 'Pick a tune', text: 'Choose a built-in tune from this list: Twinkle, Twinkle, Little Star, Ode to Joy, In the Hall of the Mountain King, Canon, A Little Night Music or Winter (1st movement). They are ready to play, so you can try the player straight away.' },
-      { sel: '#mpSeek, #mpTime, #mpLoop, #mpStart, #mpSlower, #mpPlay, #mpFaster, .mp-speed', title: 'Play and follow along', text: 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over; the metronome button clicks along with it.' },
+      { sel: '#mpSeek, #mpTime, #mpLoop, #mpStart, #mpSlower, #mpPlay, #mpFaster, #mpMix, .mp-speed', title: 'Play and follow along', text: 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over. The Mixer button sets the violin, accompaniment and metronome volumes (the metronome starts at 0).' },
       { sel: '#mpImport', title: 'Import your own', text: 'Tap Import and choose a MIDI file (.mid) from your phone or computer. It stays in the list for next time; the bin button next to the list deletes it.' },
       { sel: '#mpImport', title: 'Which files work', text: 'The first part in the file is the violin; any other parts (piano, strings…) play along as accompaniment, and the Mixer button sets the two volumes. Drums are left out. Notes below the G string are left out; very high notes are heard but not lit on the board.' }
     ]
@@ -5462,7 +5456,7 @@ function noteGate() {
     'in tune': '音准正确', 'off the board': '超出指板',
     'no sharps or flats': '无升降号', 'no ♯ or ♭': '无升降号',
     /* metronome */
-    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'A Little Night Music': '小夜曲', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
+    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'A Little Night Music': '小夜曲', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
     'Quaver (eighth note)': '八分音符', 'Crotchet (quarter note)': '四分音符', 'Minim (half note)': '二分音符', 'Semibreve (whole note)': '全音符',
     '½ beat in 4/4': '4/4 拍中占半拍', '1 beat in 4/4': '4/4 拍中占 1 拍', '2 beats in 4/4': '4/4 拍中占 2 拍', '4 beats in 4/4': '4/4 拍中占 4 拍',
     'Up bow': '上弓', 'Push, tip to frog': '推弓：弓尖到弓根', 'Down bow': '下弓', 'Pull, frog to tip': '拉弓：弓根到弓尖',
@@ -5697,7 +5691,7 @@ function noteGate() {
     'Hold for a steady tone': '长按得到持续音', 'Hold a note for 3 seconds and it keeps sounding after you let go, steady with no vibrato, like a tuning fork. Tap anywhere to stop it.': '按住一个音 3 秒，松手后它会继续响，平稳无揉弦，像音叉一样。点任意处即可停止。',
     'Choose a key': '选择调',
     'Pick a tune': '选择乐曲', 'Choose a built-in tune from this list: Twinkle, Twinkle, Little Star, Ode to Joy, In the Hall of the Mountain King, Canon, A Little Night Music or Winter (1st movement). They are ready to play, so you can try the player straight away.': '从这个列表选择内置乐曲：《小星星》、《欢乐颂》、《在山魔王的宫殿里》、《卡农》、《小夜曲》或《冬》第一乐章。它们可以直接播放，马上就能试用播放器。',
-    'Play and follow along': '播放并跟着看', 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over; the metronome button clicks along with it.': '点播放：先数一小节（3/4 拍数 3 2 1，4/4 拍数 4 3 2 1），然后每个音会在指板上以所在弦的颜色亮起，上方的乐谱随之滚过，并标出要用的手指。− 和 + 调慢或调快；第一个按钮回到开头。时间旁边的循环按钮会让乐曲反复播放；节拍器按钮会跟着乐曲打拍子。',
+    'Play and follow along': '播放并跟着看', 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over. The Mixer button sets the violin, accompaniment and metronome volumes (the metronome starts at 0).': '点播放：先数一小节（3/4 拍数 3 2 1，4/4 拍数 4 3 2 1），然后每个音会在指板上以所在弦的颜色亮起，上方的乐谱随之滚过，并标出要用的手指。− 和 + 调慢或调快；第一个按钮回到开头。时间旁边的循环按钮会让乐曲反复播放。“混音”按钮可调节小提琴、伴奏和节拍器的音量（节拍器默认为 0）。',
     'Import your own': '导入自己的文件', 'Tap Import and choose a MIDI file (.mid) from your phone or computer. It stays in the list for next time; the bin button next to the list deletes it.': '点导入，从手机或电脑选择一个 MIDI 文件（.mid）。它会留在列表里，下次还能用；点列表旁的垃圾桶按钮可以删除。',
     'Which files work': '哪些文件可以用', 'The first part in the file is the violin; any other parts (piano, strings…) play along as accompaniment, and the Mixer button sets the two volumes. Drums are left out. Notes below the G string are left out; very high notes are heard but not lit on the board.': '文件里的第一个声部是小提琴；其他声部（钢琴、弦乐等）作为伴奏一起播放，用“混音”按钮调节两者的音量。鼓声部会略去。低于 G 弦的音会略去；很高的音只播放声音，不在指板上亮起。', 'Tap here to pick a major or minor key. Notes in the key are coloured, the others are greyed out.': '点这里选择大调或小调。调内的音是彩色的，其他的是灰色。',
     'Equal is tuned like a piano. Just makes the intervals in the key pure. Pythagorean builds every note from pure fifths. The notes on the board move to match.': '平均律和钢琴的调音一样。纯律让调内的音程纯净。五度相生律用纯五度推出每个音。指板上的音会随之移动。',
