@@ -474,6 +474,7 @@ h1 {
 #view-board .stage.small .note { border-width: 1px; }
 #view-board .note.tint:not(.down) { background: color-mix(in srgb, var(--hue) 45%, transparent); color: color-mix(in srgb, var(--ink) 80%, transparent); box-shadow: none; border-color: color-mix(in srgb, var(--hue) 55%, transparent); }
 #view-board .note.tint.root:not(.down) { box-shadow: inset 0 0 0 2px var(--nut); }
+#view-board .note.beyond { visibility: hidden; }
 #view-board .vib.still { animation: none; transform: translateX(-50%); }
 #view-board .vib.still::before { display: none; }
 @keyframes vibShake { from { transform: translateX(-50%) rotate(-.3deg); } to { transform: translateX(-50%) rotate(.3deg); } }
@@ -1794,7 +1795,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.28" data-build="20261106-172741" data-cache="violin-toolkit-test-"><span>Version 1.28-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.28" data-build="20261106-173213" data-cache="violin-toolkit-test-"><span>Version 1.28-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2665,8 +2666,8 @@ function noteGate() {
       var fit = function () {
         var rr = 19, KK = 3, g = mm(N) - mm(N - 1);
         for (var j = 0; j < 4; j++) {
-          KK = Math.min(5, (room - (rr + 4) - rr - 10 - 16) / mm(N));
-          rr = Math.min(26, Math.max(6, (g * KK - 3) / 2));
+          KK = Math.min(14, (room - (rr + 4) - rr - 10 - 16) / mm(N));   /* stretched to fill the box: a short range spreads out (Trix) */
+          rr = Math.min(26, Math.max(6, (g * KK - 8) / 2));            /* at least 8 px between the closest notes */
         }
         return [KK, rr];
       };
@@ -2675,13 +2676,13 @@ function noteGate() {
       var f = fit();
       if (f[1] < 18) { evenly = true; f = fit(); want = true; }
       if (want !== renderedEvenly) { renderedEvenly = want; render(); }   /* positions are baked in at render */
-      K = f[0]; r = Math.round(f[1]);
+      K = f[0]; r = Math.floor(f[1]);
       /* never smaller than 18 px with a clear gap between notes (Trix; a small Android screen: "too small"):
          the board then runs past the room and scrolls in its box, following the notes played */
       if (r < 18) { r = 18; K = (2 * r + 10) / (mm(N) - mm(N - 1)); }
     } else if (evenly || renderedEvenly) { evenly = false; renderedEvenly = false; render(); }
     stage.style.maxHeight = room ? room + 'px' : '';
-    stage.style.overflowY = room && (r + 4) + K * mm(N) + r + 10 + 16 > room + 2 ? 'auto' : '';
+    stage.style.overflowY = room && (r + 4) + K * mm(N) + r + 10 + 16 > room + 2 ? 'auto' : room ? 'hidden' : '';   /* rows past the tune's range stay out of sight */
     var st = stage.style;
     st.setProperty('--r', r + 'px');
     st.setProperty('--head', (r + 4) + 'px');
@@ -2821,6 +2822,7 @@ function noteGate() {
       var tint = playerOn && !!playerKey && !!playerKey[nt.midi % 12] && !(nt.n > playerKey.top);   /* ... except the tune's key, pale, up to the highest position the tune uses */
       b.classList.toggle('off', !on && !tint);
       b.classList.toggle('tint', tint);
+      b.classList.toggle('beyond', playerOn && nt.n > playerN);   /* past the tune's range: hidden (Trix: the 4th finger near the edge) */
       if (tint) { b.classList.toggle('root', nt.midi % 12 === playerKey.tonic); b.style.setProperty('--hue', 'var(' + nt.s.v + ')'); return; }
       b.classList.toggle('root', on && nt.midi % 12 === key.root);
       b.style.setProperty('--hue', on ? 'var(' + nt.s.v + ')' : 'var(--off)');
@@ -4419,8 +4421,8 @@ function noteGate() {
   /* the board fits below the app bar, the score and the controls */
   function topH() { var a = document.querySelector('.appbar'); return (a ? a.offsetHeight + 10 : 0) + top.offsetHeight + 20 + Math.max(0, bar.offsetHeight - 64); }   /* + the board's own margin and padding */
   function reach() {   /* semitones above the open string, on the string the board plays each note on */
-    var top = 7;
-    if (song) song.notes.forEach(function (n) { if (n.si >= 0) top = Math.max(top, n.m - OPEN[n.si] + 1); });
+    var top = 7;   /* at least 1st position's 4th finger; the board ends at the tune's highest row (Trix) */
+    if (song) song.notes.forEach(function (n) { if (n.si >= 0) top = Math.max(top, n.m - OPEN[n.si]); });
     return top;
   }
   /* the tune's key from its key signature: a minor key has the notes of its relative major (natural minor), as on
