@@ -1795,7 +1795,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.28" data-build="20261106-174032" data-cache="violin-toolkit-test-"><span>Version 1.28-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.28" data-build="20261106-174531" data-cache="violin-toolkit-test-"><span>Version 1.28-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2686,6 +2686,7 @@ function noteGate() {
     } else if (evenly || renderedEvenly) { evenly = false; renderedEvenly = false; render(); }
     stage.style.maxHeight = room ? room + 'px' : '';
     stage.style.overflowY = room && (r + 4) + K * mm(N) + r + 10 + 16 > room + 2 ? 'auto' : room ? 'hidden' : '';   /* rows past the tune's range stay out of sight */
+    if (stage.style.overflowY !== 'auto') stage.scrollTop = 0;   /* a tune that fits starts at the open strings, even after one that scrolled (Trix) */
     var st = stage.style;
     st.setProperty('--r', r + 'px');
     st.setProperty('--head', (r + 4) + 'px');
@@ -2852,7 +2853,7 @@ function noteGate() {
       if (sp) sp.innerHTML = WIDE_SPLITS.filter(function (n) { return n < playerN; }).map(function (n) {
         return '<div class="split" style="--y:' + yFor(n) + '"></div>';
       }).join('');
-      labels.innerHTML = '<span style="--y:var(--oy)">open</span><span style="--y:' + yFor(MAXN) + '">harm.<small>octave</small></span>';
+      labels.innerHTML = '<span style="--y:var(--oy)">open</span>' + (playerN >= MAXN ? '<span style="--y:' + yFor(MAXN) + '">harm.<small>octave</small></span>' : '');   /* the octave harmonic only if the board reaches it */
     }
     pcShow(pc ? pcCur : null);
     updateSub();
