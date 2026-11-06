@@ -914,7 +914,7 @@ h1 {
   background: var(--t-bad); color: var(--panel); font: 800 15px/1 var(--font-note); margin-top: 1px;
 }
 /* the sheet: black notes on white paper in light appearance, light notes on the board colour in dark (Trix) */
-.mp-score { --sc-bg: #FFFFFF; --sc-ink: #1A1A1A; --sc-fing: 30%; position: relative; margin-top: 10px; height: 128px; overflow: hidden; border-radius: 14px; background: var(--sc-bg); color: var(--sc-ink); box-shadow: inset 0 0 0 1px var(--line, rgba(0,0,0,.12)); }
+.mp-score { --sc-bg: #FFFFFF; --sc-ink: #1A1A1A; --sc-fing: 8%; position: relative; margin-top: 10px; height: 128px; overflow: hidden; border-radius: 14px; background: var(--sc-bg); color: var(--sc-ink); box-shadow: inset 0 0 0 1px var(--line, rgba(0,0,0,.12)); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .mp-score { --sc-bg: var(--board, #46524C); --sc-ink: #E9E2D2; --sc-fing: 0%; box-shadow: none; } }
 :root[data-theme="dark"] .mp-score { --sc-bg: var(--board, #46524C); --sc-ink: #E9E2D2; --sc-fing: 0%; box-shadow: none; }
 .mp-score .mp-strip { position: absolute; left: 0; top: 4px; will-change: transform; }
@@ -1792,7 +1792,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.26" data-build="20261106-154151" data-cache="violin-toolkit-test-"><span>Version 1.26-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.26" data-build="20261106-154942" data-cache="violin-toolkit-test-"><span>Version 1.26-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2584,7 +2584,7 @@ function noteGate() {
   function stopCents(midi) {
     var j = J();
     if (!j) return 0;
-    if (!j.chain) return j.cents(midi, keyObj());
+    if (!j.chain) return j.cents(midi, tuneKey());
     /* Pythagorean: from the name the note is shown with, so a grey D♯ in G major is a D♯, not an E♭ (Hermes R16.1) */
     var nm = noteName(midi, false), acc = 0, i;
     for (i = 1; i < nm.length; i++) acc += nm[i] === '♯' ? 1 : nm[i] === '♭' ? -1 : 0;
@@ -2592,7 +2592,13 @@ function noteGate() {
   }
   function noteCents(nt) { return nt.n === 0 || nt.n === MAXN ? openCents(nt.s) : stopCents(nt.midi); }
   function noteFreq(nt) { return midiFreq(nt.midi) * Math.pow(2, noteCents(nt) / 1200); }
-  function noteN(nt) { return nt.n === 0 || nt.n === MAXN || playerOn ? nt.n : nt.n + (noteCents(nt) - openCents(nt.s)) / 100; }   /* the MIDI player: equal temperament, like MIDI */   /* semitones from its open string */
+  function noteN(nt) { return nt.n === 0 || nt.n === MAXN ? nt.n : nt.n + (noteCents(nt) - openCents(nt.s)) / 100; }   /* semitones from its open string; the MIDI player too, so Equal and Just sit apart there (Trix) */
+  /* the key Just intonation tunes to: the MIDI player's tune, else the fingerboard's chosen key */
+  function tuneKey() {
+    if (!playerOn || !playerKey) return keyObj();
+    var mode = playerKey.minor ? 'minor' : 'major';
+    return KEYS.filter(function (k) { return k.root === playerKey.tonic && k.mode === mode; })[0] || keyObj();
+  }
   function yFor(n) { return n === 0 ? 'var(--oy)' : 'calc(var(--head) + ' + mm(n).toFixed(2) + ' * var(--k))'; }
 
   /* ---------- Size the board to the screen ---------- */
@@ -3304,7 +3310,7 @@ function noteGate() {
     var nt = notes[i], el = buttons[i];
     /* a string sounds one note at a time: a new note on it replaces the one before (overlapping legato in the file) */
     if (nt) pvoices.forEach(function (r, k) { if (r.si === nt.si && k !== id && (grp === undefined || r.grp !== grp)) pOff(k); });
-    var rec = { el: el, grp: grp, si: nt ? nt.si : -1, v: quiet ? null : startVoice(midiFreq(midi), false, 0.02), t0: performance.now(), vibOn: false, player: true, open: !!nt && (nt.n === 0 || nt.n === MAXN) };
+    var rec = { el: el, grp: grp, si: nt ? nt.si : -1, v: quiet ? null : startVoice(nt ? noteFreq(nt) : midiFreq(midi), false, 0.02), t0: performance.now(), vibOn: false, player: true, open: !!nt && (nt.n === 0 || nt.n === MAXN) };
     if (!quiet) rec.timer = setTimeout(function () { applyVib(rec); }, 200);
     if (el) {
       el.classList.remove('off');
@@ -4369,6 +4375,7 @@ function noteGate() {
     var root = ((song.sf * 7) % 12 + 12) % 12, set = {};
     [0, 2, 4, 5, 7, 9, 11].forEach(function (i) { set[(root + i) % 12] = true; });
     set.tonic = song.minor ? (root + 9) % 12 : root;   /* the key note, ringed as on the fingerboard */
+    set.minor = !!song.minor;   /* so Just intonation tunes to the tune's key, not the fingerboard's */
     return set;
   }
   function fit() { APP.board.player(true, topH, reach(), keySet(), song && song.sf < 0); scroll(); }
