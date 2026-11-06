@@ -1780,7 +1780,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.25" data-build="20261106-132521" data-cache="violin-toolkit-test-"><span>Version 1.25-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.25" data-build="20261106-132947" data-cache="violin-toolkit-test-"><span>Version 1.25-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3299,13 +3299,13 @@ function noteGate() {
       el.style.setProperty('--hue', 'var(' + nt.s.v + ')');
       el.classList.add('down');
       showWave(rec, nt, fx === false || quiet);   /* a short note: the string lights, without the wobble and rings (Trix) */
-      follow();
     }
     pOff(id);
     pvoices.set(id, rec);
+    if (el) follow(el);   /* after it joins the sounding notes, so a high note brings the board up to it */
   }
   /* a board taller than its box: keep every note sounding now (both notes of a double stop) in view */
-  function follow() {
+  function follow(latest) {
     if (stage.style.overflowY !== 'auto') return;
     var top = Infinity, bot = -Infinity, sr = stage.getBoundingClientRect(), cur = stage.scrollTop;
     pvoices.forEach(function (r) {   /* positions within the scrolled box */
@@ -3315,6 +3315,9 @@ function noteGate() {
     });
     if (top === Infinity) return;
     var view = stage.clientHeight;
+    if (bot - top > view - 16 && latest) {   /* they can't all fit: the newest note wins */
+      var lr = latest.getBoundingClientRect(); top = lr.top - sr.top + cur; bot = lr.bottom - sr.top + cur;
+    }
     if (top < cur + 8 || bot > cur + view - 8)
       stage.scrollTop = Math.max(0, (top + bot) / 2 - view / 2);   /* at once: a smooth scroll falls behind fast passages */
   }
