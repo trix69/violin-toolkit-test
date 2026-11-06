@@ -1798,7 +1798,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.33" data-build="20261106-224011" data-cache="violin-toolkit-test-"><span>Version 1.33-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.33" data-build="20261106-224512" data-cache="violin-toolkit-test-"><span>Version 1.33-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3238,7 +3238,8 @@ function noteGate() {
     if (!ensureCtx()) return;
     var nt = notes[+el.dataset.i];
     if (!nt) return;
-    var rec = { el: el, v: startVoice(noteFreq(nt)), t0: performance.now(), vibOn: false, timer: 0, open: nt.n === 0 || nt.n === MAXN };   /* open strings and harmonics stay steady */
+    var rec = { el: el, nt: nt, v: startVoice(noteFreq(nt)), t0: performance.now(), vibOn: false, timer: 0, open: nt.n === 0 || nt.n === MAXN };   /* open strings and harmonics stay steady */
+    rec.mute = ctx.createGain(); rec.v.out.disconnect(); rec.v.out.connect(rec.mute); rec.mute.connect(master);   /* silenced while a higher finger holds the same string */
     voices.set(id, rec);
     rec.timer = setTimeout(function () { applyVib(rec); }, 200);   /* vibrato starts after 200 ms of holding */
     rec.latchT = setTimeout(function () { rec.latched = true; el.classList.add('latched'); applyVib(rec); }, 3000);   /* held 3 s: keep playing after release */
@@ -3246,6 +3247,23 @@ function noteGate() {
     showHz(rec, nt);
     showWave(rec, nt);
     followPosition(nt);
+    stringRule();
+  }
+  /* one string, one sound (Trix): with two fingers on the same string only the higher note sounds, as on a
+     violin; the lower one stays pressed but silent, with no string shake, rings or Hz card, and sounds again
+     if the higher finger lifts */
+  function stringRule() {
+    var top = {};
+    voices.forEach(function (r) { if (r.nt) top[r.nt.si] = Math.max(top[r.nt.si] === undefined ? -1 : top[r.nt.si], r.nt.n); });
+    voices.forEach(function (r) {
+      if (!r.nt || !r.mute) return;
+      var quiet = r.nt.n < top[r.nt.si];
+      if (r.quiet === quiet) return;
+      r.quiet = quiet;
+      try { r.mute.gain.setTargetAtTime(quiet ? 0 : 1, ctx.currentTime, 0.015); } catch (e) { r.mute.gain.value = quiet ? 0 : 1; }
+      (r.fx || []).concat(r.hz ? [r.hz] : []).forEach(function (d) { d.style.display = quiet ? 'none' : ''; });
+      r.el.classList.toggle('quiet', quiet);
+    });
   }
   var latchN = 0;
   /* a sounding note's name and frequency on the right, level with the note, while it plays (Trix) */
@@ -3285,7 +3303,8 @@ function noteGate() {
     if (rec.fx) { rec.fx.forEach(function (d) { d.remove(); }); rec.fx = null; }
     var stillDown = false;
     voices.forEach(function (r) { if (r.el === rec.el) stillDown = true; });
-    if (!stillDown) rec.el.classList.remove('down', 'latched');
+    if (!stillDown) rec.el.classList.remove('down', 'latched', 'quiet');
+    stringRule();   /* a lower finger on the same string sounds again */
   }
   function stopAll() {
     Array.from(voices.keys()).forEach(function (id) { end(id, true); });
