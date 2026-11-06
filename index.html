@@ -1774,7 +1774,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-124441" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-125124" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2608,9 +2608,12 @@ function noteGate() {
       if (f[1] < 16) { evenly = true; f = fit(); want = true; }
       if (want !== renderedEvenly) { renderedEvenly = want; render(); }   /* positions are baked in at render */
       K = f[0]; r = Math.round(f[1]);
+      /* never smaller than readable (feedback from a small Android screen: "too small", "can it scroll?"):
+         at 14 px the board runs past the room and scrolls in its box, following the notes played */
+      if (r < 14) { r = 14; K = (2 * r + 3) / (mm(N) - mm(N - 1)); }
     } else if (evenly || renderedEvenly) { evenly = false; renderedEvenly = false; render(); }
     stage.style.maxHeight = room ? room + 'px' : '';
-    stage.style.overflowY = '';
+    stage.style.overflowY = room && (r + 4) + K * mm(N) + r + 10 + 16 > room + 2 ? 'auto' : '';
     var st = stage.style;
     st.setProperty('--r', r + 'px');
     st.setProperty('--head', (r + 4) + 'px');
@@ -3281,9 +3284,24 @@ function noteGate() {
       el.style.setProperty('--hue', 'var(' + nt.s.v + ')');
       el.classList.add('down');
       showWave(rec, nt, fx === false);   /* a short note: the string lights, without the wobble and rings (Trix) */
+      follow();
     }
     pOff(id);
     pvoices.set(id, rec);
+  }
+  /* a board taller than its box: keep every note sounding now (both notes of a double stop) in view */
+  function follow() {
+    if (stage.style.overflowY !== 'auto') return;
+    var top = Infinity, bot = -Infinity, sr = stage.getBoundingClientRect(), cur = stage.scrollTop;
+    pvoices.forEach(function (r) {   /* positions within the scrolled box */
+      if (!r.el) return;
+      var er = r.el.getBoundingClientRect();
+      top = Math.min(top, er.top - sr.top + cur); bot = Math.max(bot, er.bottom - sr.top + cur);
+    });
+    if (top === Infinity) return;
+    var view = stage.clientHeight;
+    if (top < cur + 8 || bot > cur + view - 8)
+      stage.scrollTop = Math.max(0, (top + bot) / 2 - view / 2);   /* at once: a smooth scroll falls behind fast passages */
   }
   function pOff(id) {
     var rec = pvoices.get(id);
@@ -3929,7 +3947,11 @@ function noteGate() {
        room at each bar line; xAt() maps beats to x for placing and scrolling */
     var ons = [], items = [];   /* what scrolls: [x, svg markup], drawn in sections */
     sg.notes.forEach(function (n) { if (!ons.length || n.b > ons[ons.length - 1] + 1e-6) ons.push(n.b); });
-    var pts = [], cx = X0, lastBar = 0;
+    /* an empty bar before the first note: the count-in scrolls through it, so the first note reaches the
+       playhead as the music starts (Trix) */
+    var leadW = Math.max(120, barBeats * 40), pts = [[-barBeats, X0]], cx = X0 + leadW, lastBar = 0;
+    items.push([cx - 6, '<path class="bl" d="M' + (cx - 6) + ' ' + Y0 + 'V' + BOT + '"/>']);
+    cx += 12;
     ons.forEach(function (b, i) {
       var bn = Math.floor(b / barBeats + 1e-6);
       if (bn > lastBar) { items.push([cx - 6, '<path class="bl" d="M' + (cx - 6) + ' ' + Y0 + 'V' + BOT + '"/>']); cx += 12; lastBar = bn; }
@@ -3938,7 +3960,7 @@ function noteGate() {
     });
     pts.push([sg.beats, cx]);
     xAt = function (b) {
-      if (b <= pts[0][0]) return pts[0][1] - (pts[0][0] - b) * 50;
+      if (b <= pts[0][0]) return pts[0][1] - (pts[0][0] - b) * 50;   /* pts[0] is the start of the empty bar */
       for (var i = 1; i < pts.length; i++) if (b <= pts[i][0]) { var a = pts[i - 1], c = pts[i]; return a[1] + (c[1] - a[1]) * (b - a[0]) / ((c[0] - a[0]) || 1); }
       return cx + (b - sg.beats) * 50;
     };
@@ -4057,7 +4079,9 @@ function noteGate() {
   /* the playhead sits a third of the way across; the score slides under it */
   function scroll() {
     if (!song) return;
-    var beat = song.toBeat(pos), w = scoreEl.clientWidth, x = xAt(beat), hx = Math.max(w * 0.36, X0 + 50);
+    var bar = song.sig.num * 4 / song.sig.den;
+    var beat = counting ? countBeat : pos < 0.01 && !playing ? -bar : song.toBeat(pos);   /* at the very start: the empty count-in bar */
+    var w = scoreEl.clientWidth, x = xAt(beat), hx = Math.max(w * 0.36, X0 + 50);
     headEl.style.left = hx + 'px';
     /* half a beat early, so a note glows while it passes through the playhead rather than after it */
     var tx = Math.round(Math.min(0, hx - x + 22));
@@ -4130,10 +4154,17 @@ function noteGate() {
   /* count-in (Trix): one bar of the time signature counted down (3 2 1 in 3/4, 4 3 2 1 in 4/4) with a click
      on each beat, at the tune's tempo and the chosen speed; when starting from the beginning, and before each
      round of Loop; resuming after a pause plays straight on */
-  var counting = false, countT = 0, countEl = $('mpCount');
+  var counting = false, countT = 0, countEl = $('mpCount'), countBeat = 0;
   function countIn(then) {
     var n = song.sig.num, k = n, step = 60 / song.bpm * 4 / song.sig.den / speed * 1000;
-    counting = true; ui();
+    var bar = n * 4 / song.sig.den, t0 = performance.now();
+    counting = true; countBeat = -bar; ui();
+    (function slide() {   /* the score moves through the empty bar in time with the count */
+      if (!counting) return;
+      countBeat = -bar * Math.max(0, 1 - (performance.now() - t0) / (n * step));
+      scroll();
+      requestAnimationFrame(slide);
+    })();
     (function beat() {
       if (!counting) return;
       if (k === 0) { counting = false; countEl.hidden = true; then(); return; }
