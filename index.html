@@ -1759,7 +1759,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-120326" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-120616" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2913,7 +2913,7 @@ function noteGate() {
     document.addEventListener(ev, unlock, { passive: true });
   });
 
-  function startVoice(freq, pure) {
+  function startVoice(freq, pure, att) {   /* att: seconds to full volume (the MIDI player uses a quicker one) */
     var t = ctx.currentTime;
     var out = ctx.createGain();
     var nodes = [];
@@ -2968,18 +2968,18 @@ function noteGate() {
       nodes.push(lfo);
       lp.connect(body);
       body.connect(out);
-      out.gain.linearRampToValueAtTime(0.32, t + 0.07);
+      out.gain.linearRampToValueAtTime(0.32, t + (att || 0.07));
       out.connect(master);
     }
     return { out: out, nodes: nodes, vib: vib };
   }
-  function stopVoice(v) {
-    var t = ctx.currentTime;
+  function stopVoice(v, rel) {   /* rel: seconds to fade out (the MIDI player uses a shorter one) */
+    var t = ctx.currentTime, r = rel || 0.09;
     var g = v.out.gain;
     g.cancelScheduledValues(t);
     g.setValueAtTime(g.value, t);
-    g.linearRampToValueAtTime(0, t + 0.09);
-    v.nodes.forEach(function (n) { try { n.stop(t + 0.12); } catch (err) {} });
+    g.linearRampToValueAtTime(0, t + r);
+    v.nodes.forEach(function (n) { try { n.stop(t + r + 0.03); } catch (err) {} });
     setTimeout(function () { try { v.out.disconnect(); } catch (err) {} }, 400);
   }
 
@@ -3229,7 +3229,7 @@ function noteGate() {
     var i = pick(midi), nt = notes[i], el = buttons[i];
     /* a string sounds one note at a time: a new note on it replaces the one before (overlapping legato in the file) */
     if (nt) pvoices.forEach(function (r, k) { if (r.si === nt.si && k !== id) pOff(k); });
-    var rec = { el: el, si: nt ? nt.si : -1, v: startVoice(midiFreq(midi)), t0: performance.now(), vibOn: false, player: true, open: !!nt && (nt.n === 0 || nt.n === MAXN) };
+    var rec = { el: el, si: nt ? nt.si : -1, v: startVoice(midiFreq(midi), false, 0.02), t0: performance.now(), vibOn: false, player: true, open: !!nt && (nt.n === 0 || nt.n === MAXN) };
     rec.timer = setTimeout(function () { applyVib(rec); }, 200);
     if (el) {
       el.classList.remove('off');
@@ -3245,7 +3245,7 @@ function noteGate() {
     if (!rec) return;
     pvoices.delete(id);
     clearTimeout(rec.timer);
-    stopVoice(rec.v);
+    stopVoice(rec.v, 0.04);
     if (rec.fx) { rec.fx.forEach(function (d) { d.remove(); }); rec.fx = null; }
     var still = false;
     pvoices.forEach(function (r) { if (r.el === rec.el) still = true; });
@@ -3792,7 +3792,9 @@ function noteGate() {
     var low = 0, high = 0;
     var notes = raw.map(function (n) {
       if (n.m < 55) low++; else if (!APP.board.where(n.m)) high++;
-      return { m: n.m, t: toSec(n.t0), e: toSec(Math.max(n.t1, n.t0 + 1)), b: n.t0 / tpq, own: (n.t1 - n.t0) / tpq };
+      var t = toSec(n.t0), e = toSec(Math.max(n.t1, n.t0 + 1));
+      /* a short break before the next note, like a bow change (Trix: notes sounded too long and ran together) */
+      return { m: n.m, t: t, e: e - Math.min(0.05, (e - t) * 0.15), b: n.t0 / tpq, own: (n.t1 - n.t0) / tpq };
     }).filter(function (n) { return n.m >= 55; });   /* below the G string: left out */
     if (!notes.length) throw fail('Every note in this file is below the violin’s G string.');
     /* how long each note looks on the score: until the next note starts (a short breath between notes is
@@ -4013,7 +4015,8 @@ function noteGate() {
     raf = requestAnimationFrame(frame);
   }
   /* count-in (Trix): one bar of the time signature counted down (3 2 1 in 3/4, 4 3 2 1 in 4/4) with a click
-     on each beat, at the tune's tempo and the chosen speed; before every start, and before each round of Loop */
+     on each beat, at the tune's tempo and the chosen speed; when starting from the beginning, and before each
+     round of Loop; resuming after a pause plays straight on */
   var counting = false, countT = 0, countEl = $('mpCount');
   function countIn(then) {
     var n = song.sig.num, k = n, step = 60 / song.bpm * 4 / song.sig.den / speed * 1000;
@@ -4037,7 +4040,7 @@ function noteGate() {
     if (!song || playing || counting) return;
     if (!APP.board.prime()) return;   /* the sound engine starts inside the tap (iPhone) */
     if (pos >= song.end - 0.01) seekTo(0);
-    countIn(go);
+    if (pos < 0.01) countIn(go); else go();   /* the count-in only at the beginning, not on resume (Trix) */
   }
   function pause() {
     stopCount();
