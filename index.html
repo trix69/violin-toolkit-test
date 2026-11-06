@@ -918,6 +918,12 @@ h1 {
 /* the note sounding: in its string colour and glowing, like the board */
 .mp-n.on { color: var(--hue); opacity: 1; filter: drop-shadow(0 0 3px var(--hue)) drop-shadow(0 0 7px var(--hue)); }
 @media (prefers-reduced-motion: reduce) { .mp-n { transition: none; } .mp-n.on { filter: none; } }
+/* the count-in number over the score */
+.mp-count { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; background: color-mix(in srgb, var(--board, #46524C) 55%, transparent); color: #E9E2D2; font: 700 64px/1 var(--font-display); text-shadow: 0 0 14px var(--accent); pointer-events: none; }
+.mp-count[hidden] { display: none; }
+.mp-count.beat { animation: mpCount .35s ease-out; }
+@keyframes mpCount { from { transform: scale(1.35); opacity: .4; } }
+@media (prefers-reduced-motion: reduce) { .mp-count.beat { animation: none; } }
 /* controls: progress, then back / slower / play / faster / speed */
 .mp-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 8px 16px calc(env(safe-area-inset-bottom, 0px) + 10px); background: color-mix(in srgb, var(--bg) 92%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-top: 1px solid var(--line); }
 .mp-bar > div { max-width: 688px; margin: 0 auto; }
@@ -1297,7 +1303,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <input type="file" id="mpFile" accept=".mid,.midi,audio/midi,audio/x-midi" hidden>
     </div>
     <p class="mp-msg" id="mpMsg" role="status" hidden></p>
-    <div class="mp-score" id="mpScore" aria-hidden="true" translate="no"><svg id="mpSvg" xmlns="http://www.w3.org/2000/svg"></svg><svg class="mp-key" id="mpKey" xmlns="http://www.w3.org/2000/svg"></svg><div class="mp-head" id="mpHead"></div></div>
+    <div class="mp-score" id="mpScore" aria-hidden="true" translate="no"><svg id="mpSvg" xmlns="http://www.w3.org/2000/svg"></svg><svg class="mp-key" id="mpKey" xmlns="http://www.w3.org/2000/svg"></svg><div class="mp-head" id="mpHead"></div><div class="mp-count" id="mpCount" aria-hidden="true" hidden></div></div>
   </div>
   <div class="mp-bar" id="mpBar">
     <div class="mp-prog"><input type="range" id="mpSeek" min="0" max="1000" value="0" aria-label="Playback position"><span class="mp-time" id="mpTime">0:00 / 0:00</span><button type="button" class="mp-loop" id="mpLoop" aria-pressed="false" aria-label="Loop" title="Loop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button></div>
@@ -1749,7 +1755,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-105751" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.24" data-build="20261106-110038" data-cache="violin-toolkit-test-"><span>Version 1.24-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3249,6 +3255,15 @@ function noteGate() {
     /* on: player mode; top(): height of the player's own part above the board, so the board fits below it */
     player: function (on, top, n) { pAllOff(); stopAll(); playerOn = on; playerTop = top || null; playerN = Math.max(4, Math.min(MAXN, n || MAXN)); paint(); layout(); },
     on: pOn, off: pOff, allOff: pAllOff, has: function (id) { return pvoices.has(id); },
+    click: function (strong) {   /* the MIDI player's count-in: a metronome-like tick, the first one stronger */
+      if (!ensureCtx()) return;
+      var t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = strong ? 1760 : 1320;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(strong ? 0.8 : 0.5, t + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.09);
+    },
     prime: function () { if (window.APP && APP.playThroughSilent) APP.playThroughSilent(); return !!ensureCtx(); },
     where: function (midi) { return pick(midi) >= 0; },
     name: function (midi) { return noteName(midi, true); }
@@ -3948,8 +3963,8 @@ function noteGate() {
     if (document.activeElement !== seek) seek.value = end ? Math.round(pos / end * 1000) : 0;
     speedEl.textContent = Math.round(speed * 100) + '%';
     bpmEl.textContent = song ? '♩ = ' + Math.round(song.bpm * speed) : '';
-    playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
-    playBtn.classList.toggle('on', playing);
+    playBtn.setAttribute('aria-label', playing || counting ? 'Pause' : 'Play');
+    playBtn.classList.toggle('on', playing || counting);
     loopBtn.setAttribute('aria-pressed', loop ? 'true' : 'false');
     $('mpSlower').disabled = speed <= 0.5 + 1e-9;
     $('mpFaster').disabled = speed >= 1.5 - 1e-9;
@@ -3989,19 +4004,39 @@ function noteGate() {
     scroll(); ui();
     if (pos >= song.end && !active.length) {
       if (!loop) { pause(); seekTo(song.end); return; }
-      seekTo(0); last = performance.now();   /* round again, still playing */
+      seekTo(0); playing = false; countIn(go); return;   /* round again, after the count-in */
     }
     raf = requestAnimationFrame(frame);
   }
-  function play() {
-    if (!song || playing) return;
-    if (!APP.board.prime()) return;   /* the sound engine starts inside the tap (iPhone) */
-    if (pos >= song.end - 0.01) seekTo(0);
+  /* count-in (Trix): one bar of the time signature counted down (3 2 1 in 3/4, 4 3 2 1 in 4/4) with a click
+     on each beat, at the tune's tempo and the chosen speed; before every start, and before each round of Loop */
+  var counting = false, countT = 0, countEl = $('mpCount');
+  function countIn(then) {
+    var n = song.sig.num, k = n, step = 60 / song.bpm * 4 / song.sig.den / speed * 1000;
+    counting = true; ui();
+    (function beat() {
+      if (!counting) return;
+      if (k === 0) { counting = false; countEl.hidden = true; then(); return; }
+      APP.board.click(k === n);
+      countEl.textContent = k; countEl.hidden = false;
+      countEl.classList.remove('beat'); void countEl.offsetWidth; countEl.classList.add('beat');
+      k--; countT = setTimeout(beat, step);
+    })();
+  }
+  function stopCount() { counting = false; clearTimeout(countT); countEl.hidden = true; }
+  function go() {
     playing = true; last = performance.now();
     raf = requestAnimationFrame(frame);
     ui();
   }
+  function play() {
+    if (!song || playing || counting) return;
+    if (!APP.board.prime()) return;   /* the sound engine starts inside the tap (iPhone) */
+    if (pos >= song.end - 0.01) seekTo(0);
+    countIn(go);
+  }
   function pause() {
+    stopCount();
     playing = false;
     cancelAnimationFrame(raf);
     allOff();
@@ -4052,7 +4087,7 @@ function noteGate() {
     rd.readAsArrayBuffer(f);
   });
 
-  playBtn.addEventListener('click', function () { if (playing) pause(); else play(); });
+  playBtn.addEventListener('click', function () { if (playing || counting) pause(); else play(); });
   $('mpStart').addEventListener('click', function () { seekTo(0); });
   loopBtn.addEventListener('click', function () {
     loop = !loop;
@@ -4063,9 +4098,9 @@ function noteGate() {
   $('mpSlower').addEventListener('click', function () { setSpeed(-0.1); });
   $('mpFaster').addEventListener('click', function () { setSpeed(0.1); });
   seek.addEventListener('input', function () { if (song) seekTo(seek.value / 1000 * song.end); });
-  document.addEventListener('visibilitychange', function () { if (document.hidden && playing) pause(); });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && (playing || counting)) pause(); });
   window.addEventListener('resize', scroll);
-  if (APP.busy) APP.busy.push(function () { return playing; });   /* playing along counts as practice time */
+  if (APP.busy) APP.busy.push(function () { return playing || counting; });   /* playing along counts as practice time */
 
   /* the board fits below the app bar, the score and the controls */
   function topH() { var a = document.querySelector('.appbar'); return (a ? a.offsetHeight + 10 : 0) + top.offsetHeight + 20 + Math.max(0, bar.offsetHeight - 64); }   /* + the board's own margin and padding */
@@ -4540,7 +4575,7 @@ function noteGate() {
     ],
     midi: [
       { sel: '#mpSong', title: 'Pick a tune', text: 'Choose a built-in tune from this list: Twinkle, Twinkle, Little Star, Ode to Joy, Canon or In the Hall of the Mountain King. They are ready to play, so you can try the player straight away.' },
-      { sel: '#mpBar', title: 'Play and follow along', text: 'Tap play. Each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over.' },
+      { sel: '#mpBar', title: 'Play and follow along', text: 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over.' },
       { sel: '#mpImport', title: 'Import your own', text: 'Tap Import and choose a MIDI file (.mid) from your phone or computer. It plays for this visit only and is not saved.' },
       { sel: '#mpImport', title: 'Which files work', text: 'The file must have one part only: the violin. A file with piano or other parts is refused, so save just the violin part as its own MIDI file. Notes below the G string are left out; very high notes are heard but not lit on the board.' }
     ]
@@ -5011,7 +5046,7 @@ function noteGate() {
     'Hold for a steady tone': '长按得到持续音', 'Hold a note for 3 seconds and it keeps sounding after you let go, steady with no vibrato, like a tuning fork. Tap anywhere to stop it.': '按住一个音 3 秒，松手后它会继续响，平稳无揉弦，像音叉一样。点任意处即可停止。',
     'Choose a key': '选择调',
     'Pick a tune': '选择乐曲', 'Choose a built-in tune from this list: Twinkle, Twinkle, Little Star, Ode to Joy, Canon or In the Hall of the Mountain King. They are ready to play, so you can try the player straight away.': '从这个列表选择内置乐曲：小星星、欢乐颂、卡农或《在山魔王的宫殿里》。它们可以直接播放，马上就能试用播放器。',
-    'Play and follow along': '播放并跟着看', 'Tap play. Each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over.': '点播放。每个音会在指板上以所在弦的颜色亮起，上方的乐谱随之滚过，并标出要用的手指。− 和 + 调慢或调快；第一个按钮回到开头。时间旁边的循环按钮会让乐曲反复播放。',
+    'Play and follow along': '播放并跟着看', 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over.': '点播放：先数一小节（3/4 拍数 3 2 1，4/4 拍数 4 3 2 1），然后每个音会在指板上以所在弦的颜色亮起，上方的乐谱随之滚过，并标出要用的手指。− 和 + 调慢或调快；第一个按钮回到开头。时间旁边的循环按钮会让乐曲反复播放。',
     'Import your own': '导入自己的文件', 'Tap Import and choose a MIDI file (.mid) from your phone or computer. It plays for this visit only and is not saved.': '点导入，从手机或电脑选择一个 MIDI 文件（.mid）。它只在这次使用时播放，不会保存。',
     'Which files work': '哪些文件可以用', 'The file must have one part only: the violin. A file with piano or other parts is refused, so save just the violin part as its own MIDI file. Notes below the G string are left out; very high notes are heard but not lit on the board.': '文件只能有一个声部：小提琴。含有钢琴或其他声部的文件会被拒绝，请把小提琴声部单独存成一个 MIDI 文件。低于 G 弦的音会略去；很高的音只播放声音，不在指板上亮起。', 'Tap here to pick a major or minor key. Notes in the key are coloured, the others are greyed out.': '点这里选择大调或小调。调内的音是彩色的，其他的是灰色。',
     'Equal is tuned like a piano. Just makes the intervals in the key pure. Pythagorean builds every note from pure fifths. The notes on the board move to match.': '平均律和钢琴的调音一样。纯律让调内的音程纯净。五度相生律用纯五度推出每个音。指板上的音会随之移动。',
