@@ -433,7 +433,7 @@ h1 {
 #view-board .note.harm { border: 2px dashed var(--nut); }
 #view-board .note.root { box-shadow: 0 2px 4px rgba(0, 0, 0, .45), inset 0 0 0 2px var(--nut); }
 #view-board .note.down {
-  --s: 0.97; --ty: 1.5px;
+  --s: 1; --ty: 0px;   
   filter: brightness(1.05);
 }
 #view-board .note.down:not(.off) {
@@ -979,7 +979,6 @@ h1 {
 .shell[data-view="midi"] #view-board .ksig, .shell[data-view="midi"] #view-board .forkhz { display: none !important; }
 .shell[data-view="midi"] #view-board { margin-top: 10px; padding-bottom: 130px; }
 .shell[data-view="midi"] #board .note { pointer-events: none; cursor: default; }   /* the player only shows the notes */
-.shell[data-view="midi"] #board .note.down { --ty: 0px; --s: 1; }   /* not pressed, just lit: stays centred in its rings */
 
 /* ---- start overlay ---- */
 .launch {
@@ -1791,7 +1790,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.28" data-build="20261106-164121" data-cache="violin-toolkit-test-"><span>Version 1.28-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.28" data-build="20261106-170735" data-cache="violin-toolkit-test-"><span>Version 1.28-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2777,7 +2776,7 @@ function noteGate() {
       if (!b) return;
       /* Pitch Check colours the key's notes across both positions */
       var on = !playerOn && nt.inKey && (pc || (nt.n >= P.lo && nt.n <= P.hi));   /* the MIDI player starts every note grey */
-      var tint = playerOn && !!playerKey && !!playerKey[nt.midi % 12];   /* ... except the tune's key, pale */
+      var tint = playerOn && !!playerKey && !!playerKey[nt.midi % 12] && !(nt.n > playerKey.top);   /* ... except the tune's key, pale, up to the highest position the tune uses */
       b.classList.toggle('off', !on && !tint);
       b.classList.toggle('tint', tint);
       if (tint) { b.classList.toggle('root', nt.midi % 12 === playerKey.tonic); b.style.setProperty('--hue', 'var(' + nt.s.v + ')'); return; }
@@ -4375,6 +4374,8 @@ function noteGate() {
     [0, 2, 4, 5, 7, 9, 11].forEach(function (i) { set[(root + i) % 12] = true; });
     set.tonic = song.minor ? (root + 9) % 12 : root;   /* the key note, ringed as on the fingerboard */
     set.minor = !!song.minor;   /* so Just intonation tunes to the tune's key, not the fingerboard's */
+    /* a tune that stays in 1st position (nothing above the 4th finger, 7 semitones up) colours only that far (Trix) */
+    set.top = reach() <= 8 ? 7 : Infinity;
     return set;
   }
   function fit() { APP.board.player(true, topH, reach(), keySet(), song && song.sf < 0); scroll(); }
