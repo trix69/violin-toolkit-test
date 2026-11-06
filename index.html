@@ -1790,7 +1790,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.28" data-build="20261106-171537" data-cache="violin-toolkit-test-"><span>Version 1.28-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.28" data-build="20261106-171855" data-cache="violin-toolkit-test-"><span>Version 1.28-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -4290,14 +4290,18 @@ function noteGate() {
     return songs.length - 1;
   }
   function options() {
+    var v = songSel.value;
     songSel.textContent = '';
+    var tag = window.I18N && I18N.lang === 'zh' ? ' [已导入]' : ' [imported]';   /* imported files marked in the list (Trix) */
     songs.forEach(function (s, i) {
       var o = document.createElement('option');
-      o.value = i; o.textContent = s.title;
-      if (s.kept) o.setAttribute('translate', 'no');   /* a file name stays as it is in 中文 */
+      o.value = i; o.textContent = s.kept ? s.title + tag : s.title;
+      if (s.kept) o.setAttribute('translate', 'no');   /* a file name stays as it is in 中文; the tag is set here */
       songSel.appendChild(o);
     });
+    if (v !== '') songSel.value = v;
   }
+  document.addEventListener('i18n', options);   /* language switched: relabel [imported] */
   function fromB64(b64) { var bin = atob(b64), u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return u8.buffer; }
   function toB64(buf) { var u8 = new Uint8Array(buf), s = ''; for (var i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(s); }
   DEMOS.forEach(function (d) { addSong(d.title, fromB64(d.b64), null); });
@@ -5506,6 +5510,7 @@ function noteGate() {
   function apply() {
     document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
     document.title = (lang === 'zh' ? '小提琴工具箱' : 'Violin Toolkit') + ' (Test)';
+    try { document.dispatchEvent(new Event('i18n')); } catch (e) {}   /* text built in code (the MIDI list's [imported]) rebuilds first, then gets translated */
     busy = true; process(document.body); busy = false; obs.takeRecords();
   }
   window.I18N = {
