@@ -474,6 +474,7 @@ h1 {
 #view-board .stage.small .note { border-width: 1px; }
 #view-board .note.tint:not(.down) { background: color-mix(in srgb, var(--hue) 15%, transparent); color: color-mix(in srgb, var(--hue) 55%, #fff); box-shadow: none; border-color: color-mix(in srgb, var(--hue) 30%, transparent); }
 #view-board .note.tint.root:not(.down) { box-shadow: inset 0 0 0 2px var(--nut); }
+#view-board .note.down.quiet { filter: saturate(.35) brightness(.8); opacity: .75; }
 #view-board .note.beyond { visibility: hidden; }
 #view-board .vib.still { animation: none; transform: translateX(-50%); }
 #view-board .vib.still::before { display: none; }
@@ -1798,7 +1799,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.33" data-build="20261106-224512" data-cache="violin-toolkit-test-"><span>Version 1.33-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.33" data-build="20261106-225903" data-cache="violin-toolkit-test-"><span>Version 1.33-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3122,6 +3123,7 @@ function noteGate() {
   }
 
   if (window.APP && APP.busy) APP.busy.push(function () { return !!(mic && mic.stream); });   /* Pitch Check listening counts as practice time */
+  if (window.APP && APP.busy) APP.busy.push(function () { return voices.size > 0; });   /* a fingerboard note sounding (held or latched) too */
   function startMic() {
     if (mic) return;
     var token = {};
@@ -3299,6 +3301,7 @@ function noteGate() {
     voices.delete(id);
     clearTimeout(rec.timer); clearTimeout(rec.latchT);
     stopVoice(rec.v);
+    if (rec.mute) { var mu = rec.mute; rec.mute = null; setTimeout(function () { try { mu.disconnect(); } catch (e) {} }, 400); }   /* let the node go with its voice (Hermes F22) */
     if (rec.hz) { rec.hz.remove(); rec.hz = null; }
     if (rec.fx) { rec.fx.forEach(function (d) { d.remove(); }); rec.fx = null; }
     var stillDown = false;
@@ -4696,23 +4699,22 @@ function noteGate() {
       ks.forEach(function (k) { o[k] = Math.round(((+o[k] || 0) + pend[k]) * 10) / 10; });
       try { localStorage.setItem(KEY, JSON.stringify(o)); pend = {}; } catch (e) {}
     }
-    function touch() { var now = Date.now(); if (last && now > last) add(last, now); last = now; }
+    /* practice time is time with a tool running (Trix, 2026-11-06, Hermes F20): the metronome playing, the
+       tuner or Pitch Check listening, the MIDI player playing, a fingerboard note held. Taps and browsing
+       add nothing, so opening the app does not make a practice day. Counted in 1 s steps while visible. */
+    function tick() { var now = Date.now(); if (!document.hidden && anyBusy()) { if (last && now > last) add(last, now); last = now; } else last = 0; }
     function end() { last = 0; save(); }
-    document.addEventListener('pointerdown', touch, true);
-    document.addEventListener('keydown', touch, true);
     document.addEventListener('visibilitychange', function () { if (document.hidden) end(); });
     window.addEventListener('pagehide', end);
     setInterval(function () { save(); if (APP.syncDays) APP.syncDays(true); }, 15000);   /* text only: the pill appearing under an open start screen would move the tiles (Hermes F15); the day count follows along as today is practised (Trix) */
-    setInterval(function () {
-      if (!document.hidden && anyBusy()) touch();
-    }, 5000);
+    setInterval(tick, 1000);
     function series(n) {   /* [{ d: Date, s: seconds }] for the n days up to today, oldest first */
       save();
       var o = load(), d = new Date(), out = [];
       for (var i = n - 1; i >= 0; i--) { var t = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i); out.push({ d: t, s: +o[day(t.getTime())] || 0 }); }
       return out;
     }
-    function fmt(s) { var m = Math.floor(s / 60); return s > 0 && m < 1 ? '<1 min' : m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; }   /* some practice under a minute: <1 min, not 0 (Hermes F19) */
+    function fmt(s) { var m = Math.floor(s / 60), r = m % 60; return s > 0 && m < 1 ? '<1 min' : m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (r ? ' ' + r + ' min' : ''); }   /* <1 min (Hermes F19); 1 h, not 1 h 0 min (F21) */   /* some practice under a minute: <1 min, not 0 (Hermes F19) */
     function days() { save(); var o = load(); return Object.keys(o).filter(function (k) { return +o[k] > 0; }).length; }   /* any practice counts as a day (Trix, 2026-11-06; was a minute) */
     function total() { save(); var o = load(), t = 0; Object.keys(o).forEach(function (k) { t += +o[k] || 0; }); return t; }   /* seconds, every day kept */
     return { series: series, fmt: fmt, days: days, total: total };
@@ -4734,7 +4736,7 @@ function noteGate() {
     ser.forEach(function (x, i) {
       var m = Math.floor(x.s / 60), last = i === ser.length - 1;
       html += '<li class="' + (last ? 'today' : '') + (x.s <= 0 ? ' zero' : '') + '"><span class="ud">' + (last ? (zh ? '今天' : 'Today') : WD[x.d.getDay()]) + '</span>'
-        + '<i style="--h:' + (max ? Math.round(x.s / max * 100) : 0) + '%"></i><span class="uv">' + (x.s > 0 && m < 1 ? '&lt;1' : m) + '<span class="uhid">' + (zh ? ' 分钟' : ' min') + '</span></span></li>';   /* some practice, under a minute: <1, not 0 */
+        + '<i style="--h:' + (max ? Math.round(x.s / max * 100) : 0) + '%"></i><span class="uv">' + (x.s > 0 && m < 1 ? '&lt;1' : m >= 60 ? Math.round(m / 6) / 10 + (zh ? '小时' : 'h') : m) + (m >= 60 ? '' : '<span class="uhid">' + (zh ? ' 分钟' : ' min') + '</span>') + '</span></li>';   /* an hour or more: 1h, 1.5h (Hermes F21) */   /* some practice, under a minute: <1, not 0 */
     });
     document.getElementById('ubars').innerHTML = html;
     document.getElementById('useToday').textContent = USAGE.fmt(ser[ser.length - 1].s);
@@ -5573,6 +5575,7 @@ function noteGate() {
     [/^(\d+) days?$/, function (m, n) { return n + ' 天'; }],
     [/^(\d+) min$/, function (m, n) { return n + ' 分钟'; }],
     [/^<1 min$/, function () { return '<1 分钟'; }],
+    [/^(\d+) h$/, function (m, h) { return h + ' 小时'; }],
     [/^(\d+) h (\d+) min$/, function (m, h, n) { return h + ' 小时 ' + n + ' 分'; }],
     [/^Version ([\d.]+(?:-test)?)$/, function (m, v) { return '版本 ' + v; }],
     [/^Version ([\d.]+(?:-test)?) is ready\. Update now\?$/, function (m, v) { return '版本 ' + v + ' 已推出，现在更新吗？'; }],
