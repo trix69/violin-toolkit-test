@@ -477,6 +477,9 @@ h1 {
 #view-board .note.tint:not(.down) { background: color-mix(in srgb, var(--hue) 15%, transparent); color: color-mix(in srgb, var(--hue) 55%, #fff); box-shadow: none; border-color: color-mix(in srgb, var(--hue) 30%, transparent); }
 #view-board .note.tint.root:not(.down) { box-shadow: inset 0 0 0 2px var(--nut); }
 #view-board .note.down.quiet { filter: saturate(.35) brightness(.8); opacity: .75; }
+#view-board .stage.rot { grid-template-columns: 1fr 0; border-radius: 12px; z-index: 1; }
+#view-board .stage.rot .labels { display: none; }
+#view-board .stage.rot .note::after { transform: rotate(90deg); }
 #view-board .note.beyond { display: none; }
 #view-board .vib.still { animation: none; transform: translateX(-50%); }
 #view-board .vib.still::before { display: none; }
@@ -1021,6 +1024,18 @@ h1 {
 .mp-parts p + p { margin-top: 4px; }
 .mp-parts b { font: 600 13px var(--font-note); color: var(--accent); margin-right: 8px; }
 .mp-parts p[hidden] { display: none; }
+/* full screen (Trix): the score across the whole width, the fingerboard turned a quarter turn below it (board.html
+   places it, .stage.rot), the controls at the bottom; the app bar and the tune list step aside */
+.mp-full[hidden] { display: none; }
+.mp-full .i-out, .mp-full[aria-pressed="true"] .i-in { display: none; }
+.mp-full[aria-pressed="true"] .i-out { display: block; }
+.shell.mp-fs { max-width: none; padding-top: env(safe-area-inset-top, 0px); }
+.shell.mp-fs .appbar, .shell.mp-fs #mpTop .mp-row { display: none; }
+.shell.mp-fs #mpTop .mp-score { margin-top: 8px; }
+.shell.mp-fs #view-midi { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.shell.mp-fs #view-board { margin: 0; padding: 0; height: 0; }
+.shell.mp-fs .mp-bar > div { max-width: none; }
+html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 
 /* ---- start overlay ---- */
 .launch {
@@ -1394,7 +1409,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <label class="mp-vol"><span>Metronome</span><span class="mp-fader"><input type="range" id="mpVolM" min="0" max="100" step="5" aria-label="Metronome volume"></span><output id="mpVolMOut" translate="no"></output></label>
       <p class="mp-mixnone" id="mpMixNone" hidden>This tune has no accompaniment.</p>
     </div>
-    <div class="mp-prog"><input type="range" id="mpSeek" min="0" max="1000" value="0" aria-label="Playback position"><span class="mp-time" id="mpTime">0:00 / 0:00</span><button type="button" class="mp-loop" id="mpLoop" aria-pressed="false" aria-label="Loop" title="Loop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button></div>
+    <div class="mp-prog"><input type="range" id="mpSeek" min="0" max="1000" value="0" aria-label="Playback position"><span class="mp-time" id="mpTime">0:00 / 0:00</span><button type="button" class="mp-loop" id="mpLoop" aria-pressed="false" aria-label="Loop" title="Loop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button><button type="button" class="mp-loop mp-full" id="mpFull" aria-pressed="false" aria-label="Full screen" title="Full screen"><svg class="i-in" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><svg class="i-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg></button></div>
     <div class="mp-ctl">
       <button type="button" class="mp-btn" id="mpStart" aria-label="Back to start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path d="M18 5.5v13L8.5 12z" fill="currentColor"/></svg></button>
       <button type="button" class="mp-btn" id="mpSlower" aria-label="Slower">−</button>
@@ -1844,7 +1859,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-125741" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-130523" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2719,15 +2734,17 @@ function noteGate() {
        goes (up to a twelfth, for double stops). It fills the room left if it fits; otherwise notes keep their
        size and the board scrolls in its own box, following the notes played */
     var N = playerOn ? playerN : MAXN, room = 0;
+    var box = playerOn && playerTop && playerRot ? playerRot() : null;   /* full screen (Trix): the board turned a quarter turn, in this box */
     if (playerOn && playerTop) {
       /* the whole tune's range fits the room: real spacing if the notes stay 16 px or more, else even spacing;
          the notes and their letters shrink as needed, never overlapping (Trix: no pressing in the player anyway) */
-      room = Math.max(120, avail - playerTop());
+      room = box ? Math.max(120, box.W) : Math.max(120, avail - playerTop());
+      var cap = box ? Math.max(6, Math.floor((box.H / 4 - 6) / 2)) : 26;   /* turned: the four strings share the box's height */
       var fit = function () {
         var rr = 19, KK = 3, g = mm(N) - mm(N - 1);
         for (var j = 0; j < 4; j++) {
           KK = Math.min(14, (room - (rr + 4) - rr - 10 - 16) / mm(N));   /* stretched to fill the box: a short range spreads out (Trix) */
-          rr = Math.min(26, Math.max(6, (g * KK - 8) / 2));            /* at least 8 px between the closest notes */
+          rr = Math.min(cap, Math.max(6, (g * KK - 8) / 2));            /* at least 8 px between the closest notes */
         }
         return [KK, rr];
       };
@@ -2739,10 +2756,19 @@ function noteGate() {
       K = f[0]; r = Math.floor(f[1]);
       /* never smaller than 18 px with a clear gap between notes (Trix; a small Android screen: "too small"):
          the board then runs past the room and scrolls in its box, following the notes played */
-      if (r < 18) { r = 18; K = (2 * r + 10) / (mm(N) - mm(N - 1)); }
+      if (r < 18 && !box) { r = 18; K = (2 * r + 10) / (mm(N) - mm(N - 1)); }   /* turned, it always fits: no scrolling (Trix) */
     } else if (evenly || renderedEvenly) { evenly = false; renderedEvenly = false; render(); }
+    var st0 = stage.style;
+    stage.classList.toggle('rot', !!box);
+    if (box) {   /* laid out upright box.H wide and box.W tall, then turned anticlockwise: the nut on the left, the E string on top */
+      room = 0;
+      st0.position = 'fixed'; st0.left = box.L + 'px'; st0.top = (box.T + box.H) + 'px';
+      st0.width = box.H + 'px'; st0.height = box.W + 'px'; st0.boxSizing = 'border-box';
+      st0.transformOrigin = '0 0'; st0.transform = 'rotate(-90deg)';
+    } else { st0.position = st0.left = st0.top = st0.width = st0.height = st0.boxSizing = st0.transformOrigin = st0.transform = ''; }
     stage.style.maxHeight = room ? room + 'px' : '';
     stage.style.overflowY = room && (r + 4) + K * mm(N) + r + 10 + 16 > room + 2 ? 'auto' : room ? 'hidden' : '';   /* rows past the tune's range stay out of sight */
+    if (box) stage.style.overflowY = 'hidden';
     if (stage.style.overflowY !== 'auto') stage.scrollTop = 0;   /* a tune that fits starts at the open strings, even after one that scrolled (Trix) */
     var st = stage.style;
     st.setProperty('--r', r + 'px');
@@ -3418,7 +3444,7 @@ function noteGate() {
     else if (state.pos === 'pc' && !mic && !playerOn && board.offsetParent) startMic();
   });
   /* ---------- MIDI player (built page): this board with every note grey; the player lights and sounds the notes it plays ---------- */
-  var playerOn = false, playerTop = null, playerN = MAXN, pvoices = new Map(), PTOP = 19, renderedEvenly = false, playerKey = null, playerFlat = null;   /* the player's board reaches a twelfth up each string */
+  var playerRot = null, playerOn = false, playerTop = null, playerN = MAXN, pvoices = new Map(), PTOP = 19, renderedEvenly = false, playerKey = null, playerFlat = null;   /* the player's board reaches a twelfth up each string */
   /* where a pitch is played: the highest string that has it within the octave, so the lowest position (A4 = open A) */
   function pick(midi) {
     for (var si = STRINGS.length - 1; si >= 0; si--) {
@@ -3491,8 +3517,8 @@ function noteGate() {
   if (window.APP) APP.board = {
     toTop: function () { stage.scrollTop = 0; },   /* a newly chosen tune starts at the open strings (Hermes F14) */
     /* on: player mode; top(): height of the player's own part above the board, so the board fits below it */
-    player: function (on, top, n, key, flat) {
-      pAllOff(); stopAll(); playerOn = on; playerTop = top || null; playerKey = on ? key || null : null; playerFlat = on ? !!flat : null;
+    player: function (on, top, n, key, flat, rot) {   /* rot(): full screen, the box { L, T, W, H } the turned board fills */
+      pAllOff(); stopAll(); playerOn = on; playerTop = top || null; playerRot = on && rot || null; playerKey = on ? key || null : null; playerFlat = on ? !!flat : null;
       playerN = on ? Math.max(4, Math.min(PTOP, n || MAXN)) : MAXN;
       TOPN = on ? Math.max(MAXN, playerN) : MAXN;
       renderedEvenly = null; layout(); if (renderedEvenly === null) { renderedEvenly = false; render(); layout(); }
@@ -4835,10 +4861,41 @@ function noteGate() {
     song.notes.forEach(function (n) { if (n.si >= 0) set.top = Math.max(set.top, n.m - OPEN[n.si]); });
     return set;
   }
-  function fit() { APP.board.player(true, topH, reach(), keySet(), song && song.sf < 0); scroll(); }
+  function fit() { APP.board.player(true, topH, reach(), keySet(), song && song.sf < 0, full ? fsBox : null); scroll(); }
+  /* full screen (Trix): the score takes the whole width and the fingerboard turns a quarter turn anticlockwise to
+     fill the room between the score and the controls, every note in view (no scrolling). The browser's own full
+     screen too where there is one (not on iPhone, where the page alone rearranges). */
+  var full = false, fullBtn = $('mpFull'), shellEl = document.getElementById('shell') || document.body;
+  function fsBox() {
+    var sb = scoreEl.getBoundingClientRect(), bb = bar.getBoundingClientRect(), vw = document.documentElement.clientWidth || innerWidth;
+    var L = Math.max(16, sb.left), T = sb.bottom + 10;
+    return { L: L, T: T, W: Math.max(160, vw - 2 * L), H: Math.max(100, bb.top - 10 - T) };
+  }
+  function fsEl() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+  function setFull(on) {
+    if (on === full) return;
+    full = on;
+    shellEl.classList.toggle('mp-fs', on); document.documentElement.classList.toggle('mp-fs-on', on);
+    fullBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    fullBtn.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen'); fullBtn.title = fullBtn.getAttribute('aria-label');
+    var de = document.documentElement;
+    try {
+      if (on && !fsEl()) { var r = (de.requestFullscreen || de.webkitRequestFullscreen || function () {}).call(de); if (r && r.catch) r.catch(function () {}); }
+      else if (!on && fsEl()) { var x = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (x && x.catch) x.catch(function () {}); }
+    } catch (e) {}
+    window.scrollTo(0, 0);
+    if (shown) { fit(); requestAnimationFrame(function () { if (shown) fit(); }); setTimeout(function () { if (shown) fit(); }, 350); }   /* again once the browser has gone full screen */
+  }
+  /* only on a computer or an iPad (Trix), not on a phone: a screen at least 600 px on its short side */
+  fullBtn.hidden = Math.min(screen.width || 0, screen.height || 0) < 600;
+  fullBtn.addEventListener('click', function () { setFull(!full); });
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(function (ev) {
+    document.addEventListener(ev, function () { if (!fsEl() && full) setFull(false); else if (shown) setTimeout(fit, 50); });   /* left with Esc or Back */
+  });
+  window.addEventListener('resize', function () { if (full && shown) fit(); });
   APP.views.midi = {
     show: function () { shown = true; fit(); },
-    hide: function () { shown = false; pause(); setMixOpen(false); APP.board.player(false); }
+    hide: function () { setFull(false); shown = false; pause(); setMixOpen(false); APP.board.player(false); }
   };
   load(0);
 })();
@@ -5565,7 +5622,7 @@ function noteGate() {
     'in tune': '音准正确', 'off the board': '超出指板',
     'no sharps or flats': '无升降号', 'no ♯ or ♭': '无升降号',
     /* metronome */
-    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Downloading this tune…': '正在下载这首曲子…', 'This tune downloads the first time you play it. Connect to the internet and choose it again.': '这首曲子第一次播放时需要下载。请连接网络后再选择一次。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'Serenade': '小夜曲', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only percussion.': '这个文件只有打击乐。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
+    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Full screen': '全屏', 'Exit full screen': '退出全屏', 'Downloading this tune…': '正在下载这首曲子…', 'This tune downloads the first time you play it. Connect to the internet and choose it again.': '这首曲子第一次播放时需要下载。请连接网络后再选择一次。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'Serenade': '小夜曲', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only percussion.': '这个文件只有打击乐。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
     'Quaver (eighth note)': '八分音符', 'Crotchet (quarter note)': '四分音符', 'Minim (half note)': '二分音符', 'Semibreve (whole note)': '全音符',
     '½ beat in 4/4': '4/4 拍中占半拍', '1 beat in 4/4': '4/4 拍中占 1 拍', '2 beats in 4/4': '4/4 拍中占 2 拍', '4 beats in 4/4': '4/4 拍中占 4 拍',
     'Up bow': '上弓', 'Push, tip to frog': '推弓：弓尖到弓根', 'Down bow': '下弓', 'Pull, frog to tip': '拉弓：弓根到弓尖',
