@@ -1879,7 +1879,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-133541" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-133919" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -4943,17 +4943,18 @@ function noteGate() {
       else if (!on && so.unlock) so.unlock();
     } catch (e) {}
   }
-  function setFull(on) {
+  var fsAuto = false;   /* entered by turning the phone: no lock, so turning it upright again can leave */
+  function setFull(on, auto) {
     if (on === full) return;
-    full = on;
+    full = on; fsAuto = !!(on && auto);
     shellEl.classList.toggle('mp-fs', on); document.documentElement.classList.toggle('mp-fs-on', on);
     fullBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     fullBtn.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen'); fullBtn.title = fullBtn.getAttribute('aria-label');
     var de = document.documentElement;
     try {
       if (on && !fsEl()) {
-        var r = (de.requestFullscreen || de.webkitRequestFullscreen || function () {}).call(de);
-        if (phone()) { if (r && r.then) r.then(function () { if (full) lockSide(true); }, function () { if (full) lockSide(true); }); else lockSide(true); }   /* Chrome locks only once full screen */
+        var r = auto ? null : (de.requestFullscreen || de.webkitRequestFullscreen || function () {}).call(de);   /* the browser's own full screen needs a tap */
+        if (auto) {} else if (phone()) { if (r && r.then) r.then(function () { if (full) lockSide(true); }, function () { if (full) lockSide(true); }); else lockSide(true); }   /* Chrome locks only once full screen */
       } else if (!on) {
         if (phone()) lockSide(false);
         if (fsEl()) { var x = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (x && x.catch) x.catch(function () {}); }
@@ -4972,15 +4973,25 @@ function noteGate() {
     if (sh !== fsShort) { fsShort = sh; shellEl.classList.toggle('mp-fs-short', sh); }
     scroll();
   }
+  /* a phone in the player (Trix): turned sideways, full screen by itself; turned upright, back out */
+  var wasSide = innerWidth > innerHeight;
+  function turned() {
+    var side = innerWidth > innerHeight;
+    if (side === wasSide) return;
+    wasSide = side;
+    if (!shown || !phone()) return;
+    if (side && !full) setFull(true, true);
+    else if (!side && full) setFull(false);
+  }
   fsCheck();
-  window.addEventListener('resize', function () { fsCheck(); if (full && shown) fit(); });
-  window.addEventListener('orientationchange', function () { setTimeout(function () { fsCheck(); if (full && shown) fit(); }, 250); });
+  window.addEventListener('resize', function () { turned(); fsCheck(); if (full && shown) fit(); });
+  window.addEventListener('orientationchange', function () { setTimeout(function () { turned(); fsCheck(); if (full && shown) fit(); }, 250); });
   fullBtn.addEventListener('click', function () { setFull(!full); });
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(function (ev) {
     document.addEventListener(ev, function () { if (!fsEl() && full) setFull(false); else if (shown) setTimeout(fit, 50); });   /* left with Esc or Back */
   });
   APP.views.midi = {
-    show: function () { shown = true; fit(); },
+    show: function () { shown = true; fit(); if (phone() && innerWidth > innerHeight && !full) setFull(true, true); },   /* opened on a phone held sideways: full screen (Trix) */
     hide: function () { setFull(false); shown = false; pause(); setMixOpen(false); APP.board.player(false); }
   };
   load(0);
@@ -5473,6 +5484,7 @@ function noteGate() {
       { sel: '#mpSong', title: 'Pick a tune', text: 'Choose a built-in tune from this list: Twinkle, Twinkle, Little Star, Ode to Joy, In the Hall of the Mountain King, Canon, Serenade or Winter (1st movement). They are ready to play, so you can try the player straight away.' },
       { sel: '#mpSeek, #mpTime, #mpLoop, #mpStart, #mpSlower, #mpPlay, #mpFaster, .mp-speed', title: 'Play and follow along', text: 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over.' },
       { sel: '#mpMix', title: 'Mixer', text: 'Tap the Mixer button for three faders: Violin, Accompaniment and Metronome. Drag one up for louder, down for quieter; your levels are remembered. The metronome starts at 0, so raise it to hear a click on every beat. Tunes with only a violin part have no accompaniment, so that fader stays at 0.' },
+      { sel: '#mpFull', title: 'Full screen', text: 'Tap the corner button on the fingerboard for full screen: a bigger score across the whole width and the fingerboard laid sideways, every note in view. On a phone, just turn it sideways and the player goes full screen by itself; turn it upright again to leave.' },
       { sel: '#mpImport', title: 'Import your own', text: 'Tap Import and choose a MIDI file (.mid) from your phone or computer. It stays in the list for next time; the bin button next to the list deletes it.' },
       { sel: '#mpImport', title: 'Which files work', text: 'A file can have several parts. The violin is the part named Violin (Violin I if there are two), otherwise the first part; the others (piano, strings…) play along as accompaniment, and a short note over the music says which is which. Drums are left out. Notes below the G string are left out; very high notes are heard but not lit on the board.' }
     ]
@@ -5708,7 +5720,7 @@ function noteGate() {
     'in tune': '音准正确', 'off the board': '超出指板',
     'no sharps or flats': '无升降号', 'no ♯ or ♭': '无升降号',
     /* metronome */
-    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Full screen': '全屏', 'Exit full screen': '退出全屏', 'Downloading this tune…': '正在下载这首曲子…', 'This tune downloads the first time you play it. Connect to the internet and choose it again.': '这首曲子第一次播放时需要下载。请连接网络后再选择一次。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'Serenade': '小夜曲', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only percussion.': '这个文件只有打击乐。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
+    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Full screen': '全屏', 'Exit full screen': '退出全屏', 'Tap the corner button on the fingerboard for full screen: a bigger score across the whole width and the fingerboard laid sideways, every note in view. On a phone, just turn it sideways and the player goes full screen by itself; turn it upright again to leave.': '点按指板角上的按钮进入全屏：乐谱更大、横跨整个宽度，指板横放，所有音符一览无余。在手机上，只要把手机横过来，播放器就会自动全屏；竖回来即可退出。', 'Downloading this tune…': '正在下载这首曲子…', 'This tune downloads the first time you play it. Connect to the internet and choose it again.': '这首曲子第一次播放时需要下载。请连接网络后再选择一次。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'Serenade': '小夜曲', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only percussion.': '这个文件只有打击乐。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
     'Quaver (eighth note)': '八分音符', 'Crotchet (quarter note)': '四分音符', 'Minim (half note)': '二分音符', 'Semibreve (whole note)': '全音符',
     '½ beat in 4/4': '4/4 拍中占半拍', '1 beat in 4/4': '4/4 拍中占 1 拍', '2 beats in 4/4': '4/4 拍中占 2 拍', '4 beats in 4/4': '4/4 拍中占 4 拍',
     'Up bow': '上弓', 'Push, tip to frog': '推弓：弓尖到弓根', 'Down bow': '下弓', 'Pull, frog to tip': '拉弓：弓根到弓尖',
