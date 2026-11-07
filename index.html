@@ -1886,7 +1886,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-141608" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-142045" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2968,7 +2968,7 @@ function noteGate() {
       var tint = playerOn && !!playerKey && !!playerKey[nt.midi % 12] && !(nt.n > playerKey.top);   /* ... except the tune's key, pale, up to the highest position the tune uses */
       b.classList.toggle('off', !on && !tint);
       b.classList.toggle('tint', tint);
-      b.classList.toggle('beyond', playerOn && nt.n > Math.max(playerN, showN));   /* full screen: as far as the board reaches, grey (Trix) */   /* past the tune's range: hidden (Trix: the 4th finger near the edge) */
+      b.classList.toggle('beyond', playerOn && nt.n > (nt.si === STRINGS.length - 1 ? Math.max(playerN, showN) : playerN));   /* full screen: the E string on as far as the board reaches, grey (Trix: E string only) */   /* past the tune's range: hidden (Trix: the 4th finger near the edge) */
       if (tint) { b.classList.toggle('root', nt.midi % 12 === playerKey.tonic); b.style.setProperty('--hue', 'var(' + nt.s.v + ')'); return; }
       b.classList.toggle('root', on && nt.midi % 12 === key.root);
       b.style.setProperty('--hue', on ? 'var(' + nt.s.v + ')' : 'var(--off)');
