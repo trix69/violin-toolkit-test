@@ -1886,7 +1886,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-140902" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-141608" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2792,7 +2792,7 @@ function noteGate() {
           var rr0 = 19, KK0 = 1;
           for (var j0 = 0; j0 < 4; j0++) {
             KK0 = (room - 2 * rr0 - 4 - 10 - 16) / len;
-            rr0 = Math.min(cap, Math.max(6, (g0 * KK0 - 3) / 2));   /* as large as fits, 3 px apart (Trix) */
+            rr0 = Math.min(cap, Math.max(6, g0 * KK0 / 1.8));   /* as large as fits, neighbours on a string overlapping by up to 10% of a circle (Trix) */
           }
           return [KK0, rr0];
         };
