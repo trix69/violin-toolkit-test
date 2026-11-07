@@ -479,6 +479,8 @@ h1 {
 #view-board .note.down.quiet { filter: saturate(.35) brightness(.8); opacity: .75; }
 #view-board .stage.rot { grid-template-columns: 1fr 0; border-radius: 12px; z-index: 1; }
 #view-board .stage.rot .labels { display: none; }
+#view-board .bridge { display: none; }
+#view-board .stage.rot .bridge { display: block; position: absolute; left: 3%; right: 3%; top: calc(var(--head) + var(--bridge) - 3px); height: 6px; border-radius: 3px; background: var(--nut); box-shadow: 0 1px 3px rgba(0,0,0,.35); }
 #view-board .stage.rot .note::after { transform: rotate(90deg); }
 #view-board .note.beyond { display: none; }
 #view-board .vib.still { animation: none; transform: translateX(-50%); }
@@ -1030,7 +1032,10 @@ h1 {
 .mp-full .i-out, .mp-full[aria-pressed="true"] .i-in { display: none; }
 .mp-full[aria-pressed="true"] .i-out { display: block; }
 .shell.mp-fs { max-width: none; padding-top: env(safe-area-inset-top, 0px); }
-.shell.mp-fs .appbar, .shell.mp-fs #mpTop .mp-row { display: none; }
+.shell.mp-fs .appbar { display: none; }   /* the tune list and Import stay (Trix) */
+.shell.mp-fs #view-midi { padding-top: 10px; }
+.shell.mp-fs .mp-score { height: calc(128px * 1.4); }   /* the score drawn 1.4 times as large (midi.js scroll) */
+.mp-score .mp-strip, .mp-score .mp-key { transform-origin: 0 0; }
 .shell.mp-fs #mpTop .mp-score { margin-top: 8px; }
 .shell.mp-fs #view-midi { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .shell.mp-fs #view-board { margin: 0; padding: 0; height: 0; }
@@ -1859,7 +1864,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-131126" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-131549" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2623,7 +2628,8 @@ function noteGate() {
   var WIDTHS = [3.4, 2.8, 2.2, 1.5];
   var MAXN = 12;           /* the octave: where the natural harmonic sits, half way along the string */
   var TOPN = MAXN;         /* the highest note built on each string: the octave, or higher in the MIDI player */
-  var STRING_MM = 328;     /* 4/4 violin string length */
+  var STRING_MM = 328;     /* 4/4 violin string length, nut to bridge */
+  var BEYOND = 22;         /* MIDI full screen: string shown past the bridge, toward the tailpiece (about 55 mm on a violin) */
 
   /* lo..hi is the range of semitones the hand can reach without shifting. Notes inside it show in colour. */
   /* the MIDI player and Pitch Check (no single position): 1st and 3rd position's finger lines together; 1st
@@ -2739,7 +2745,7 @@ function noteGate() {
       /* the whole tune's range fits the room: real spacing if the notes stay 16 px or more, else even spacing;
          the notes and their letters shrink as needed, never overlapping (Trix: no pressing in the player anyway) */
       room = box ? Math.max(120, box.W) : Math.max(120, avail - playerTop());
-      var cap = box ? Math.max(6, Math.floor((box.H / 4 - 6) / 2)) : 26;   /* turned: the four strings share the box's height */
+      var cap = box ? Math.max(6, Math.min(24, Math.floor((box.H / 4 - 6) / 2))) : 26;   /* turned: the four strings share the box's height; smaller notes (Trix) */
       var fit = function () {
         var rr = 19, KK = 3, g = mm(N) - mm(N - 1);
         for (var j = 0; j < 4; j++) {
@@ -2749,6 +2755,17 @@ function noteGate() {
         return [KK, rr];
       };
       var want = false;
+      if (box) {
+        /* full screen (Trix): the real violin, nut to bridge (328 mm) and a little string beyond, across the
+           width; real spacing always, so the bridge sits where it does on the instrument */
+        var was = renderedEvenly; evenly = false; renderedEvenly = false; if (was !== false) render();
+        var g0 = mm(N) - mm(N - 1), rr0 = 19, KK0 = 1;
+        for (var j0 = 0; j0 < 4; j0++) {
+          KK0 = (room - 2 * rr0 - 4 - 10 - 16) / (STRING_MM + BEYOND);
+          rr0 = Math.min(cap, Math.max(6, (g0 * KK0 - 8) / 2));
+        }
+        K = KK0; r = Math.floor(rr0);
+      } else {
       if (evenly) { evenly = false; }
       var f = fit();
       if (f[1] < 18) { evenly = true; f = fit(); want = true; }
@@ -2756,7 +2773,8 @@ function noteGate() {
       K = f[0]; r = Math.floor(f[1]);
       /* never smaller than 18 px with a clear gap between notes (Trix; a small Android screen: "too small"):
          the board then runs past the room and scrolls in its box, following the notes played */
-      if (r < 18 && !box) { r = 18; K = (2 * r + 10) / (mm(N) - mm(N - 1)); }   /* turned, it always fits: no scrolling (Trix) */
+      if (r < 18) { r = 18; K = (2 * r + 10) / (mm(N) - mm(N - 1)); }
+      }
     } else if (evenly || renderedEvenly) { evenly = false; renderedEvenly = false; render(); }
     var st0 = stage.style;
     stage.classList.toggle('rot', !!box);
@@ -2775,7 +2793,8 @@ function noteGate() {
     st.setProperty('--head', (r + 4) + 'px');
     st.setProperty('--oy', (r + 4) + 'px');
     st.setProperty('--k', K.toFixed(3) + 'px');
-    st.setProperty('--span', Math.round(K * mm(N)) + 'px');
+    st.setProperty('--span', Math.round(K * (box ? STRING_MM + BEYOND : mm(N))) + 'px');   /* full screen: on past the bridge */
+    st.setProperty('--bridge', (K * STRING_MM).toFixed(1) + 'px');
     st.setProperty('--fs', Math.round(r * 0.95) + 'px');
     stage.classList.toggle('small', r < 15);   /* small notes: thinner rim */
     curK = K; curR = r;
@@ -2825,7 +2844,7 @@ function noteGate() {
     stopAll();
     var key = keyObj();
     notes = buildNotes(key);
-    var html = '<div class="splits" id="splits"></div><div class="nut"></div>';
+    var html = '<div class="splits" id="splits"></div><div class="bridge"></div><div class="nut"></div>';   /* the bridge: MIDI full screen only, under the strings */
     STRINGS.forEach(function (s, si) {
       html += '<div class="string" style="--x:' + (si * 25 + 12.5) + '%;--w:' + WIDTHS[si] + 'px"></div>';
     });
@@ -4492,11 +4511,13 @@ function noteGate() {
     if (!song) return;
     var bar = song.sig.num * 4 / song.sig.den;
     var beat = counting ? countBeat : pos < 0.01 && !playing ? -bar : song.toBeat(pos);   /* at the very start: the empty count-in bar */
-    var w = scoreEl.clientWidth, x = xAt(beat), hx = full ? X0 + 50 : Math.max(w * 0.36, X0 + 50);   /* full screen: the playhead at the left, just after the clef and key (Trix) */
-    headEl.style.left = hx + 'px';
+    var z = full ? 1.4 : 1;   /* full screen: the score larger, easier to read (Trix); positions below are in score units */
+    keySvg.style.transform = z !== 1 ? 'scale(' + z + ')' : '';
+    var w = scoreEl.clientWidth / z, x = xAt(beat), hx = full ? X0 + 50 : Math.max(w * 0.36, X0 + 50);   /* full screen: the playhead at the left, just after the clef and key (Trix) */
+    headEl.style.left = hx * z + 'px';
     /* half a beat early, so a note glows while it passes through the playhead rather than after it */
     var tx = Math.round(hx - x + 22);   /* may move right of the start: at rest the playhead sits at the empty bar, before the first note */
-    svg.style.transform = 'translateX(' + tx + 'px)';
+    svg.style.transform = (z !== 1 ? 'scale(' + z + ') ' : '') + 'translateX(' + tx + 'px)';
     /* show only the sections in view (and one either side) */
     var c0 = Math.max(0, Math.floor(-tx / 1200) - 1), c1 = Math.max(0, Math.floor((w - tx) / 1200) + 1);
     if (c0 + ':' + c1 !== shownFrom) {   /* both edges: the right one moves first as the score scrolls in */
