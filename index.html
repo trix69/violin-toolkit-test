@@ -1895,7 +1895,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.38" data-build="20261107-192013" data-cache="violin-toolkit-test-"><span>Version 1.38-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.38" data-build="20261107-192235" data-cache="violin-toolkit-test-"><span>Version 1.38-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -5227,7 +5227,12 @@ function noteGate() {
   document.addEventListener('pointerdown', function (e) { if (!mixPop.hidden && !mixPop.contains(e.target) && !mixBtn.contains(e.target)) setMixOpen(false); }, true);
   mixPop.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); setMixOpen(false); mixBtn.focus(); } });
   playBtn.addEventListener('click', function () { if (playing || counting) pause(); else play(); });
-  $('mpStart').addEventListener('click', function () { seekTo(0); });
+  $('mpStart').addEventListener('click', function () {
+    var was = playing || counting;
+    if (was) pause();
+    seekTo(0);
+    if (was) play();   /* playing: start again with the count-in (Trix) */
+  });
   loopBtn.addEventListener('click', function () {
     loop = !loop;
     try { localStorage.setItem('violin-midi-loop', loop ? 'on' : 'off'); } catch (e) {}
