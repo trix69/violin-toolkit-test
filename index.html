@@ -480,7 +480,7 @@ h1 {
 #view-board .stage.rot { grid-template-columns: 1fr 0; border-radius: 12px; z-index: 1; }
 #view-board .stage.rot .labels { display: none; }
 #view-board .bridge { display: none; }
-#view-board .stage.rot .bridge { display: block; position: absolute; left: 3%; right: 3%; top: calc(var(--head) + var(--bridge) - 3px); height: 6px; border-radius: 3px; background: var(--nut); box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+#view-board .stage.rot:not(.nobridge) .bridge { display: block; position: absolute; left: 3%; right: 3%; top: calc(var(--head) + var(--bridge) - 3px); height: 6px; border-radius: 3px; background: var(--nut); box-shadow: 0 1px 3px rgba(0,0,0,.35); }
 #view-board .stage.rot .note::after { transform: rotate(90deg); }
 #view-board .note.beyond { display: none; }
 #view-board .vib.still { animation: none; transform: translateX(-50%); }
@@ -1864,7 +1864,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-131730" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-131953" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2740,7 +2740,7 @@ function noteGate() {
        goes (up to a twelfth, for double stops). It fills the room left if it fits; otherwise notes keep their
        size and the board scrolls in its own box, following the notes played */
     var N = playerOn ? playerN : MAXN, room = 0;
-    var box = playerOn && playerTop && playerRot ? playerRot() : null;   /* full screen (Trix): the board turned a quarter turn, in this box */
+    var box = playerOn && playerTop && playerRot ? playerRot() : null, boxLen = 0;   /* full screen (Trix): the board turned a quarter turn, in this box */
     if (playerOn && playerTop) {
       /* the whole tune's range fits the room: real spacing if the notes stay 16 px or more, else even spacing;
          the notes and their letters shrink as needed, never overlapping (Trix: no pressing in the player anyway) */
@@ -2759,12 +2759,21 @@ function noteGate() {
         /* full screen (Trix): the real violin, nut to bridge (328 mm) and a little string beyond, across the
            width; real spacing always, so the bridge sits where it does on the instrument */
         var was = renderedEvenly; evenly = false; renderedEvenly = false; if (was !== false) render();
-        var g0 = mm(N) - mm(N - 1), rr0 = 19, KK0 = 1;
-        for (var j0 = 0; j0 < 4; j0++) {
-          KK0 = (room - 2 * rr0 - 4 - 10 - 16) / (STRING_MM + BEYOND);
-          rr0 = Math.min(cap, Math.max(6, (g0 * KK0 - 8) / 2));
-        }
-        K = KK0; r = Math.floor(rr0);
+        var g0 = mm(N) - mm(N - 1);
+        var solve = function (len) {
+          var rr0 = 19, KK0 = 1;
+          for (var j0 = 0; j0 < 4; j0++) {
+            KK0 = (room - 2 * rr0 - 4 - 10 - 16) / len;
+            rr0 = Math.min(cap, Math.max(6, (g0 * KK0 - 8) / 2));
+          }
+          return [KK0, rr0];
+        };
+        /* the whole string with its bridge if the notes stay readable (24 px or more across); otherwise (Trix:
+           option 1) it stops two semitones past the tune's highest note, still to scale, without the bridge */
+        boxLen = STRING_MM + BEYOND;
+        var sv = solve(boxLen);
+        if (sv[1] < 12) { boxLen = mm(N + 2); sv = solve(boxLen); }
+        K = sv[0]; r = Math.floor(sv[1]);
       } else {
       if (evenly) { evenly = false; }
       var f = fit();
@@ -2793,7 +2802,8 @@ function noteGate() {
     st.setProperty('--head', (r + 4) + 'px');
     st.setProperty('--oy', (r + 4) + 'px');
     st.setProperty('--k', K.toFixed(3) + 'px');
-    st.setProperty('--span', Math.round(K * (box ? STRING_MM + BEYOND : mm(N))) + 'px');   /* full screen: on past the bridge */
+    st.setProperty('--span', Math.round(K * (box ? boxLen : mm(N))) + 'px');   /* full screen: on past the bridge, or trimmed */
+    stage.classList.toggle('nobridge', !!box && boxLen < STRING_MM);
     st.setProperty('--bridge', (K * STRING_MM).toFixed(1) + 'px');
     st.setProperty('--fs', Math.round(r * 0.95) + 'px');
     stage.classList.toggle('small', r < 15);   /* small notes: thinner rim */
