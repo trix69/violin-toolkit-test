@@ -1884,7 +1884,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-135744" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.36" data-build="20261107-140009" data-cache="violin-toolkit-test-"><span>Version 1.36-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2793,7 +2793,7 @@ function noteGate() {
         K = sv[0]; r = Math.floor(sv[1]);
         /* the rest of the board's length gets more notes, grey (Trix: a tune up to the 4th finger left it empty) */
         var sn = N;
-        while (sn + 1 <= TOPN && mm(sn + 1) <= boxLen - (r + 2) / K) sn++;
+        while (sn + 1 <= TOPN && mm(sn + 1) <= boxLen - (r + 52) / K) sn++;   /* clear of the Full screen button in the corner (Trix) */
         if (sn !== showN) { showN = sn; paint(); }
       } else {
       if (evenly) { evenly = false; }
