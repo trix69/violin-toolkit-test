@@ -1886,7 +1886,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.37" data-build="20261107-143558" data-cache="violin-toolkit-test-"><span>Version 1.37-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.37" data-build="20261107-145037" data-cache="violin-toolkit-test-"><span>Version 1.37-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3193,7 +3193,7 @@ function noteGate() {
       o.connect(out);
       o.start(t);
       nodes.push(o);
-      out.gain.linearRampToValueAtTime(0.5, t + 0.02);
+      out.gain.setTargetAtTime(0.5, t, 0.02 / 3);   /* exponential: smooth even when the audio clock has run ahead (Android: clicks) */
       out.connect(master);
     } else {
       var lp = ctx.createBiquadFilter();
@@ -3235,7 +3235,7 @@ function noteGate() {
       nodes.push(lfo);
       lp.connect(body);
       body.connect(out);
-      out.gain.linearRampToValueAtTime(0.32, t + (att || 0.07));
+      out.gain.setTargetAtTime(0.32, t, (att || 0.07) / 3);   /* exponential: smooth even when the audio clock has run ahead (Trix, Android: clicks between notes) */
       out.connect(master);
     }
     return { out: out, nodes: nodes, vib: vib };
@@ -3243,10 +3243,12 @@ function noteGate() {
   function stopVoice(v, rel) {   /* rel: seconds to fade out (the MIDI player uses a shorter one) */
     var t = ctx.currentTime, r = rel || 0.09;
     var g = v.out.gain;
-    g.cancelScheduledValues(t);
-    g.setValueAtTime(g.value, t);
-    g.linearRampToValueAtTime(0, t + r);
-    v.nodes.forEach(function (n) { try { n.stop(t + r + 0.03); } catch (err) {} });
+    /* from the level actually sounding, never a jump (Trix, Android: a click on every note change; the audio
+       clock there runs ahead of currentTime, so a short linear ramp could start late and step) */
+    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t);
+    else { g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); }
+    g.setTargetAtTime(0, t, r / 3);
+    v.nodes.forEach(function (n) { try { n.stop(t + r * 2.5 + 0.03); } catch (err) {} });
     setTimeout(function () { try { v.out.disconnect(); } catch (err) {} }, 400);
   }
 
