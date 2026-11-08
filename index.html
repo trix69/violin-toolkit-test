@@ -1092,6 +1092,20 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 .mp-score .slur { stroke-width: 1.2; }
 .mp-score .mp-dyn { fill: var(--sc-ink); font: italic 700 15px 'Times New Roman', 'Noto Serif', Georgia, serif; }
 .mp-grace .stem { stroke-width: 1; }   /* grace notes: small (Trix) */
+/* A–B (Trix): a passage repeated; its button beside Loop, its panel above the controls, A and B marked on the score */
+.mp-ab { font: 700 12px var(--font-note); letter-spacing: -0.02em; width: auto; min-width: 36px; padding: 0 6px; }
+.mp-ab[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.mp-abpop { position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); width: min(340px, calc(100vw - 32px)); box-sizing: border-box; padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: var(--fg); box-shadow: 0 10px 30px rgba(0,0,0,.18); z-index: 20; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.mp-abpop[hidden] { display: none; }
+.mp-abtitle { grid-column: 1 / -1; margin: 0; font: 600 15px var(--font-note); }
+.mp-absel { display: grid; gap: 4px; font: 500 13px var(--font-note); color: var(--muted, inherit); }
+.mp-absel select { height: 44px; padding: 0 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); font: 600 16px var(--font-note); }
+.mp-abbtns { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; }
+.mp-abbtns button { height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--fg); font: 600 15px var(--font-note); cursor: pointer; }
+.mp-abbtns button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.mp-abbtns button[hidden] { display: none; }
+#mpABOff { margin-right: auto; }
+.mp-abm { position: absolute; top: 4px; height: 112px; width: 0; border-left: 2px solid var(--accent); pointer-events: none; font: 700 11px var(--font-note); color: var(--accent); padding-left: 3px; z-index: 1; }
 
 /* ---- start overlay ---- */
 .launch {
@@ -1465,7 +1479,13 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <label class="mp-vol"><span>Metronome</span><span class="mp-fader"><input type="range" id="mpVolM" min="0" max="100" step="5" aria-label="Metronome volume"></span><output id="mpVolMOut" translate="no"></output></label>
       <p class="mp-mixnone" id="mpMixNone" hidden>This tune has no accompaniment.</p>
     </div>
-    <div class="mp-prog"><input type="range" id="mpSeek" min="0" max="1000" value="0" aria-label="Playback position"><span class="mp-time" id="mpTime">0:00 / 0:00</span><button type="button" class="mp-loop" id="mpLoop" aria-pressed="false" aria-label="Loop" title="Loop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button><button type="button" class="mp-loop mp-full" id="mpFull" aria-pressed="false" aria-label="Full screen" title="Full screen"><svg class="i-in" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l6 6M4 9.5V4h5.5M20 20l-6-6M20 14.5V20h-5.5"/></svg><svg class="i-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l6 6M10 4.5V10H4.5M20 20l-6-6M14 19.5V14h5.5"/></svg></button></div>
+    <div class="mp-abpop" id="mpABPop" role="dialog" aria-labelledby="mpABTitle" hidden>
+      <p class="mp-abtitle" id="mpABTitle">Repeat bars</p>
+      <label class="mp-absel"><span>From bar (A)</span><select id="mpA" translate="no"></select></label>
+      <label class="mp-absel"><span>To bar (B)</span><select id="mpB" translate="no"></select></label>
+      <div class="mp-abbtns"><button type="button" id="mpABOff" hidden>Off</button><button type="button" id="mpABCancel">Cancel</button><button type="button" class="primary" id="mpABSet">Repeat</button></div>
+    </div>
+    <div class="mp-prog"><input type="range" id="mpSeek" min="0" max="1000" value="0" aria-label="Playback position"><span class="mp-time" id="mpTime">0:00 / 0:00</span><button type="button" class="mp-loop" id="mpLoop" aria-pressed="false" aria-label="Loop" title="Loop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button><button type="button" class="mp-loop mp-ab" id="mpAB" aria-pressed="false" aria-expanded="false" aria-controls="mpABPop" aria-label="Repeat a passage (A–B)" title="Repeat a passage (A–B)" translate="no">A–B</button><button type="button" class="mp-loop mp-full" id="mpFull" aria-pressed="false" aria-label="Full screen" title="Full screen"><svg class="i-in" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l6 6M4 9.5V4h5.5M20 20l-6-6M20 14.5V20h-5.5"/></svg><svg class="i-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l6 6M10 4.5V10H4.5M20 20l-6-6M14 19.5V14h5.5"/></svg></button></div>
     <div class="mp-ctl">
       <button type="button" class="mp-btn" id="mpStart" aria-label="Back to start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path d="M18 5.5v13L8.5 12z" fill="currentColor"/></svg></button>
       <button type="button" class="mp-btn" id="mpSlower" aria-label="Slower">−</button>
@@ -1915,7 +1935,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.39" data-build="20261108-101242" data-cache="violin-toolkit-test-"><span>Version 1.39-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.39" data-build="20261108-113657" data-cache="violin-toolkit-test-"><span>Version 1.39-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -4500,6 +4520,13 @@ function noteGate() {
        pickup is 0); a MIDI file's bars counted from its start */
     var barQ = sg.sig.num * 4 / sg.sig.den, bl = bars ? bars.map(function (b) { return { beat: b.tick / tpq - sg.skipB, num: b.num }; }) : null;
     sg.marks = (soloMarks || []).map(function (m) { return { beat: m.tick / tpq - sg.skipB, kind: m.kind, text: m.text }; }).filter(function (m) { return m.beat > -1e-6; });
+    /* the bars in playing order, for A–B (Trix): the score's numbers (a bar played twice is listed twice) or counted */
+    var blist = [];
+    if (bl) bl.forEach(function (b) { if (b.beat > -1e-6 && b.beat < sg.beats - 1e-6) blist.push({ beat: b.beat, num: b.num }); });
+    else for (var bb = 0; bb < sg.beats - 1e-6; bb += barQ) blist.push({ beat: bb, num: String(Math.floor((bb + sg.skipB) / barQ + 1e-6) + 1) });
+    var seenBar = {}; blist.forEach(function (b) { b.time = seenBar[b.num] = (seenBar[b.num] || 0) + 1; });
+    blist.forEach(function (b) { b.rep = seenBar[b.num] > 1; });
+    sg.bars = blist;
     sg.barNo = function (beat) {
       if (!bl) return String(Math.floor((Math.max(0, beat) + sg.skipB) / barQ + 1e-6) + 1);
       var n = bl.length ? bl[0].num : '1';
@@ -4611,6 +4638,7 @@ function noteGate() {
         return (g.tick + (s - g.sec) / g.spt) / tpq - skipB;
       },
       low: low, high: high, skipB: skipB,
+      beatSec: function (b) { return toSec((b + skipB) * tpq) - skipT; },   /* beats (from the first bar kept) to seconds: A–B */
       sec: function (tick) { return toSec(tick) - skipT; }   /* ticks to seconds from the first bar kept (the accompaniment) */
     };
   }
@@ -4938,6 +4966,7 @@ function noteGate() {
     keySvg.setAttribute('width', kw + 14); keySvg.setAttribute('height', BOT + 46);
     keySvg.setAttribute('viewBox', '0 0 ' + (kw + 14) + ' ' + (BOT + 46));
     keySvg.innerHTML = kl + CLEF + out.slice(0, head).join('');
+    if (typeof placeAB === 'function') setTimeout(placeAB, 0);
     noteEls = [];
     Array.prototype.forEach.call(svg.querySelectorAll('.mp-n'), function (el) { noteEls[+el.getAttribute('data-k')] = el; });
   }
@@ -4948,7 +4977,7 @@ function noteGate() {
     var beat = counting ? countBeat : pos < 0.01 && !playing ? -bar : song.toBeat(pos);   /* at the very start: the empty count-in bar */
     var z = full ? (fsShort ? 0.8 : 1.4) : 1;   /* full screen: the score larger, easier to read (Trix); a phone on its side: smaller, for room; positions below are in score units */
     keySvg.style.transform = z !== 1 ? 'scale(' + z + ')' : '';
-    var bn = song.barNo ? song.barNo(Math.max(beat, 0)) : '';   /* the bar under the playhead (Trix) */
+    var bn = song.barNo ? song.barNo(counting ? countBase : Math.max(beat, 0)) : '';   /* counting in: the bar it leads into */   /* the bar under the playhead (Trix) */
     if (bn !== barNoEl.textContent) barNoEl.textContent = bn;
     var w = scoreEl.clientWidth / z, x = xAt(beat), hx = full ? X0 + 50 : Math.max(w * 0.36, X0 + 50);   /* full screen: the playhead at the left, just after the clef and key (Trix) */
     headEl.style.left = hx * z + 'px';
@@ -5021,6 +5050,8 @@ function noteGate() {
     /* the board keeps one note per string; drop the ones it replaced */
     active = active.filter(function (k) { if (APP.board.has('n' + k)) return true; noteEls[k].classList.remove('on'); noteEls[k].classList.add('done'); return false; });
     scroll(); ui();
+    var rr = abRange();
+    if (rr && pos >= rr.eT - 0.005) { seekTo(rr.aT); playing = false; countIn(go, rr.aB); return; }   /* A–B: round again from A, after the count-in (Trix) */
     if (pos >= song.end && !active.length) {
       if (!loop) { pause(); seekTo(song.end); return; }
       seekTo(0); playing = false; countIn(go); return;   /* round again, after the count-in */
@@ -5030,14 +5061,15 @@ function noteGate() {
   /* count-in (Trix): one bar of the time signature counted down (3 2 1 in 3/4, 4 3 2 1 in 4/4) with a click
      on each beat, at the tune's tempo and the chosen speed; when starting from the beginning, and before each
      round of Loop; resuming after a pause plays straight on */
-  var counting = false, countT = 0, countEl = $('mpCount'), countBeat = 0;
-  function countIn(then) {
+  var counting = false, countT = 0, countEl = $('mpCount'), countBeat = 0, countBase = 0;
+  function countIn(then, base) {   /* base: the beat it leads into (A–B: bar A), else the start */
+    base = base || 0; countBase = base;
     var n = song.sig.num, k = n, step = 60 / song.bpm * 4 / song.sig.den / speed * 1000;
     var bar = n * 4 / song.sig.den, t0 = performance.now();
-    counting = true; countBeat = -bar; ui();
+    counting = true; countBeat = base - bar; ui();
     (function slide() {   /* the score moves through the empty bar in time with the count */
       if (!counting) return;
-      countBeat = -bar * Math.max(0, 1 - (performance.now() - t0) / (n * step));
+      countBeat = base - bar * Math.max(0, 1 - (performance.now() - t0) / (n * step));
       scroll();
       requestAnimationFrame(slide);
     })();
@@ -5082,6 +5114,12 @@ function noteGate() {
   function play() {
     if (!song || playing || counting) return;
     if (!APP.board.prime()) return;   /* the sound engine starts inside the tap (iPhone) */
+    var r = abRange();
+    if (r) {   /* A–B: from bar A (outside the passage: back to A), counting in at A */
+      if (pos < r.aT - 0.01 || pos >= r.eT - 0.01) seekTo(r.aT);
+      if (Math.abs(pos - r.aT) < 0.01) countIn(go, r.aB); else go();
+      return;
+    }
     if (pos >= song.end - 0.01) seekTo(0);
     if (pos < 0.01) countIn(go); else go();   /* the count-in only at the beginning, not on resume (Trix) */
   }
@@ -5135,6 +5173,7 @@ function noteGate() {
       return;
     }
     drawScore();
+    ab = null; abUi(); setABOpen(false);
     seekTo(0);
     var warn = [];
     if (song.low) warn.push(song.low + (song.low > 1 ? ' notes are' : ' note is') + ' below the violin’s G string and left out.');
@@ -5293,11 +5332,75 @@ function noteGate() {
   volM.addEventListener('input', function () { mix.m = volM.value / 100; mixUi(); saveMix(); });
   document.addEventListener('pointerdown', function (e) { if (!mixPop.hidden && !mixPop.contains(e.target) && !mixBtn.contains(e.target)) setMixOpen(false); }, true);
   mixPop.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); setMixOpen(false); mixBtn.focus(); } });
+  /* A–B (Trix): repeat a passage, from bar A to the end of bar B, counting in each time round. Off until it is set
+     in its panel; bars picked from lists (a scrolling wheel on phones); A empty = the beginning, B empty = the end;
+     B at least one bar after A */
+  var ab = null, abBtn = $('mpAB'), abPop = $('mpABPop'), selA = $('mpA'), selB = $('mpB');
+  function abRange() {
+    if (!ab || !song || !song.bars) return null;
+    var bars = song.bars, aB = ab.a >= 0 && bars[ab.a] ? bars[ab.a].beat : 0, nx = ab.b >= 0 ? bars[ab.b + 1] : null;
+    return { aB: aB, aT: song.beatSec(aB), eB: nx ? nx.beat : song.beats, eT: nx ? song.beatSec(nx.beat) : song.end };
+  }
+  function barLabel(b) {
+    var zh = window.I18N && I18N.lang === 'zh';
+    if (!b.rep) return b.num;
+    return zh ? b.num + '（第 ' + b.time + ' 遍）' : b.num + ' (' + b.time + (['', 'st', 'nd', 'rd'][b.time] || 'th') + ' time)';
+  }
+  function fillAB() {
+    var zh = window.I18N && I18N.lang === 'zh', bars = song ? song.bars : [];
+    [selA, selB].forEach(function (sel, w) {
+      sel.textContent = '';
+      var o = document.createElement('option'); o.value = '-1'; o.textContent = w ? (zh ? '结尾' : 'End') : (zh ? '开头' : 'Beginning'); sel.appendChild(o);
+      bars.forEach(function (b, i) { var q = document.createElement('option'); q.value = i; q.textContent = barLabel(b); sel.appendChild(q); });
+    });
+  }
+  function limitB() {   /* B at least one bar after A */
+    var a = +selA.value, last = song.bars.length - 1;
+    Array.prototype.forEach.call(selB.options, function (o) { var v = +o.value; o.disabled = v >= 0 && v < a + 1; });
+    if (+selB.value >= 0 && +selB.value < a + 1) selB.value = a + 1 <= last ? String(a + 1) : '-1';
+  }
+  function abUi() {
+    abBtn.setAttribute('aria-pressed', ab ? 'true' : 'false');
+    $('mpABOff').hidden = !ab;
+    placeAB();
+  }
+  function placeAB() {   /* A and B marked on the score */
+    Array.prototype.forEach.call(svg.querySelectorAll('.mp-abm'), function (el) { el.remove(); });
+    var r = abRange();
+    if (!r || !xAt) return;
+    [[r.aB, 'A'], [r.eB, 'B']].forEach(function (m) {
+      var d = document.createElement('div'); d.className = 'mp-abm'; d.style.left = (xAt(m[0]) - 14) + 'px'; d.textContent = m[1]; svg.appendChild(d);
+    });
+  }
+  function setABOpen(open) {
+    if (open && !song) return;
+    abPop.hidden = !open; abBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (!open) return;
+    setMixOpen(false);
+    fillAB();
+    selA.value = ab ? String(ab.a) : (song.bars.length ? '0' : '-1');   /* first and last bar (Trix) */
+    selB.value = ab ? String(ab.b) : String(song.bars.length - 1);
+    limitB();
+    selA.focus();
+  }
+  abBtn.addEventListener('click', function (e) { e.stopPropagation(); setABOpen(abPop.hidden); });
+  selA.addEventListener('change', limitB);
+  $('mpABCancel').addEventListener('click', function () { setABOpen(false); abBtn.focus(); });   /* nothing set: stays as it was (off) */
+  /* a change of A–B pauses and moves to bar A (or the start when off); Play then counts in (Trix) */
+  $('mpABOff').addEventListener('click', function () { ab = null; abUi(); setABOpen(false); pause(); seekTo(0); abBtn.focus(); });
+  $('mpABSet').addEventListener('click', function () {
+    ab = { a: +selA.value, b: +selB.value };
+    abUi(); setABOpen(false); abBtn.focus();
+    pause(); seekTo(abRange().aT);
+  });
+  document.addEventListener('pointerdown', function (e) { if (!abPop.hidden && !abPop.contains(e.target) && !abBtn.contains(e.target)) setABOpen(false); }, true);
+  abPop.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); setABOpen(false); abBtn.focus(); } });
+  document.addEventListener('i18n', function () { if (!abPop.hidden) { var a = selA.value, b = selB.value; fillAB(); selA.value = a; selB.value = b; limitB(); } });
   playBtn.addEventListener('click', function () { if (playing || counting) pause(); else play(); });
   $('mpStart').addEventListener('click', function () {
-    var was = playing || counting;
+    var was = playing || counting, r = abRange();
     if (was) pause();
-    seekTo(0);
+    seekTo(r ? r.aT : 0);   /* A–B on: back to bar A */
     if (was) play();   /* playing: start again with the count-in (Trix) */
   });
   loopBtn.addEventListener('click', function () {
@@ -6005,7 +6108,7 @@ function noteGate() {
     ],
     midi: [
       { sel: '#mpSong', title: 'Pick a tune', text: 'Choose a built-in tune from this list: Twinkle, Twinkle, Little Star, Ode to Joy, In the Hall of the Mountain King, Canon, Serenade or Winter (1st movement). They are ready to play, so you can try the player straight away.' },
-      { sel: '#mpSeek, #mpTime, #mpLoop, #mpStart, #mpSlower, #mpPlay, #mpFaster, .mp-speed', title: 'Play and follow along', text: 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over. On a keyboard, Space plays or pauses; − / + or ← / → change the speed.' },
+      { sel: '#mpSeek, #mpTime, #mpLoop, #mpStart, #mpSlower, #mpPlay, #mpFaster, .mp-speed', title: 'Play and follow along', text: 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over. On a keyboard, Space plays or pauses; − / + or ← / → change the speed. A–B, beside the loop button, repeats a passage you choose by bar, counting in each time.' },
       { sel: '#mpMix', title: 'Mixer', text: 'Tap the Mixer button for three faders: Violin, Accompaniment and Metronome. Drag one up for louder, down for quieter; your levels are remembered. The metronome starts at 0, so raise it to hear a click on every beat. Tunes with only a violin part have no accompaniment, so that fader stays at 0.' },
       { sel: '#mpFull', title: 'Full screen', text: 'Tap the corner button on the fingerboard for full screen: a bigger score across the whole width and the fingerboard laid sideways, every note in view. On a phone, just turn it sideways and the player goes full screen by itself; turn it upright again to leave.' },
       { sel: '#mpImport', title: 'Import your own', text: 'Tap Import and choose a MIDI file (.mid) or a MusicXML score (.musicxml, .mxl) from your phone or computer. It stays in the list for next time; the bin button next to the list deletes it.' },
@@ -6243,7 +6346,7 @@ function noteGate() {
     'in tune': '音准正确', 'off the board': '超出指板',
     'no sharps or flats': '无升降号', 'no ♯ or ♭': '无升降号',
     /* metronome */
-    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Full screen': '全屏', 'Exit full screen': '退出全屏', 'Tap the corner button on the fingerboard for full screen: a bigger score across the whole width and the fingerboard laid sideways, every note in view. On a phone, just turn it sideways and the player goes full screen by itself; turn it upright again to leave.': '点按指板角上的按钮进入全屏：乐谱更大、横跨整个宽度，指板横放，所有音符一览无余。在手机上，只要把手机横过来，播放器就会自动全屏；竖回来即可退出。', 'This is not a MIDI or MusicXML file.': '这不是 MIDI 或 MusicXML 文件。', 'This MusicXML file could not be read.': '无法读取这个 MusicXML 文件。', 'This browser can’t open compressed MusicXML (.mxl). Export the score as uncompressed MusicXML (.musicxml) instead.': '这个浏览器无法打开压缩的 MusicXML（.mxl）。请把乐谱导出为未压缩的 MusicXML（.musicxml）。', 'This file has no score in it.': '这个文件里没有乐谱。', 'This MusicXML file is in the timewise layout, which the player can’t read. Export it again as MusicXML from your notation app.': '这个 MusicXML 文件是按时间排列的格式，播放器无法读取。请在打谱软件中重新导出为 MusicXML。', 'This file could not be read.': '无法读取这个文件。', 'Opening the score…': '正在打开乐谱…', 'Downloading this tune…': '正在下载这首曲子…', 'This tune downloads the first time you play it. Connect to the internet and choose it again.': '这首曲子第一次播放时需要下载。请连接网络后再选择一次。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'Serenade': '小夜曲', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only percussion.': '这个文件只有打击乐。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
+    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Full screen': '全屏', 'Exit full screen': '退出全屏', 'Tap the corner button on the fingerboard for full screen: a bigger score across the whole width and the fingerboard laid sideways, every note in view. On a phone, just turn it sideways and the player goes full screen by itself; turn it upright again to leave.': '点按指板角上的按钮进入全屏：乐谱更大、横跨整个宽度，指板横放，所有音符一览无余。在手机上，只要把手机横过来，播放器就会自动全屏；竖回来即可退出。', 'This is not a MIDI or MusicXML file.': '这不是 MIDI 或 MusicXML 文件。', 'This MusicXML file could not be read.': '无法读取这个 MusicXML 文件。', 'This browser can’t open compressed MusicXML (.mxl). Export the score as uncompressed MusicXML (.musicxml) instead.': '这个浏览器无法打开压缩的 MusicXML（.mxl）。请把乐谱导出为未压缩的 MusicXML（.musicxml）。', 'This file has no score in it.': '这个文件里没有乐谱。', 'This MusicXML file is in the timewise layout, which the player can’t read. Export it again as MusicXML from your notation app.': '这个 MusicXML 文件是按时间排列的格式，播放器无法读取。请在打谱软件中重新导出为 MusicXML。', 'This file could not be read.': '无法读取这个文件。', 'Repeat a passage (A–B)': '反复播放一段（A–B）', 'Repeat bars': '反复小节', 'From bar (A)': '从第几小节（A）', 'To bar (B)': '到第几小节（B）', 'Repeat': '反复', 'Cancel': '取消', 'Opening the score…': '正在打开乐谱…', 'Downloading this tune…': '正在下载这首曲子…', 'This tune downloads the first time you play it. Connect to the internet and choose it again.': '这首曲子第一次播放时需要下载。请连接网络后再选择一次。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'Serenade': '小夜曲', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only percussion.': '这个文件只有打击乐。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
     'Quaver (eighth note)': '八分音符', 'Crotchet (quarter note)': '四分音符', 'Minim (half note)': '二分音符', 'Semibreve (whole note)': '全音符',
     '½ beat in 4/4': '4/4 拍中占半拍', '1 beat in 4/4': '4/4 拍中占 1 拍', '2 beats in 4/4': '4/4 拍中占 2 拍', '4 beats in 4/4': '4/4 拍中占 4 拍',
     'Up bow': '上弓', 'Push, tip to frog': '推弓：弓尖到弓根', 'Down bow': '下弓', 'Pull, frog to tip': '拉弓：弓根到弓尖',
@@ -6478,7 +6581,7 @@ function noteGate() {
     'Hold for a steady tone': '长按得到持续音', 'Hold a note for 3 seconds and it keeps sounding after you let go, steady with no vibrato, like a tuning fork. Tap anywhere to stop it.': '按住一个音 3 秒，松手后它会继续响，平稳无揉弦，像音叉一样。点任意处即可停止。',
     'Choose a key': '选择调',
     'Pick a tune': '选择乐曲', 'Choose a built-in tune from this list: Twinkle, Twinkle, Little Star, Ode to Joy, In the Hall of the Mountain King, Canon, Serenade or Winter (1st movement). They are ready to play, so you can try the player straight away.': '从这个列表选择内置乐曲：《小星星》、《欢乐颂》、《在山魔王的宫殿里》、《卡农》、《小夜曲》或《冬》第一乐章。它们可以直接播放，马上就能试用播放器。',
-    'Play and follow along': '播放并跟着看', 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over. On a keyboard, Space plays or pauses; − / + or ← / → change the speed.': '点播放：先数一小节（3/4 拍数 3 2 1，4/4 拍数 4 3 2 1），然后每个音会在指板上以所在弦的颜色亮起，上方的乐谱随之滚过，并标出要用的手指。− 和 + 调慢或调快；第一个按钮回到开头。时间旁边的循环按钮会让乐曲反复播放。用键盘时，空格键播放或暂停，− / + 或 ← / → 调整速度。',
+    'Play and follow along': '播放并跟着看', 'Tap play: it counts in one bar (3 2 1 in 3/4, 4 3 2 1 in 4/4), then each note lights up on the fingerboard in its string colour, and the music scrolls past the line above with the finger to use. − and + slow it down or speed it up; the first button goes back to the start. The loop button by the time plays the tune over and over. On a keyboard, Space plays or pauses; − / + or ← / → change the speed. A–B, beside the loop button, repeats a passage you choose by bar, counting in each time.': '点播放：先数一小节（3/4 拍数 3 2 1，4/4 拍数 4 3 2 1），然后每个音会在指板上以所在弦的颜色亮起，上方的乐谱随之滚过，并标出要用的手指。− 和 + 调慢或调快；第一个按钮回到开头。时间旁边的循环按钮会让乐曲反复播放。用键盘时，空格键播放或暂停，− / + 或 ← / → 调整速度。循环按钮旁的 A–B 可按小节选一段反复播放，每次都先数拍。',
     'Import your own': '导入自己的文件', 'Tap Import and choose a MIDI file (.mid) or a MusicXML score (.musicxml, .mxl) from your phone or computer. It stays in the list for next time; the bin button next to the list deletes it.': '点导入，从手机或电脑选择一个 MIDI 文件（.mid）或 MusicXML 乐谱（.musicxml、.mxl）。它会留在列表里，下次还能用；点列表旁的垃圾桶按钮可以删除。',
     'Which files work': '哪些文件可以用', 'Install the Android app: it carries the whole toolkit and works offline from the start.': '安装安卓应用：整个工具箱都在应用里，从一开始就能离线使用。', 'If the app won’t install, add the website from Chrome instead:': '如果应用装不上，可以改用 Chrome 把网站添加到主屏幕：', 'Download the Android app (APK)': '下载安卓应用（APK）', 'Android will ask you to allow installs from your browser (Install unknown apps). Then open the downloaded file and tap Install.': '安卓会请你允许从浏览器安装应用（“安装未知应用”）。然后打开下载的文件，点“安装”。', 'Tap the Mixer button for three faders: Violin, Accompaniment and Metronome. Drag one up for louder, down for quieter; your levels are remembered. The metronome starts at 0, so raise it to hear a click on every beat. Tunes with only a violin part have no accompaniment, so that fader stays at 0.': '点“混音”按钮会出现三个推子：小提琴、伴奏和节拍器。向上拖更响，向下拖更轻；设置会被记住。节拍器默认为 0，调高后每一拍都会有提示音。只有小提琴声部的曲子没有伴奏，伴奏推子保持为 0。', 'A file can have several parts. The violin is the part named Violin (Violin I if there are two), otherwise the first part; the others (piano, strings…) play along as accompaniment, and a short note over the music says which is which. Drums are left out. Notes below the G string are left out; very high notes are heard but not lit on the board. A MusicXML score keeps its fingerings and string numbers: the player shows them as written, and uses its own choice only where none are marked.': '文件可以有多个声部。名为 Violin 的声部是小提琴（有两个时用 Violin I），否则用第一个声部；其他声部（钢琴、弦乐等）作为伴奏一起播放，乐谱上方会短暂显示哪个是哪个。鼓声部会略去。低于 G 弦的音会略去；很高的音只播放声音，不在指板上亮起。MusicXML 乐谱会保留其中标注的指法和弦号：播放器照原样显示，只有没标注的地方才由播放器自己安排。', 'Tap here to pick a major or minor key. Notes in the key are coloured, the others are greyed out.': '点这里选择大调或小调。调内的音是彩色的，其他的是灰色。',
     'Equal is tuned like a piano. Just makes the intervals in the key pure. Pythagorean builds every note from pure fifths. The notes on the board move to match.': '平均律和钢琴的调音一样。纯律让调内的音程纯净。五度相生律用纯五度推出每个音。指板上的音会随之移动。',
