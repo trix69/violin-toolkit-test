@@ -1135,7 +1135,7 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 .fg-page .fg-paper { fill: #fff; }
 .fg-page .fg-title { fill: #1A1A1A; font: 700 22px 'Times New Roman', 'Noto Serif', 'Songti SC', serif; text-anchor: middle; }
 .fg-page .fg-sub { fill: #333; font: 400 13px 'Times New Roman', 'Noto Serif', 'Songti SC', serif; text-anchor: middle; }
-.fg-page .fg-tempo { fill: #1A1A1A; font: 700 15px 'Times New Roman', 'Noto Serif', serif; }   /* in score units (x 0.64 on the page) */
+.fg-page .fg-tempo { fill: #1A1A1A; font: 700 15px 'Times New Roman', 'Noto Serif', serif; text-anchor: middle; }   /* in score units (x 0.64 on the page) */
 .fg-page .fg-qr { fill: #000; }
 .fg-page .fg-cap { fill: #555; font: 400 10.67px var(--font-body); text-anchor: end; }   /* 8 pt */
 .fg-page .fg-run { fill: #777; font: 400 10.67px var(--font-body); }   /* the running header, 8 pt, muted */
@@ -2034,7 +2034,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.41" data-build="20261110-065827" data-cache="violin-toolkit-test-"><span>Version 1.41-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.41" data-build="20261110-070010" data-cache="violin-toolkit-test-"><span>Version 1.41-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -6036,7 +6036,7 @@ function noteGate() {
     for (var j = 0; j < 5; j++) lines += '<path class="sl" d="M0 ' + (Y0 + j * S) + 'H' + wide + '"/>';
     var bo = sg.barAt ? sg.barAt(r.bars[q[0]].beat + 1e-3) : null;
     out.push(lines, CLEF, r.head.join(''));
-    if (si === 0) out.push('<text class="fg-tempo" x="2" y="' + (Y0 - 24) + '">♩ = ' + sg.bpm + '</text>');   /* the tempo above the first bar (Trix) */
+    if (si === 0) out.push('<text class="fg-tempo" x="' + (hw + ((r.bars[q[0] + 1] ? r.bars[q[0] + 1].x : xb) - xa) / 2).toFixed(1) + '" y="' + (Y0 - 24) + '">♩ = ' + sg.bpm + '</text>');   /* the tempo over the middle of the first bar (Trix) */
     else if (bo) out.push('<text class="fg-bn" x="2" y="' + (Y0 - 24) + '">' + esc(bo.num) + '</text>');
     /* a position held over a page turn: its numeral again at the top of the new page (Trix) */
     if (firstOnPage && si > 0) r.passages.forEach(function (p) {
