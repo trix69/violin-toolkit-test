@@ -1118,6 +1118,35 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 .mp-score .mp-pos { fill: var(--sc-ink); font: 18px 'Times New Roman', 'Noto Serif', Georgia, serif; transform: skewX(-14deg); transform-box: fill-box; transform-origin: 50% 100%; }   /* the Unicode numerals (Ⅲ) have no italic in most fonts: slanted by hand */
 .mp-score .mp-posd { fill: none; stroke: var(--sc-ink); stroke-width: 1; stroke-dasharray: 4 3; opacity: .8; }
 
+/* ---- fingerings ---- */
+/* Fingerings (指法谱, Trix): the violin part on A4 pages, the same drawing as the MIDI player's score */
+#view-fingering .fg-bar { display: flex; align-items: center; gap: 12px; margin: 10px 0 12px; }
+#view-fingering .fg-note { flex: 1; margin: 0; font: 400 13px var(--font-body); color: var(--muted); }
+#view-fingering .fg-pdf { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--accent); color: var(--on-accent); font: 600 15px var(--font-note); cursor: pointer; }
+#view-fingering .fg-pdf svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+#view-fingering .fg-pdf:disabled { opacity: .4; cursor: default; }
+#view-fingering .fg-pdf:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* white paper and black ink whatever the theme (the player's score box styles undone) */
+#view-fingering .fg-pages.mp-score { --sc-bg: #FFFFFF; --sc-ink: #1A1A1A; --sc-fing: 8%; height: auto; overflow: visible; margin: 0; border-radius: 0; background: none; box-shadow: none; color: var(--sc-ink); }
+#view-fingering .fg-page { display: block; width: 100%; height: auto; margin: 0 0 16px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.08); }
+.fg-page .fg-paper { fill: #fff; }
+.fg-page .fg-title { fill: #1A1A1A; font: 600 20px 'Times New Roman', 'Noto Serif', 'Songti SC', serif; text-anchor: middle; }
+.fg-page .fg-foot { fill: #666; font: 400 9px var(--font-body); }
+.fg-page .fg-bn { fill: #555; font: italic 11px 'Times New Roman', 'Noto Serif', serif; }
+.mp-score .fg-pg-n { text-anchor: end; }
+.mp-fg { position: absolute; z-index: 4; top: 6px; right: 6px; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 1px solid color-mix(in srgb, var(--sc-ink) 18%, transparent); border-radius: 9px; background: color-mix(in srgb, var(--sc-bg) 88%, transparent); color: var(--sc-ink); cursor: pointer; }
+.mp-fg svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.mp-fg:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* the PDF: only the pages, one per sheet, no margins of the browser's own (the 15 mm are inside each page) */
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  html.fg-printing, html.fg-printing body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  html.fg-printing body > :not(#shell), html.fg-printing #shell > :not(#main), html.fg-printing #main > :not(#view-fingering), html.fg-printing #view-fingering > * > :not(.fg-pages) { display: none !important; }
+  html.fg-printing #shell, html.fg-printing #main, html.fg-printing #view-fingering, html.fg-printing #fg { display: block !important; margin: 0 !important; padding: 0 !important; max-width: none !important; width: auto !important; border: 0 !important; box-shadow: none !important; }
+  html.fg-printing .fg-page { width: 210mm !important; height: 297mm !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; break-after: page; page-break-after: always; }
+  html.fg-printing .fg-page:last-child { break-after: auto; page-break-after: auto; }
+}
+
 /* ---- start overlay ---- */
 .launch {
   position: fixed; inset: 0; z-index: 100;
@@ -1143,7 +1172,7 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 @media (min-width: 640px) { .launch-grid { gap: 16px; } }
 @media (min-width: 900px) {   /* five in a row: a wider card so each name fits on one line (Trix) */
   .launch-card { width: min(100%, 900px); }
-  .launch-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } .launch-grid > :last-child:nth-child(odd) { grid-column: auto; }
+  .launch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }   /* six tools: 3 x 2 */ .launch-grid > :last-child:nth-child(odd) { grid-column: auto; }
   .launch-btn b { white-space: nowrap; }
 }
 @media (max-width: 480px) { .launch-btn { padding: 16px 10px; min-height: 0; gap: 6px; } .launch-btn b { font-size: 18px; } .launch-btn span { font-size: 13px; } }
@@ -1477,11 +1506,16 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <h1>MIDI Player</h1>
       <p class="appsub" id="ttl-midi-sub"></p>
     </div>
+    <div id="ttl-fingering" hidden>
+      <h1>Fingerings</h1>
+      <p class="appsub">Automatic fingerings · PDF</p>
+    </div>
     <nav class="tabs" aria-label="Tools">
       <button type="button" class="tab" data-view="tuner" aria-label="Tuner" title="Tuner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 17.5a8.5 8.5 0 0 1 17 0"/><path d="M12 17.5l3.6-7"/><circle cx="12" cy="17.5" r="1.2"/><path d="M12 5.8v1.8M5.6 9l1.3 1.2M18.4 9l-1.3 1.2"/></svg></button>
       <button type="button" class="tab" data-view="board" aria-current="page" aria-label="Fingerboard" title="Fingerboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3h11"/><path d="M8.4 3.5L7.2 21M10.8 3.5l-.5 17.5M13.2 3.5l.5 17.5M15.6 3.5L16.8 21" opacity=".7"/><path d="M7.7 11h8.6M7.3 17h9.4" opacity=".7"/><circle cx="10.8" cy="7.3" r="1.3" fill="currentColor"/><circle cx="15.6" cy="14" r="1.3" fill="currentColor"/></svg></button>
       <button type="button" class="tab" data-view="metronome" aria-label="Metronome" title="Metronome"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3h5.6l3.4 18H5.8z"/><path d="M12 17.5L15.6 6.5"/><circle cx="14.2" cy="10.6" r="1.2" fill="currentColor"/><path d="M8 21h8" opacity=".0"/></svg></button>
       <button type="button" class="tab" data-view="midi" aria-label="MIDI Player" title="MIDI Player"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12"/><ellipse cx="6.6" cy="17.6" rx="2.6" ry="2" fill="currentColor"/><ellipse cx="16.6" cy="15.6" rx="2.6" ry="2" fill="currentColor"/><path d="M9 9.5l10-2"/></svg></button>
+      <button type="button" class="tab" data-view="fingering" aria-label="Fingerings" title="Fingerings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5l3.5 3.5v13.5H6z"/><path d="M14.5 3.5V7H18"/><path d="M8.5 12.5h7M8.5 15.5h7"/><text x="9" y="10.4" font-size="5.5" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">1 3</text></svg></button>
       <button type="button" class="tab" data-view="symbols" aria-label="Symbols" title="Symbols"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3-1.2 6-1 8.5.8 2.5-1.8 5.5-2 8.5-.8v13.2c-3-1.2-6-1-8.5.8-2.5-1.8-5.5-2-8.5-.8z"/><path d="M12 6.3v13.2"/><path d="M16.2 9v5.2"/><ellipse cx="15.2" cy="14.4" rx="1.3" ry="1" fill="currentColor"/></svg></button>
       <button type="button" class="tab" id="switchTool" aria-label="Switch tool" title="Switch tool" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg></button>
       <button type="button" class="tab tab-set" id="openSettings" aria-label="Settings" title="Settings" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
@@ -1499,7 +1533,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <input type="file" id="mpFile" accept=".mid,.midi,audio/midi,audio/x-midi,.musicxml,.xml,.mxl,application/vnd.recordare.musicxml+xml,application/vnd.recordare.musicxml,application/xml,text/xml" hidden>
     </div>
     <p class="mp-msg" id="mpMsg" role="status" hidden></p>
-    <div class="mp-score" id="mpScore" aria-hidden="true" translate="no"><div class="mp-barno" id="mpBarNo"></div><div class="mp-strip" id="mpSvg"></div><svg class="mp-key" id="mpKey" xmlns="http://www.w3.org/2000/svg"></svg><div class="mp-head" id="mpHead"></div><div class="mp-count" id="mpCount" aria-hidden="true" hidden></div><div class="mp-parts" id="mpParts" hidden><p><b id="mpPartsLV">Violin</b><span id="mpPartsV"></span></p><p><b id="mpPartsLA">Accompaniment</b><span id="mpPartsA"></span></p><p><b id="mpPartsLD">Left out</b><span id="mpPartsD"></span></p></div></div>
+    <div class="mp-score" id="mpScore" translate="no"><div class="mp-barno" id="mpBarNo" aria-hidden="true"></div><div class="mp-strip" id="mpSvg" aria-hidden="true"></div><svg class="mp-key" id="mpKey" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><div class="mp-head" id="mpHead" aria-hidden="true"></div><div class="mp-count" id="mpCount" aria-hidden="true" hidden></div><button type="button" class="mp-fg" id="mpFg" aria-label="Fingerings: this tune on pages, as a PDF" title="Fingerings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5l3.5 3.5v13.5H6z"/><path d="M14.5 3.5V7H18"/><path d="M9 11.5h6M9 14.5h6M9 17.5h3.5"/></svg></button><div class="mp-parts" id="mpParts" aria-hidden="true" hidden><p><b id="mpPartsLV">Violin</b><span id="mpPartsV"></span></p><p><b id="mpPartsLA">Accompaniment</b><span id="mpPartsA"></span></p><p><b id="mpPartsLD">Left out</b><span id="mpPartsD"></span></p></div></div>
     <p class="mp-vh" id="mpPartsSr" role="status"></p>
   </div>
   <div class="mp-bar" id="mpBar">
@@ -1526,6 +1560,22 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <div class="mp-speed"><span id="mpSpeed">100%</span><small id="mpBpm" translate="no"></small></div>
     </div>
   </div>
+</div>
+
+  </section>
+
+  <section id="view-fingering" aria-label="Fingerings" hidden>
+<div class="fg" id="fg">
+  <div class="mp-row fg-row">
+    <label class="mp-song"><span class="mp-vh">Tune</span><select id="fgSong"></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></label>
+    <button type="button" class="mp-import" id="fgImport"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 14.5v4a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-4"/></svg>Import</button>
+  </div>
+  <div class="fg-bar">
+    <p class="fg-note">Fingerings, strings and positions are chosen automatically; they can't be edited yet.</p>
+    <button type="button" class="fg-pdf" id="fgPdf"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4V20.5H7z"/><path d="M14 3.5v4h4"/><path d="M10 12.5h5M10 15.5h5"/></svg>PDF</button>
+  </div>
+  <p class="mp-msg" id="fgMsg" role="status" hidden></p>
+  <div class="fg-pages mp-score" id="fgPages" translate="no" aria-label="Fingered violin part"></div>
 </div>
 
   </section>
@@ -1971,7 +2021,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.41" data-build="20261110-061006" data-cache="violin-toolkit-test-"><span>Version 1.41-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.41" data-build="20261110-062653" data-cache="violin-toolkit-test-"><span>Version 1.41-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2056,6 +2106,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" class="launch-btn" data-view="board"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3h11"/><path d="M8.4 3.5L7.2 21M10.8 3.5l-.5 17.5M13.2 3.5l.5 17.5M15.6 3.5L16.8 21" opacity=".7"/><path d="M7.7 11h8.6M7.3 17h9.4" opacity=".7"/><circle cx="10.8" cy="7.3" r="1.3" fill="currentColor"/><circle cx="15.6" cy="14" r="1.3" fill="currentColor"/></svg><b>Fingerboard</b><span>Find and play notes in each position</span></button>
       <button type="button" class="launch-btn" data-view="metronome"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3h5.6l3.4 18H5.8z"/><path d="M12 17.5L15.6 6.5"/><circle cx="14.2" cy="10.6" r="1.2" fill="currentColor"/><path d="M8 21h8" opacity=".0"/></svg><b>Metronome</b><span>Keep steady time at any tempo</span></button>
       <button type="button" class="launch-btn" data-view="midi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12"/><ellipse cx="6.6" cy="17.6" rx="2.6" ry="2" fill="currentColor"/><ellipse cx="16.6" cy="15.6" rx="2.6" ry="2" fill="currentColor"/><path d="M9 9.5l10-2"/></svg><b>MIDI Player</b><span>Play a tune and watch it on the fingerboard</span></button>
+      <button type="button" class="launch-btn" data-view="fingering"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5l3.5 3.5v13.5H6z"/><path d="M14.5 3.5V7H18"/><path d="M8.5 12.5h7M8.5 15.5h7"/><text x="9" y="10.4" font-size="5.5" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">1 3</text></svg><b>Fingerings</b><span>Marks the violin part with fingerings, exports a PDF</span></button>
       <button type="button" class="launch-btn" data-view="symbols"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3-1.2 6-1 8.5.8 2.5-1.8 5.5-2 8.5-.8v13.2c-3-1.2-6-1-8.5.8-2.5-1.8-5.5-2-8.5-.8z"/><path d="M12 6.3v13.2"/><path d="M16.2 9v5.2"/><ellipse cx="15.2" cy="14.4" rx="1.3" ry="1" fill="currentColor"/></svg><b>Symbols</b><span>Look up music signs and what they mean</span></button>
     </div>
     <button type="button" class="launch-days" id="launchDays" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-4"/><path d="M12 16V7"/><path d="M17 16v-6"/></svg><span class="use-days">Practised on 0 days</span></button>
@@ -4887,11 +4938,17 @@ function noteGate() {
     m = /^([1-9])(?:st|nd|rd|th)\.?\s*pos(?:ition|\.)?$/i.exec(t);
     return m ? +m[1] : 0;
   }
-  function posMarks(sg, inf) {
+  function posMarks(sg, inf, xAt, bars, passages) {
     var out = [], CHW = 1200, ns = sg.notes;
     function mark(x, y, h) { out.push([x, '<text class="mp-pos" x="' + (x - 4) + '" y="' + y + '">' + ROMAN_U[h] + '</text>']); }
     function dash(x0, x1, y) {   /* in pieces no longer than a score section, so each shows with its section */
-      for (var a = x0; a < x1; ) { var b = Math.min(x1, (Math.floor(a / CHW) + 1) * CHW); out.push([a, '<path class="mp-posd" d="M' + a + ' ' + y + 'H' + b + '"/>']); a = b; }
+      /* in pieces that end at bar lines and score sections: each shows with its section, and a page system ends its own */
+      var cuts = bars.map(function (q) { return q.x; });
+      for (var a = x0; a < x1; ) {
+        var b = Math.min(x1, (Math.floor(a / CHW) + 1) * CHW);
+        for (var c = 0; c < cuts.length; c++) if (cuts[c] > a + 0.5 && cuts[c] < b) { b = cuts[c]; break; }
+        out.push([a, '<path class="mp-posd" d="M' + a + ' ' + y + 'H' + b + '"/>']); a = b;
+      }
     }
     function topOver(k0, k1) { var t = Y0 - 7; for (var k = k0; k <= k1; k++) if (inf[k] && inf[k].top !== undefined) t = Math.min(t, inf[k].top); return Math.max(14, t); }
     var own = (sg.marks || []).filter(function (m) { return m.kind === 'words' && posWord(m.text); });
@@ -4917,6 +4974,7 @@ function noteGate() {
          note whose fingering or bowing reaches up to it (the strip has no more room above: Winter's high runs) */
       var x0 = inf[open.k0].hx, x1 = inf[kEnd].hx + 6, y = topOver(open.k0, open.k0), ly = y - 5, a = x0 + 2 + 18 * ROMAN_W[open.h];
       mark(x0, y, open.h);
+      passages.push({ h: open.h, x0: x0, x1: x1, y: y });
       if (open.h > 0) {   /* "I" (back to 1st) needs no line */
         for (var k = open.k0 + 1; k <= kEnd; k++) {
           var f = inf[k]; if (!f || f.top === undefined || ly <= f.top + 2) continue;   /* its marks end below the line */
@@ -4935,8 +4993,13 @@ function noteGate() {
     if (open) close(open.kEnd);
     return out;
   }
-  function drawScore() {
-    var sg = song, sharps = sg.sf >= 0, sp = sharps ? SP_S : SP_F, n = Math.abs(sg.sf), keyAcc = {};
+  /* the score drawing, shared by the player's scrolling strip and the Fingerings pages (one renderer, two
+     layouts): every shape as [x, svg markup] on one long line, plus where each bar starts. opts.gain(beat) widens
+     the spacing after a beat (the pages justify each system with it) */
+  function scoreItems(sg, opts) {
+    opts = opts || {};
+    var X0, W, xAt, bars = [];
+    var sharps = sg.sf >= 0, sp = sharps ? SP_S : SP_F, n = Math.abs(sg.sf), keyAcc = {};
     for (var i = 0; i < n; i++) keyAcc[(sharps ? SHARP_K : FLAT_K)[i]] = sharps ? 1 : -1;
     var out = [], x = 40;
     /* key signature as printed: each sign on its own line or space, about a space apart (Trix) */
@@ -4984,13 +5047,14 @@ function noteGate() {
        playhead as the music starts (Trix) */
     var leadW = Math.max(120, barBeats * 40), pts = [[-barBeats, X0]], cx = X0 + leadW, lastBar = 0;
     items.push([cx - 6, '<path class="bl" d="M' + (cx - 6) + ' ' + Y0 + 'V' + BOT + '"/>']);
+    bars.push({ beat: 0, x: cx - 6 });
     cx += 12;
     evs.forEach(function (b, i) {
       var bn = Math.floor(b / barBeats + 1e-6);
-      if (bn > lastBar) { items.push([cx - 6, '<path class="bl" d="M' + (cx - 6) + ' ' + Y0 + 'V' + BOT + '"/>']); cx += 12; lastBar = bn; }
+      if (bn > lastBar) { items.push([cx - 6, '<path class="bl" d="M' + (cx - 6) + ' ' + Y0 + 'V' + BOT + '"/>']); bars.push({ beat: bn * barBeats, x: cx - 6 }); cx += 12; lastBar = bn; }
       if (gRoom[b.toFixed(3)]) cx += 12 * gRoom[b.toFixed(3)];
       pts.push([b, cx]);
-      cx += 26 + 30 * Math.sqrt(Math.max(0.125, (i + 1 < evs.length ? evs[i + 1] : sg.beats) - b));
+      cx += (26 + 30 * Math.sqrt(Math.max(0.125, (i + 1 < evs.length ? evs[i + 1] : sg.beats) - b))) * (opts.gain ? opts.gain(b) : 1);
     });
     pts.push([sg.beats, cx]);
     xAt = function (b) {
@@ -5005,6 +5069,8 @@ function noteGate() {
     });
     var endX = cx - 8;
     items.push([endX - 4, '<path class="bl" d="M' + (endX - 4) + ' ' + Y0 + 'V' + BOT + '"/><path class="bl end" d="M' + endX + ' ' + Y0 + 'V' + BOT + '"/>']);
+    bars.push({ beat: sg.beats, x: endX - 4, end: true });
+    if (opts.barsOnly) return { X0: X0, bars: bars };   /* the pages' first pass: where the bars fall is all it needs */
     /* first pass: where each note sits; accidentals hold to the end of the bar */
     var barNo = -1, inBar = {}, inf = sg.notes.map(function (nt) {
       var bn = Math.floor(nt.b / barBeats + 1e-6);
@@ -5155,7 +5221,8 @@ function noteGate() {
       if (dotted) g.push('<circle class="dot" cx="' + (hx + 9) + '" cy="' + (step % 2 === 0 ? y - S / 2 : y) + '" r="1.7"/>');
       items.push([hx, '<g class="mp-n" data-k="' + k + '" style="--hue:' + hueOf(nt) + '">' + g.join('') + '</g>']);
     });
-    items = items.concat(beams, slurItems, posMarks(sg, inf));
+    var passages = [];
+    items = items.concat(beams, slurItems, posMarks(sg, inf, xAt, bars, passages));
     /* dynamics, hairpins and words under the staff (MusicXML, Trix) */
     var DY = BOT + 41, wedge = null, lastDynX = -99;   /* below any fingering under the notes */
     (sg.marks || []).forEach(function (m) {
@@ -5177,6 +5244,11 @@ function noteGate() {
         wedge = null;
       } else wedge = { x: x, cresc: m.text === 'crescendo' };
     });
+    return { items: items, head: out.slice(0, head), X0: X0, W: W, xAt: xAt, bars: bars, passages: passages };
+  }
+  function drawScore() {
+    var r = scoreItems(song), items = r.items, i;
+    X0 = r.X0; W = r.W; xAt = r.xAt;
     /* the score in sections ~1200 px wide, each its own svg, only those near the playhead shown: one svg as
        wide as a long piece (Winter: 47 000 px, 9 800 shapes) was redrawn on every frame and stalled phones */
     var CH = 1200, H = BOT + 46, nC = Math.ceil(W / CH), parts = [];
@@ -5195,7 +5267,7 @@ function noteGate() {
     for (i = 0; i < 5; i++) kl += '<path class="sl" d="M0 ' + (Y0 + i * S) + 'H' + kw + '"/>';
     keySvg.setAttribute('width', kw + 14); keySvg.setAttribute('height', BOT + 46);
     keySvg.setAttribute('viewBox', '0 0 ' + (kw + 14) + ' ' + (BOT + 46));
-    keySvg.innerHTML = kl + CLEF + out.slice(0, head).join('');
+    keySvg.innerHTML = kl + CLEF + r.head.join('');
     if (typeof placeAB === 'function') setTimeout(placeAB, 0);
     noteEls = [];
     Array.prototype.forEach.call(svg.querySelectorAll('.mp-n'), function (el) { noteEls[+el.getAttribute('data-k')] = el; });
@@ -5401,6 +5473,7 @@ function noteGate() {
       if (s.failed) { s.failed = false; say(s.err || 'This tune downloads the first time you play it. Connect to the internet and choose it again.', true); }
       else { say(s.have ? 'Opening the score…' : 'Downloading this tune…'); fetchDemo(i); }   /* a long score (Serenade) takes a few seconds on a phone */   /* choosing it again tries again; a built-in one is being read (a moment) */
       if (shown) fit();
+      if (APP.fgSync) APP.fgSync();
       return;
     }
     drawScore();
@@ -5414,6 +5487,7 @@ function noteGate() {
     mixUi();
     APP.board.toTop();   /* a new tune opens at the open strings, whatever the last one scrolled to (Hermes F14) */
     if (shown) fit();
+    if (APP.fgSync) APP.fgSync();   /* the Fingerings pages follow the current tune */
   }
   function addSong(title, buf, kept) {   /* kept: an imported file, with its id in the saved list */
     var sg = parse(buf);
@@ -5432,6 +5506,7 @@ function noteGate() {
       songSel.appendChild(o);
     });
     if (v !== '') songSel.value = v;
+    if (APP.fgSync) APP.fgSync();   /* the Fingerings list is the same list */
   }
   document.addEventListener('i18n', options);   /* language switched: relabel [imported] */
   function fromB64(b64) { var bin = atob(b64), u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return u8.buffer; }
@@ -5874,6 +5949,98 @@ function noteGate() {
     document.addEventListener(ev, function () { if (!fsEl() && full) setFull(false); else if (shown) setTimeout(fit, 50); });   /* left with Esc or Back */
   });
   APP.midiSong = function () { return song; };   /* for tests: the tune on screen */
+  /* ---------- Fingerings (指法谱, Trix): the violin part with the app's fingerings, on A4 pages and as a PDF.
+     Same tune list, reader, planner and drawing as the player (scoreItems): the long line is cut at bar lines
+     into systems, each system justified by widening its note spacing (a second drawing pass, so nothing is
+     stretched), systems stacked on pages. The preview is the PDF: printing shows these same pages. */
+  var fgSel = $('fgSong'), fgPages = $('fgPages'), fgMsg = $('fgMsg'), fgPdf = $('fgPdf'), fgShown = false, fgDirty = true, fgHtml = '';
+  var PG_W = 794, PG_H = 1123, PG_M = 57, PG_K = 0.64, SYS_H = BOT + 46;   /* A4 at 96 px per inch, 15 mm margins; score at 64 % (a 5.8 mm staff) */
+  function fgOptions() { if (!fgSel) return; fgSel.innerHTML = songSel.innerHTML; fgSel.value = songSel.value; }
+  function fgSync() { fgOptions(); fgDirty = true; if (fgShown) fgRender(); }
+  var fgT = 0;
+  APP.fgSync = function () { clearTimeout(fgT); fgT = setTimeout(fgSync, 0); };   /* after the caller has set the list's value (an import selects its tune after loading it) */
+  function fgTitle() {
+    var i = +songSel.value, s = songs[i], o = songSel.options[songSel.selectedIndex], zh = window.I18N && I18N.lang === 'zh';
+    return (s ? (s.kept ? s.title : (o ? o.textContent : s.title)) : '') + ' · ' + (zh ? '小提琴' : 'Violin');
+  }
+  function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function fgLayout(sg) {
+    var r1 = scoreItems(sg, { barsOnly: true }), hw = r1.X0 - 12, avail = (PG_W - 2 * PG_M) / PG_K - hw - 4, bars = r1.bars, sys = [], a = 0;
+    while (a < bars.length - 1) {   /* as many whole bars as fit; at least one */
+      var b = a + 1;
+      while (b + 1 < bars.length && bars[b + 1].x - bars[a].x <= avail) b++;
+      sys.push([a, b]); a = b;
+    }
+    var gains = sys.map(function (q, i) {
+      var w = bars[q[1]].x - bars[q[0]].x, fixed = 12 * (q[1] - q[0]) + 4;
+      if (i === sys.length - 1 && w < avail * 0.75) return 1;   /* a short last system stays at its natural width */
+      return Math.max(1, (avail - fixed) / Math.max(1, w - fixed));
+    });
+    var r = scoreItems(sg, { gain: function (b) { for (var i = 0; i < sys.length; i++) if (b < bars[sys[i][1]].beat - 1e-6) return gains[i]; return gains[gains.length - 1]; } });
+    r.sys = sys; r.hw = hw; r.items.sort(function (p, q) { return p[0] - q[0]; });
+    return r;
+  }
+  function fgSystem(sg, r, si, firstOnPage, id) {
+    var q = r.sys[si], xa = r.bars[q[0]].x, xb = r.bars[q[1]].x, hw = r.hw, tx = hw - xa, wide = hw + xb - xa, out = [], lines = '';
+    for (var j = 0; j < 5; j++) lines += '<path class="sl" d="M0 ' + (Y0 + j * S) + 'H' + wide + '"/>';
+    var bo = sg.barAt ? sg.barAt(r.bars[q[0]].beat + 1e-3) : null;
+    out.push(lines, CLEF, r.head.join(''));
+    if (bo) out.push('<text class="fg-bn" x="2" y="' + (Y0 - 24) + '">' + esc(bo.num) + '</text>');
+    /* a position held over a page turn: its numeral again at the top of the new page (Trix) */
+    if (firstOnPage && si > 0) r.passages.forEach(function (p) {
+      if (p.h > 0 && p.x0 < xa - 1 && p.x1 > xa + 14) out.push('<text class="mp-pos" x="' + (hw + 4) + '" y="' + p.y + '">' + ROMAN_U[p.h] + '</text>');
+    });
+    var body = [];
+    for (var lo = 0, hi = r.items.length; lo < hi; ) { var mid = (lo + hi) >> 1; if (r.items[mid][0] <= xa + 0.5) lo = mid + 1; else hi = mid; }
+    for (var k = lo; k < r.items.length && r.items[k][0] <= xb + 0.5; k++) body.push(r.items[k][1]);
+    out.push('<clipPath id="' + id + '"><rect x="' + (hw - 2) + '" y="-12" width="' + (xb - xa + 8) + '" height="' + (SYS_H + 24) + '"/></clipPath>');
+    out.push('<g clip-path="url(#' + id + ')"><g transform="translate(' + tx.toFixed(2) + ' 0)">' + body.join('') + '</g></g>');
+    return out.join('');
+  }
+  function fgRender() {
+    if (!fgPages) return;
+    fgDirty = false;
+    if (!song) { fgPages.innerHTML = ''; fgPdf.disabled = true; fgMsg.hidden = false; fgMsg.textContent = msg.hidden ? 'Opening the score…' : msg.textContent; return; }
+    fgMsg.hidden = true; fgPdf.disabled = false;
+    var sg = song, r = fgLayout(sg), zh = window.I18N && I18N.lang === 'zh';
+    var pages = [], cur = null, y = 0, sysH = SYS_H * PG_K + 2, bottom = PG_H - PG_M - 16;
+    r.sys.forEach(function (q, si) {
+      if (!cur || y + sysH > bottom) { cur = []; pages.push(cur); y = PG_M + (pages.length === 1 ? 44 : 0); cur.first = true; }
+      cur.push([si, y, cur.length === 0]); y += sysH;
+    });
+    var btn = document.getElementById('verBtn'), ver = btn ? btn.dataset.version : '', build = btn ? btn.dataset.build : '';
+    var html = pages.map(function (pg, pi) {
+      var o = ['<svg class="fg-page" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + PG_W + ' ' + PG_H + '" width="' + PG_W + '" height="' + PG_H + '"><rect class="fg-paper" width="' + PG_W + '" height="' + PG_H + '"/>'];
+      if (pi === 0) o.push('<text class="fg-title" x="' + PG_W / 2 + '" y="' + (PG_M + 14) + '">' + esc(fgTitle()) + '</text>');
+      pg.forEach(function (e) { o.push('<g transform="translate(' + PG_M + ' ' + e[1].toFixed(1) + ') scale(' + PG_K + ')">' + fgSystem(sg, r, e[0], e[2], 'fgc' + pi + '_' + e[0]) + '</g>'); });
+      o.push('<text class="fg-foot" x="' + PG_M + '" y="' + (PG_H - PG_M + 10) + '">Violin Toolkit ' + esc(ver) + (build ? ' · ' + esc(build) : '') + '</text>');
+      o.push('<text class="fg-foot fg-pg-n" x="' + (PG_W - PG_M) + '" y="' + (PG_H - PG_M + 10) + '">' + (zh ? '第 ' + (pi + 1) + ' 页，共 ' + pages.length + ' 页' : 'Page ' + (pi + 1) + ' of ' + pages.length) + '</text>');
+      o.push('</svg>');
+      return o.join('');
+    }).join('');
+    fgHtml = html; fgPages.innerHTML = html;
+  }
+  if (fgSel) {
+    fgSel.addEventListener('change', function () { songSel.value = fgSel.value; load(+songSel.value); });   /* one current tune for both tools */
+    $('fgImport').addEventListener('click', function () { $('mpImport').click(); });   /* the same import, the same list */
+    $('mpFg').addEventListener('click', function (e) { e.stopPropagation(); APP.show('fingering'); window.scrollTo(0, 0); });
+    $('mpFg').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+    document.addEventListener('i18n', function () { fgOptions(); if (fgShown) fgRender(); else fgDirty = true; });
+    fgPdf.addEventListener('click', function () {
+      if (!song) return;
+      var ios = window.VTiOSApp && window.webkit && webkit.messageHandlers && webkit.messageHandlers.vt;
+      document.documentElement.classList.add('fg-printing');
+      if (ios) { webkit.messageHandlers.vt.postMessage({ print: fgTitle() }); return; }   /* the iPhone app makes the PDF and offers the share sheet */
+      if (window.VTApp && VTApp.print) { VTApp.print(fgTitle()); return; }   /* the Android app: the system print screen (Save as PDF) */
+      window.print();
+    });
+    window.addEventListener('afterprint', function () { document.documentElement.classList.remove('fg-printing'); });
+    APP.fgPrinted = function () { document.documentElement.classList.remove('fg-printing'); };   /* the apps call this when their print screen closes */
+    APP.views.fingering = {
+      show: function () { fgShown = true; fgOptions(); if (fgDirty) fgRender(); },
+      hide: function () { fgShown = false; }
+    };
+  }
   APP.views.midi = {
     show: function () { appCall('rotate', true); shown = true; fit(); if (phone() && innerWidth > innerHeight && !full) setFull(true, true); },   /* the phone apps turn only in the MIDI player (Trix) */   /* opened on a phone held sideways: full screen (Trix) */
     hide: function () { setFull(false); appCall('rotate', false); shown = false; pause(); setMixOpen(false); APP.board.player(false); }
@@ -5885,7 +6052,7 @@ function noteGate() {
 (function () {
   /* Each tool registers APP.views[name] = { show, hide } and has a #view-name section,
      a #ttl-name heading block and a .tab button with data-view="name". */
-  var names = ['tuner', 'board', 'metronome', 'symbols', 'midi'];
+  var names = ['tuner', 'board', 'metronome', 'symbols', 'midi', 'fingering'];
   var shell = document.getElementById('shell');
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab[data-view]'));
   var cur = null;
@@ -6358,8 +6525,8 @@ function noteGate() {
   sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
 
   var h = (location.hash || '').replace('#', '').split(/[,&;]/).map(function (t) { return t.trim().toLowerCase(); })
-    .filter(function (t) { return ['fingerboard', 'board', 'tuner', 'metronome', 'symbols', 'midi'].indexOf(t) >= 0; })[0] || '';
-  var map = { fingerboard: 'board', board: 'board', tuner: 'tuner', metronome: 'metronome', symbols: 'symbols', midi: 'midi' };
+    .filter(function (t) { return ['fingerboard', 'board', 'tuner', 'metronome', 'symbols', 'midi', 'fingering', 'fingerings'].indexOf(t) >= 0; })[0] || '';
+  var map = { fingerboard: 'board', board: 'board', tuner: 'tuner', metronome: 'metronome', symbols: 'symbols', midi: 'midi', fingering: 'fingering', fingerings: 'fingering' };
   show(map[h] || 'board');
 
   /* start overlay: asked once per load unless the link already names a tool (#tuner, #metronome, #fingerboard) */
@@ -6684,7 +6851,7 @@ function noteGate() {
     'in tune': '音准正确', 'off the board': '超出指板',
     'no sharps or flats': '无升降号', 'no ♯ or ♭': '无升降号',
     /* metronome */
-    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Full screen': '全屏', 'Exit full screen': '退出全屏', 'This is not a MIDI or MusicXML file.': '这不是 MIDI 或 MusicXML 文件。', 'This MusicXML file could not be read.': '无法读取这个 MusicXML 文件。', 'This browser can’t open compressed MusicXML (.mxl). Export the score as uncompressed MusicXML (.musicxml) instead.': '这个浏览器无法打开压缩的 MusicXML（.mxl）。请把乐谱导出为未压缩的 MusicXML（.musicxml）。', 'This file has no score in it.': '这个文件里没有乐谱。', 'This MusicXML file is in the timewise layout, which the player can’t read. Export it again as MusicXML from your notation app.': '这个 MusicXML 文件是按时间排列的格式，播放器无法读取。请在打谱软件中重新导出为 MusicXML。', 'This file could not be read.': '无法读取这个文件。', 'Repeat a passage (A–B)': '反复播放一段（A–B）', 'Repeat bars': '反复小节', 'From bar (A)': '从第几小节（A）', 'To bar (B)': '到第几小节（B）', 'Repeat': '反复', 'Cancel': '取消', 'Choose a MIDI or MusicXML file (.mid, .midi, .musicxml, .xml or .mxl).': '请选择 MIDI 或 MusicXML 文件（.mid、.midi、.musicxml、.xml 或 .mxl）。', 'Vibrato on long notes': '长音揉弦', 'Updates come from Google Play': '更新通过 Google Play 进行', 'Choose a built-in tune or one you imported.': '选择内置曲目或你导入的曲目。', 'Play counts in, then each note lights up on the fingerboard as the score scrolls by with its fingering. − and + change the speed; Loop and A–B repeat the tune or a passage.': '播放前先数拍，然后每个音在指板上亮起，乐谱带着指法滚动。− 和 + 调整速度；循环和 A–B 可反复整首或一段。', 'Levels for the violin, accompaniment and metronome, and vibrato on long notes.': '调节小提琴、伴奏和节拍器的音量，以及长音揉弦。', 'A bigger score and the whole fingerboard. On a phone, just turn it sideways.': '更大的乐谱和完整的指板。手机上只要横过来即可。', 'Add a MIDI or MusicXML file. The violin part lights up and the other parts play along.': '添加 MIDI 或 MusicXML 文件。小提琴声部会亮起，其他声部一起伴奏。', 'Play and follow along': '播放并跟着看', 'Import your own': '导入自己的文件', 'Touch a coloured note to hear it.': '按住彩色音符即可听到它。', 'Hold for 3 seconds and it keeps sounding, like a tuning fork. Tap anywhere to stop.': '按住 3 秒后松手也会继续发声，像音叉一样。点任意处停止。', 'Pick a major or minor key; swipe a row for more. Notes outside the key are grey.': '选择大调或小调，左右滑动查看更多。调外的音显示为灰色。', 'Tap here to pick a major or minor key. Notes outside the key are grey.': '点这里选择大调或小调。调外的音显示为灰色。', 'Equal, Just or Pythagorean tuning. The notes on the board move to match.': '平均律、纯律或五度相生律。指板上的音会随之移动。', 'Switch the hand between 1st, 2nd and 3rd position. Each note shows the finger that plays it.': '在一把位、二把位和三把位之间切换。每个音都标有所用的手指。', 'Tap it and play a note: a disc shows where it lands. On the note is in tune, below is sharp, above is flat.': '点它然后演奏一个音：圆盘显示它的位置。在音符上为准，偏下为偏高，偏上为偏低。', '1 Hz lower': '降低 1 Hz', '1 Hz higher': '升高 1 Hz', 'Update in Google Play': '在 Google Play 中更新', 'Update on the App Store': '在 App Store 中更新', 'Opening the score…': '正在打开乐谱…', 'Downloading this tune…': '正在下载这首曲子…', 'This tune downloads the first time you play it. Connect to the internet and choose it again.': '这首曲子第一次播放时需要下载。请连接网络后再选择一次。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'Serenade': '小夜曲', 'Serenade, 1st movement': '小夜曲 · 第一乐章', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only drums or sound effects.': '这个文件只有打击乐或音效。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
+    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Full screen': '全屏', 'Exit full screen': '退出全屏', 'This is not a MIDI or MusicXML file.': '这不是 MIDI 或 MusicXML 文件。', 'This MusicXML file could not be read.': '无法读取这个 MusicXML 文件。', 'This browser can’t open compressed MusicXML (.mxl). Export the score as uncompressed MusicXML (.musicxml) instead.': '这个浏览器无法打开压缩的 MusicXML（.mxl）。请把乐谱导出为未压缩的 MusicXML（.musicxml）。', 'This file has no score in it.': '这个文件里没有乐谱。', 'This MusicXML file is in the timewise layout, which the player can’t read. Export it again as MusicXML from your notation app.': '这个 MusicXML 文件是按时间排列的格式，播放器无法读取。请在打谱软件中重新导出为 MusicXML。', 'This file could not be read.': '无法读取这个文件。', 'Repeat a passage (A–B)': '反复播放一段（A–B）', 'Repeat bars': '反复小节', 'From bar (A)': '从第几小节（A）', 'To bar (B)': '到第几小节（B）', 'Repeat': '反复', 'Cancel': '取消', 'Choose a MIDI or MusicXML file (.mid, .midi, .musicxml, .xml or .mxl).': '请选择 MIDI 或 MusicXML 文件（.mid、.midi、.musicxml、.xml 或 .mxl）。', 'Vibrato on long notes': '长音揉弦', 'Updates come from Google Play': '更新通过 Google Play 进行', 'Choose a built-in tune or one you imported.': '选择内置曲目或你导入的曲目。', 'Play counts in, then each note lights up on the fingerboard as the score scrolls by with its fingering. − and + change the speed; Loop and A–B repeat the tune or a passage.': '播放前先数拍，然后每个音在指板上亮起，乐谱带着指法滚动。− 和 + 调整速度；循环和 A–B 可反复整首或一段。', 'Levels for the violin, accompaniment and metronome, and vibrato on long notes.': '调节小提琴、伴奏和节拍器的音量，以及长音揉弦。', 'A bigger score and the whole fingerboard. On a phone, just turn it sideways.': '更大的乐谱和完整的指板。手机上只要横过来即可。', 'Add a MIDI or MusicXML file. The violin part lights up and the other parts play along.': '添加 MIDI 或 MusicXML 文件。小提琴声部会亮起，其他声部一起伴奏。', 'Play and follow along': '播放并跟着看', 'Import your own': '导入自己的文件', 'Touch a coloured note to hear it.': '按住彩色音符即可听到它。', 'Hold for 3 seconds and it keeps sounding, like a tuning fork. Tap anywhere to stop.': '按住 3 秒后松手也会继续发声，像音叉一样。点任意处停止。', 'Pick a major or minor key; swipe a row for more. Notes outside the key are grey.': '选择大调或小调，左右滑动查看更多。调外的音显示为灰色。', 'Tap here to pick a major or minor key. Notes outside the key are grey.': '点这里选择大调或小调。调外的音显示为灰色。', 'Equal, Just or Pythagorean tuning. The notes on the board move to match.': '平均律、纯律或五度相生律。指板上的音会随之移动。', 'Switch the hand between 1st, 2nd and 3rd position. Each note shows the finger that plays it.': '在一把位、二把位和三把位之间切换。每个音都标有所用的手指。', 'Tap it and play a note: a disc shows where it lands. On the note is in tune, below is sharp, above is flat.': '点它然后演奏一个音：圆盘显示它的位置。在音符上为准，偏下为偏高，偏上为偏低。', '1 Hz lower': '降低 1 Hz', '1 Hz higher': '升高 1 Hz', 'Update in Google Play': '在 Google Play 中更新', 'Update on the App Store': '在 App Store 中更新', 'Fingerings': '指法谱', 'Marks the violin part with fingerings, exports a PDF': '把谱面标上指法，导出 PDF', 'Fingerings, strings and positions are chosen automatically; they can\'t be edited yet.': '指法、弦和把位都是自动标注的，暂时不能修改。', 'Fingered violin part': '标有指法的小提琴分谱', 'Fingerings: this tune on pages, as a PDF': '指法谱：把这首曲子排成页面，导出 PDF', 'Automatic fingerings · PDF': '自动指法 · PDF', 'Opening the score…': '正在打开乐谱…', 'Downloading this tune…': '正在下载这首曲子…', 'This tune downloads the first time you play it. Connect to the internet and choose it again.': '这首曲子第一次播放时需要下载。请连接网络后再选择一次。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'Serenade': '小夜曲', 'Serenade, 1st movement': '小夜曲 · 第一乐章', 'Winter, 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only drums or sound effects.': '这个文件只有打击乐或音效。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
     'Quaver (eighth note)': '八分音符', 'Crotchet (quarter note)': '四分音符', 'Minim (half note)': '二分音符', 'Semibreve (whole note)': '全音符',
     '½ beat in 4/4': '4/4 拍中占半拍', '1 beat in 4/4': '4/4 拍中占 1 拍', '2 beats in 4/4': '4/4 拍中占 2 拍', '4 beats in 4/4': '4/4 拍中占 4 拍',
     'Up bow': '上弓', 'Push, tip to frog': '推弓：弓尖到弓根', 'Down bow': '下弓', 'Pull, frog to tip': '拉弓：弓根到弓尖',
