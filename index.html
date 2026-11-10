@@ -1625,6 +1625,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
 <div class="fg" id="fg">
   <div class="mp-row fg-row">
     <label class="mp-song"><span class="mp-vh">Tune</span><select id="fgSong"></select><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></label>
+    <button type="button" class="mp-del" id="fgDel" aria-label="Delete this file" title="Delete this file" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9.5 7V4.5h5V7"/><path d="M6.5 7l1 12.5h9l1-12.5"/><path d="M10 11v5M14 11v5"/></svg></button>
     <button type="button" class="mp-import" id="fgImport"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 14.5v4a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-4"/></svg>Import</button>
   </div>
   <div class="fg-bar">
@@ -2080,7 +2081,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.42" data-build="20261111-071835" data-cache="violin-toolkit-test-"><span>Version 1.42-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.42" data-build="20261111-072209" data-cache="violin-toolkit-test-"><span>Version 1.42-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -6362,7 +6363,7 @@ function noteGate() {
   var fgSel = $('fgSong'), fgPages = $('fgPages'), fgMsg = $('fgMsg'), fgPdf = $('fgPdf'), fgShown = false, fgDirty = true, fgHtml = '';
   var PG_W = 794, PG_H = 1123, PG_M = 57, PG_K = 0.62, SYS_H = BOT + 46, FG_IND = 60;   /* FG_IND: the first system's indent, in score units (~10 mm) */   /* A4 at 96 px per inch, 15 mm margins; score at 64 % (a 5.8 mm staff) */
   function fgOptions() { if (!fgSel) return; fgSel.innerHTML = songSel.innerHTML; fgSel.value = songSel.value; }
-  function fgSync() { fgOptions(); fgDirty = true; if (APP.fgReset) APP.fgReset(); if (fgShown) fgRender(); }
+  function fgSync() { fgOptions(); var cur = songs[+songSel.value]; $('fgDel').hidden = !(cur && cur.kept); fgDirty = true; if (APP.fgReset) APP.fgReset(); if (fgShown) fgRender(); }
   var fgT = 0;
   APP.fgSync = function () { clearTimeout(fgT); fgT = setTimeout(fgSync, 0); };   /* after the caller has set the list's value (an import selects its tune after loading it) */
   /* the exported PDF's name (Trix): the tune as the list shows it (never an import's file name), a hyphen and the part
@@ -6538,6 +6539,7 @@ function noteGate() {
   if (fgSel) {
     fgSel.addEventListener('change', function () { songSel.value = fgSel.value; load(+songSel.value); });   /* one current tune for both tools */
     $('fgImport').addEventListener('click', function () { $('mpImport').click(); });   /* the same import, the same list */
+    $('fgDel').addEventListener('click', function () { delBtn.click(); fgSel.focus(); });   /* the player's bin: the same list (Trix) */
     $('fgPlay').addEventListener('click', function () { APP.show('midi'); window.scrollTo(0, 0); if (song && !playing && !counting) play(); });   /* back to the player, the same tune, playing (Trix); inside the tap, so the sound may start (iPhone) */
     $('mpFg').addEventListener('click', function (e) { e.stopPropagation(); APP.show('fingering'); window.scrollTo(0, 0); });
     $('mpFg').addEventListener('pointerdown', function (e) { e.stopPropagation(); });
