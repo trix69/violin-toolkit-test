@@ -1158,7 +1158,7 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 #view-fingering .fg-note { flex: 1; margin: 0; font: 400 13px var(--font-body); color: var(--muted); }
 #view-fingering .fg-pdf { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--accent); color: var(--on-accent); font: 600 15px var(--font-note); cursor: pointer; }
 #view-fingering .fg-play { flex: none; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--fg); cursor: pointer; }
-#view-fingering .fg-play svg { width: 20px; height: 20px; fill: currentColor; margin-left: 3px; }
+#view-fingering .fg-play svg { width: 26px; height: 26px; fill: currentColor; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }   /* the MIDI player's triangle: same size, outline and centre (Trix) */
 #view-fingering .fg-play:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 #view-fingering .fg-pdf svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 #view-fingering .fg-pdf:disabled { opacity: .4; cursor: default; }
@@ -1625,7 +1625,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
   </div>
   <div class="fg-bar">
     <p class="fg-note">Fingerings, strings and positions are marked automatically and may contain mistakes.</p>
-    <button type="button" class="fg-play" id="fgPlay" aria-label="Play in the MIDI player" title="Play in the MIDI player"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></button>
+    <button type="button" class="fg-play" id="fgPlay" aria-label="Play in the MIDI player" title="Play in the MIDI player"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z"/></svg></button>
     <button type="button" class="fg-pdf" id="fgPdf" title="Export as PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5"/><path d="M7.5 8L12 3.5 16.5 8"/><path d="M8 11H6a1.5 1.5 0 0 0-1.5 1.5v6.5A1.5 1.5 0 0 0 6 20.5h12a1.5 1.5 0 0 0 1.5-1.5v-6.5A1.5 1.5 0 0 0 18 11h-2"/></svg>Export</button>
   </div>
   <p class="mp-msg" id="fgMsg" role="status" hidden></p>
@@ -2076,7 +2076,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.41" data-build="20261110-164045" data-cache="violin-toolkit-test-"><span>Version 1.41-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.41" data-build="20261110-175120" data-cache="violin-toolkit-test-"><span>Version 1.41-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3025,7 +3025,15 @@ function noteGate() {
       K = f[0]; r = Math.floor(f[1]);
       /* never smaller than 18 px with a clear gap between notes (Trix; a small Android screen: "too small"):
          the board then runs past the room and scrolls in its box, following the notes played */
-      if (r < 18) { r = 18; K = (2 * r + 10) / (mm(N) - mm(N - 1)); }
+      if (r < 18) {
+        /* Trix: a bit tighter, so one position and its 4th-finger stretch (9 rows: low 1st finger to a tone past the
+           4th; 1st position from the open strings) are all in view at once and a stretch never scrolls: the clear gap between notes 10 px down to 4,
+           then the notes down to 15 px */
+        var G = 9;   /* gaps: 1st position's box with the open strings, to a tone past the 4th finger (10 rows) */
+        r = 18; var clr = Math.max(4, Math.min(10, (room - 16 - 2 * r) / G - 2 * r));
+        if ((room - 16 - 2 * r) / G - 2 * r < 4) r = Math.max(15, Math.floor((room - 16 - 4 * G) / (2 * G + 2)));
+        K = (2 * r + clr) / (mm(N) - mm(N - 1));
+      }
       }
     } else if (evenly || renderedEvenly) { evenly = false; renderedEvenly = false; render(); }
     if (!box && showN) { showN = 0; paint(); }
@@ -3766,7 +3774,7 @@ function noteGate() {
     var nt = notes[i], el = buttons[i];
     /* a string sounds one note at a time: a new note on it replaces the one before (overlapping legato in the file) */
     if (nt) pvoices.forEach(function (r, k) { if (r.si === nt.si && k !== id && (grp === undefined || r.grp !== grp)) pOff(k); });
-    var rec = { el: el, grp: grp, si: nt ? nt.si : -1, v: quiet ? null : tone === 'pizz' ? startPluck(nt ? noteFreq(nt) : midiFreq(midi)) : startVoice(nt ? noteFreq(nt) : midiFreq(midi), tone === 'pure', 0.02), t0: performance.now(), vibOn: false, player: true, open: !!nt && (nt.n === 0 || nt.n === MAXN) };
+    var rec = { el: el, grp: grp, si: nt ? nt.si : -1, v: quiet ? null : tone === 'pizz' ? startPluck(nt ? noteFreq(nt) : midiFreq(midi)) : startVoice(nt ? noteFreq(nt) : midiFreq(midi), tone === 'pure', 0.02), t0: performance.now(), vibOn: false, player: true, open: !!nt && (nt.n === 0 || nt.n === MAXN), n: nt ? nt.n : -1 };
     if (rec.v) {   /* through the note's dynamic level, then the mixer's violin level */
       rec.v.out.disconnect();
       if (lvl && lvl !== 1) { var lg = ctx.createGain(); lg.gain.value = lvl; rec.v.out.connect(lg); lg.connect(soloOut()); }
@@ -3834,7 +3842,7 @@ function noteGate() {
   function centreHand() {
     if (stage.style.overflowY !== 'auto' || pHand < 0) return;
     var s = HAND_S[pHand];
-    centreRows(pHand === 0 ? 0 : Math.max(1, s - 1), Math.min(playerN, s + 5), false, false);
+    centreRows(pHand === 0 ? 0 : s - 1, Math.min(playerN, s + 7), false, false);   /* the box and the 4th finger's stretch, so a stretched note is in view without scrolling (Trix) */   /* the box and the 4th finger's stretch, so a stretched note is in view without scrolling */
   }
   /* the Fingerboard tool: the same glass box over the chosen position's keys (Trix); 1st position includes the open strings */
   function posBox(pc) {
@@ -3849,12 +3857,19 @@ function noteGate() {
     if (h === pHand || h < 0) return;   /* unknown (a chord out of reach): keep the last one */
     pHand = h; handLabel(); centreHand();
   }
+  /* the position's box and its 4th-finger stretch all fit the board's box (a very small screen: not) */
+  function handFits() {
+    var s0 = HAND_S[pHand], base = 2 * (TOPN + 1), a = buttons[base + (pHand === 0 ? 0 : s0 - 1)], z = buttons[base + Math.min(playerN, s0 + 7)];
+    if (!a || !z) return false;
+    return z.getBoundingClientRect().bottom - a.getBoundingClientRect().top + 16 <= stage.clientHeight;
+  }
   function follow(latest) {
     if (stage.style.overflowY !== 'auto') return;
     var top = Infinity, bot = -Infinity, sr = stage.getBoundingClientRect(), cur = stage.scrollTop;
     pvoices.forEach(function (r) {   /* positions within the scrolled box */
       if (!r.el) return;
       if (r.open && pHand >= 0) return;   /* an open string lights the whole string anyway: no scrolling back to the nut */
+      if (pHand >= 0 && r.n > HAND_S[pHand] + 5 && r.n <= HAND_S[pHand] + 7 && handFits()) return;   /* the 4th finger stretched (a semitone or a tone past its usual note): the hand stays, the board too (Trix), when it is in view with the box */
       var er = r.el.getBoundingClientRect();
       top = Math.min(top, er.top - sr.top + cur); bot = Math.max(bot, er.bottom - sr.top + cur);
     });
@@ -5401,7 +5416,7 @@ function noteGate() {
       }
       var upY = Math.min(stem && up ? (hd.beam >= 0 ? hd.tip : hd.yTop - 3.4 * S) : topY - (fg !== null && !chord ? 12 : 0), Y0) - 7;
       arts.forEach(function (a) {   /* above the note and its fingering */
-        var by = Math.max(8, upY), d = null;
+        var by = Math.max(opts.paged ? -34 : 8, upY), d = null;   /* the pages have room above a system (Trix: tr sat on the fingering of Winter's high notes) */
         if (a === 'down-bow') d = '<path class="art bow" d="M' + (hx - 5) + ' ' + (by + 4) + 'V' + (by - 3) + 'H' + (hx + 5) + 'V' + (by + 4) + '"/>';
         else if (a === 'up-bow') d = '<path class="art" d="M' + (hx - 4) + ' ' + (by - 4) + 'L' + hx + ' ' + (by + 4) + 'L' + (hx + 4) + ' ' + (by - 4) + '"/>';
         else if (a === 'stopped') d = '<path class="art" d="M' + (hx - 4) + ' ' + by + 'h8M' + hx + ' ' + (by - 4) + 'v8"/>';
@@ -5719,6 +5734,7 @@ function noteGate() {
     APP.board.toTop();   /* a new tune opens at the open strings, whatever the last one scrolled to (Hermes F14) */
     if (shown) fit();
     if (APP.fgSync) APP.fgSync();   /* the Fingerings pages follow the current tune */
+    settle();   /* and once more when it has settled (an iPhone left the board short) */
   }
   function addSong(title, buf, kept) {   /* kept: an imported file, with its id in the saved list */
     var sg = parse(buf);
@@ -5805,6 +5821,16 @@ function noteGate() {
     songSel.focus();
   });
   songSel.addEventListener('change', function () { load(+songSel.value); });
+  /* Trix (iPhone): a board left short, cut after two rows, after choosing Winter; not reproduced. Measure the board
+     again once the list's picker has closed and the tune has settled, and when the visible area changes (sizes only) */
+  var settleT = [];
+  function settle() {
+    settleT.forEach(clearTimeout); settleT = [];
+    [250, 800].forEach(function (ms) { settleT.push(setTimeout(function () { if (shown && !full && song) { APP.board.relayout(); scroll(); placeFull(); } }, ms)); });
+  }
+  songSel.addEventListener('blur', settle);
+  songSel.addEventListener('change', settle);
+  if (window.visualViewport) visualViewport.addEventListener('resize', function () { if (shown && !full) settle(); });
   /* only MIDI and MusicXML files (Trix). iPhone / iPad Safari greys out types iOS does not know (.mxl), so there the
      picker shows every file and a wrong one is turned away here; the iPhone app has its own picker with just these */
   var OK_EXT = /\.(mid|midi|musicxml|xml|mxl)$/i;
