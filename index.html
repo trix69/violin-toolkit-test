@@ -951,15 +951,6 @@ h1 {
 #view-midi { color: var(--fg); font-family: var(--font-note); }
 .mp-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .mp-row { display: flex; gap: 8px; }
-/* phones (Hermes F37): the tune list gets the whole row, so an imported file's name and its [imported] tag are
-   readable; Import (and Delete) sit on the row below, at the right */
-@media (max-width: 480px) {
-  .mp-row { flex-wrap: wrap; justify-content: flex-end; }
-  .mp-row .mp-song { flex: 1 1 100%; }
-  .mp-row .mp-song select { padding: 0 32px 0 12px; }
-  .mp-row .mp-song svg { right: 10px; }
-}
-@media (max-width: 360px) { .mp-row .mp-song select { font-size: 15px; padding-left: 10px; } }
 .mp-song { position: relative; flex: 1; min-width: 0; }
 .mp-song select { width: 100%; height: 44px; padding: 0 36px 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--fg); font: 600 16px var(--font-note); -webkit-appearance: none; appearance: none; text-overflow: ellipsis; }
 .mp-song svg { position: absolute; right: 12px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
@@ -2086,7 +2077,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.42" data-build="20261110-235455" data-cache="violin-toolkit-test-"><span>Version 1.42-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.42" data-build="20261111-001219" data-cache="violin-toolkit-test-"><span>Version 1.42-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -3001,7 +2992,7 @@ function noteGate() {
       var fit = function () {
         var rr = 19, KK = 3, g = mm(N) - mm(N - 1);
         for (var j = 0; j < 4; j++) {
-          KK = Math.min(box ? 1e9 : 14, (room - (rr + 4) - rr - 10 - 16) / mm(N));   /* full screen: the whole width (Trix) */   /* stretched to fill the box: a short range spreads out (Trix) */
+          KK = Math.min(box ? 1e9 : 14, (room - (rr + 4) - rr - 10) / mm(N));   /* room is the stage's inner height: its 8 px padding sits outside max-height (Trix: the board stopped short of the controls) */   /* full screen: the whole width (Trix) */   /* stretched to fill the box: a short range spreads out (Trix) */
           rr = Math.min(cap, Math.max(6, (g * KK - 8) / 2));            /* at least 8 px between the closest notes */
         }
         return [KK, rr];
@@ -3050,7 +3041,7 @@ function noteGate() {
            gap leaves (18 px at most, 9 at least); the board scrolls past that */
         r = 18;
         var gMin = mm(N) - mm(N - 1);
-        K = Math.max((room - (r + 4) - r - 16) / mm(9), (2 * 9 + 3) / gMin);
+        K = Math.max((room - (r + 4) - r - 10) / mm(Math.min(9, N)), (2 * 9 + 3) / gMin);   /* a tune that stays lower fills the room (Trix: the board stopped short of the controls) */
         rowR = function (n) {
           if (n <= 0) return r;
           var g = Math.min(mm(n) - mm(n - 1), n < TOPN ? mm(n + 1) - mm(n) : Infinity);
@@ -3069,7 +3060,7 @@ function noteGate() {
       st0.transformOrigin = '0 0'; st0.transform = 'rotate(-90deg)';
     } else { st0.position = st0.left = st0.top = st0.width = st0.height = st0.boxSizing = st0.transformOrigin = st0.transform = ''; }
     stage.style.maxHeight = room ? room + 'px' : '';
-    stage.style.overflowY = room && (r + 4) + K * mm(N) + r + 10 + 16 > room + 2 ? 'auto' : room ? 'hidden' : '';   /* rows past the tune's range stay out of sight */
+    stage.style.overflowY = room && (r + 4) + K * mm(N) + r + 10 > room + 2 ? 'auto' : room ? 'hidden' : '';   /* rows past the tune's range stay out of sight */
     if (box) stage.style.overflowY = 'hidden';
     if (stage.style.overflowY !== 'auto') stage.scrollTop = 0;   /* a tune that fits starts at the open strings, even after one that scrolled (Trix) */
     var st = stage.style;
