@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-pp="2026-11-12">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -1332,6 +1332,18 @@ html[lang="zh-CN"] {
 #upd { z-index: 140; }
 #fgWarn { z-index: 140; }
 #delAsk { z-index: 140; }
+/* the privacy policy screen (Trix): above everything (start overlay 100, tour 105, sheets 140); the body scrolls,
+   the title, date and buttons stay in view */
+#pp { z-index: 200; }
+.pp-card { display: flex; flex-direction: column; overflow: hidden; }
+.pp-card h2 { margin: 0; outline: none; }
+.pp-date { margin: 4px 0 0; color: var(--muted); font: 400 13px var(--font-note); }
+.pp-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-top: 10px; font: 400 15px/1.5 var(--font-note); }
+.pp-body p { margin: 0 0 10px; }
+.pp-body a { color: var(--accent); font-weight: 600; }
+.pp-msg { color: var(--t-bad, #B5566B); font-weight: 600; }
+.pp-card .upd-row { flex: none; }
+.pp-state { margin-left: auto; color: var(--muted); font: 400 13px var(--font-note); }
 .upd-msg { margin: 8px 0 0; font: 400 15px/1.5 var(--font-note); }
 .upd-note { margin: 6px 0 0; font: 400 13px/1.5 var(--font-note); color: var(--muted); }
 .upd-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -2072,6 +2084,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
     <button type="button" class="howto-btn" id="openUsage" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-4"/><path d="M12 16V7"/><path d="M17 16v-6"/></svg><span class="use-days">Practised on 0 days</span></button>
     <h3 id="lblHelp">Help</h3>
     <button type="button" class="howto-btn" id="showTips"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6"/><path d="M12 16.8h.01"/></svg><span>Show tips again</span></button>
+    <button type="button" class="howto-btn" id="ppShow" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l7 2.6v5.4c0 4.2-2.9 7.8-7 9-4.1-1.2-7-4.8-7-9V6.1z"/><path d="M9 12l2 2 4-4"/></svg><span>Privacy policy</span><small class="pp-state" id="ppState"></small></button>
     <button type="button" class="howto-btn" id="openCredits" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12"/><ellipse cx="6.6" cy="17.6" rx="2.6" ry="2"/><ellipse cx="16.6" cy="15.6" rx="2.6" ry="2"/></svg><span>Score credits</span></button>
     <div class="pair" id="linkPair">
       <div>
@@ -2086,7 +2099,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.43" data-build="20261112-062715" data-cache="violin-toolkit-test-"><span>Version 1.43-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.43" data-build="20261112-065304" data-cache="violin-toolkit-test-"><span>Version 1.43-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2168,6 +2181,21 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
     <div class="upd-row">
       <button type="button" class="upd-later" id="updLater">Later</button>
       <button type="button" class="sheet-done" id="updNow">Update</button>
+    </div>
+  </div>
+</div>
+<div class="sheet pp-sheet" id="pp" role="dialog" aria-modal="true" aria-labelledby="ppTitle" aria-describedby="ppText" hidden>
+  <div class="sheet-card pp-card">
+    <h2 id="ppTitle" tabindex="-1">Privacy policy</h2>
+    <p class="pp-date" id="ppDate"></p>
+    <div class="pp-body">
+      <p id="ppText">Violin Toolkit has no accounts and no cookies. Your settings, practice time and imported tunes stay on this device. The only time the app goes online is to check for a new version (it sends the app version, the kind of app and a random number made on this device, which we count) and, on the phone builds, to fetch a built-in tune the first time you play it.</p>
+      <p><a id="ppLink" href="https://trix69.github.io/violin-toolkit/docs/privacy.html" target="_blank" rel="noopener">Read the full policy</a></p>
+      <p class="pp-msg" id="ppMsg" role="status" hidden></p>
+    </div>
+    <div class="upd-row">
+      <button type="button" class="upd-later" id="ppNo">Decline</button>
+      <button type="button" class="sheet-done" id="ppYes">Accept</button>
     </div>
   </div>
 </div>
@@ -7137,6 +7165,7 @@ function noteGate() {
     }
     function newer() {
       return versionJson().then(function (j) {
+        if (j && j.pp && APP.ppRemote) APP.ppRemote(j.pp);   /* the policy's date on the site (no extra request) */
         if (APK || IOSAPP) return num(j.version) > num(btn.dataset.version) ? j : null;   /* the app: only a higher version number */
         /* a different build stamp means a new release (test builds keep the same version number) */
         return (j.build && btn.dataset.build ? j.build !== btn.dataset.build : num(j.version) > num(btn.dataset.version)) ? j : null;
@@ -7189,7 +7218,7 @@ function noteGate() {
     function ask(j, now) {   /* now: asked for (Check for updates), so not held back by the automatic-check setting */
       if ((!APP.autoUpd && !now) || busy) return;
       var tips = document.getElementById('coach');   /* a first-use tour makes the rest of the page inert: wait for it */
-      if (anyBusy() || document.hidden || (tips && !tips.hidden)) { setTimeout(function () { ask(j); }, tips && !tips.hidden ? 1000 : 5000); return; }
+      if (anyBusy() || document.hidden || (tips && !tips.hidden) || (APP.ppOpen && APP.ppOpen())) { setTimeout(function () { ask(j); }, tips && !tips.hidden ? 1000 : 5000); return; }
       pending = j; offered = j.build || j.version;
       document.getElementById('updMsg').textContent = STORE ? 'Version ' + j.version + ' is available.' : APK ? 'Version ' + j.version + ' is available. Download the new Android app from the website to update.' : 'Version ' + j.version + ' is ready. Update now?';
       if (STORE) { updNow.textContent = PLAY ? 'Update in Google Play' : 'Update on the App Store'; }
@@ -7283,6 +7312,71 @@ function noteGate() {
   /* switch tool (Trix): back to the start screen to pick another tool; Escape returns to this one */
   document.getElementById('switchTool').addEventListener('click', function () { if (APP.coach) APP.coach.interrupt(); openLaunch(true, this); });
   if (!map[h]) openLaunch();
+
+  /* Privacy policy (Trix): its version is its date (src/PP_VERSION, stamped into this page as data-pp). Before the
+     app is used, and again whenever that date is newer than the one accepted, a screen asks for agreement: it sits
+     above everything, the page behind is inert, no Escape, no tap-outside; Accept stores the date (localStorage
+     violin-pp), Decline leaves the app closed with Accept still offered. The page's own date needs no request, so
+     it works offline; the update check also passes on the date in version.json (pp), so a newer policy on the
+     site is noticed without an extra request. #pp=reset in the address clears the acceptance for this visit
+     (for testing; not a visible control). If storage is unavailable the screen shows once per launch. */
+  var PPV = document.documentElement.getAttribute('data-pp') || '';
+  var pp = document.getElementById('pp'), ppTitle = document.getElementById('ppTitle'), ppMsg = document.getElementById('ppMsg');
+  var ppMem = null, ppSeen = false, ppDate = '', ppInert = [], ppBack = null;
+  function ppGet() { try { return localStorage.getItem('violin-pp') || ''; } catch (e) { return ppMem || ''; } }
+  function ppPut(v) { ppMem = v; try { localStorage.setItem('violin-pp', v); } catch (e) {} }
+  if (/(?:^|[#,&;])pp=reset(?=$|[,&;])/i.test(location.hash)) { try { localStorage.removeItem('violin-pp'); } catch (e) {} }
+  function ppState() {
+    var a = ppGet(), el = document.getElementById('ppState');
+    if (el) el.textContent = a ? 'Accepted ' + a : 'Not accepted';
+  }
+  function ppKey(e) {
+    if (pp.hidden) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return; }   /* no way round it */
+    if (e.key === 'Tab') {
+      var els = [document.getElementById('ppLink'), document.getElementById('ppNo'), document.getElementById('ppYes')];
+      var i = els.indexOf(document.activeElement);
+      e.preventDefault(); e.stopPropagation();
+      els[(i + (e.shiftKey ? els.length - 1 : 1) + els.length) % els.length].focus();
+    }
+  }
+  function ppOpen(date, updated) {
+    ppDate = date; ppSeen = true;
+    ppTitle.textContent = updated ? 'Privacy policy updated' : 'Privacy policy';
+    document.getElementById('ppDate').textContent = 'Last updated ' + date;
+    ppMsg.hidden = true;
+    if (APP.coach) APP.coach.interrupt();
+    ppBack = document.activeElement;
+    ppInert = Array.prototype.filter.call(document.body.children, function (el) { return el !== pp && !el.inert; });
+    ppInert.forEach(function (el) { el.inert = true; });
+    pp.hidden = false;
+    window.addEventListener('keydown', ppKey, true);
+    ppTitle.focus();
+  }
+  function ppClose() {
+    pp.hidden = true;
+    window.removeEventListener('keydown', ppKey, true);
+    ppInert.forEach(function (el) { el.inert = false; }); ppInert = [];
+    if (!launch.hidden) { try { document.getElementById('launchCard').focus({ preventScroll: true }); } catch (e) {} }
+    else if (ppBack && ppBack.focus) { try { ppBack.focus(); } catch (e) {} }
+    if (APP.coach) APP.coach.maybe(cur);   /* the tips tour waited for this */
+  }
+  document.getElementById('ppYes').addEventListener('click', function () { ppPut(ppDate); ppState(); ppClose(); });
+  document.getElementById('ppNo').addEventListener('click', function () {
+    ppMsg.textContent = 'The app needs your agreement to the privacy policy to run.'; ppMsg.hidden = false;
+  });
+  document.getElementById('ppLink').addEventListener('click', function (e) {   /* offline: say so rather than open a dead page */
+    if (navigator.onLine === false) { e.preventDefault(); ppMsg.textContent = 'You are offline. The full policy opens when you are online; the summary above covers it.'; ppMsg.hidden = false; }
+  });
+  document.getElementById('ppShow').addEventListener('click', function () { ppOpen(ppGet() > PPV ? ppGet() : PPV, false); });   /* Settings > Help: look again */
+  /* the update check hands over the site's policy date (version.json pp): a newer one than accepted asks again, once */
+  APP.ppRemote = function (d) {
+    if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(d || '') || d <= PPV || ppGet() >= d || !pp.hidden || ppSeen) return;
+    ppOpen(d, true);
+  };
+  APP.ppOpen = function () { return !pp.hidden; };
+  ppState();
+  if (PPV && ppGet() < PPV) ppOpen(PPV, !!ppGet());
 })();
 </script>
 <script>
@@ -7557,7 +7651,7 @@ function noteGate() {
     'in tune': '音准正确', 'off the board': '超出指板',
     'no sharps or flats': '无升降号', 'no ♯ or ♭': '无升降号',
     /* metronome */
-    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Full screen': '全屏', 'Exit full screen': '退出全屏', 'This is not a MIDI or MusicXML file.': '这不是 MIDI 或 MusicXML 文件。', 'This MusicXML file could not be read.': '无法读取这个 MusicXML 文件。', 'This browser can’t open compressed MusicXML (.mxl). Export the score as uncompressed MusicXML (.musicxml) instead.': '这个浏览器无法打开压缩的 MusicXML（.mxl）。请把乐谱导出为未压缩的 MusicXML（.musicxml）。', 'This file has no score in it.': '这个文件里没有乐谱。', 'This MusicXML file is in the timewise layout, which the player can’t read. Export it again as MusicXML from your notation app.': '这个 MusicXML 文件是按时间排列的格式，播放器无法读取。请在打谱软件中重新导出为 MusicXML。', 'This file could not be read.': '无法读取这个文件。', 'Repeat a passage (A–B)': '反复播放一段（A–B）', 'Repeat bars': '反复小节', 'From bar (A)': '从第几小节（A）', 'To bar (B)': '到第几小节（B）', 'Repeat': '反复', 'Cancel': '取消', 'Imported piece': '导入的曲谱', 'Delete this file?': '删除这个文件？', 'Delete': '删除', 'This piece was imported from your own file. The exported pages are for your personal use. Before sharing or selling them, make sure the original score\'s licence or copyright allows it.': '这首曲子来自你导入的文件。导出的乐谱仅供个人使用。分享或出售之前，请先确认原乐谱的许可或版权允许这样做。', 'Only the fingerings added by Violin Toolkit are CC0.': '只有 Violin Toolkit 添加的指法以 CC0 发布。', 'Choose a MIDI or MusicXML file (.mid, .midi, .musicxml, .xml or .mxl).': '请选择 MIDI 或 MusicXML 文件（.mid、.midi、.musicxml、.xml 或 .mxl）。', 'Vibrato on long notes': '长音揉弦', 'Updates come from Google Play': '更新通过 Google Play 进行', 'Choose a built-in tune or one you imported.': '选择内置曲目或你导入的曲目。', 'Play counts in, then each note lights up on the fingerboard as the score scrolls by with its fingering. − and + change the speed; Loop and A–B repeat the tune or a passage.': '播放前先数拍，然后每个音在指板上亮起，乐谱带着指法滚动。− 和 + 调整速度；循环和 A–B 可反复整首或一段。', 'Levels for the violin, accompaniment and metronome, and vibrato on long notes.': '调节小提琴、伴奏和节拍器的音量，以及长音揉弦。', 'A bigger score and the whole fingerboard. On a phone, just turn it sideways.': '更大的乐谱和完整的指板。手机上只要横过来即可。', 'Add a MIDI or MusicXML file. The violin part lights up and the other parts play along.': '添加 MIDI 或 MusicXML 文件。小提琴声部会亮起，其他声部一起伴奏。', 'Play and follow along': '播放并跟着看', 'Import your own': '导入自己的文件', 'Touch a coloured note to hear it.': '按住彩色音符即可听到它。', 'Hold for 3 seconds and it keeps sounding, like a tuning fork. Tap anywhere to stop.': '按住 3 秒后松手也会继续发声，像音叉一样。点任意处停止。', 'Pick a major or minor key; swipe a row for more. Notes outside the key are grey.': '选择大调或小调，左右滑动查看更多。调外的音显示为灰色。', 'Tap here to pick a major or minor key. Notes outside the key are grey.': '点这里选择大调或小调。调外的音显示为灰色。', 'Equal, Just or Pythagorean tuning. The notes on the board move to match.': '平均律、纯律或五度相生律。指板上的音会随之移动。', 'Switch the hand between 1st, 2nd and 3rd position. Each note shows the finger that plays it.': '在一把位、二把位和三把位之间切换。每个音都标有所用的手指。', 'Tap it and play a note: a disc shows where it lands. On the note is in tune, below is sharp, above is flat.': '点它然后演奏一个音：圆盘显示它的位置。在音符上为准，偏下为偏高，偏上为偏低。', '1 Hz lower': '降低 1 Hz', '1 Hz higher': '升高 1 Hz', 'Update in Google Play': '在 Google Play 中更新', 'Update on the App Store': '在 App Store 中更新', 'Fingerings': '指法谱', 'Marks the violin part with fingerings, exports a PDF': '把谱面标上指法，导出 PDF', 'Fingerings, strings and positions are marked automatically and may contain mistakes.': '指法、弦和把位均为自动标注，可能有误。', 'Fingered violin part': '标有指法的小提琴分谱', 'Fingerings: this tune on pages, as a PDF': '指法谱：把这首曲子排成页面，导出 PDF', 'Automatic fingerings · PDF': '自动指法 · PDF', 'Play in the MIDI player': '在 MIDI 播放器中播放', 'Export': '导出', 'Export as PDF': '导出 PDF', 'Minuet in G': 'G 大调小步舞曲', 'Gavotte': '加沃特舞曲', 'Air (BWV 1068)': 'G弦上的咏叹调（原调）', 'Ave Maria': '圣母颂', 'Ständchen (Serenade)': '舒伯特小夜曲', 'The Swan (Le Cygne)': '天鹅', 'Humoresque No. 7': '幽默曲（第七首）', 'Habanera (Carmen)': '哈巴涅拉（卡门）', 'Grande Valse brillante (opening)': '华丽大圆舞曲（开头）', 'Spring (La primavera), 1st movement': '春 · 第一乐章', 'Score credits': '曲谱来源', 'The built-in tunes and the editions they come from. The compositions are public domain; each edition is used under the licence shown.': '内置曲目及其所用的乐谱版本。乐曲本身均属公有领域；各版本按所示许可使用。', 'Fingerings pages made from the built-in tunes carry the licence of their source, shown at the foot of each page; the fingerings and layout added by Violin Toolkit are released under CC0.': '用内置曲目生成的指法谱沿用其来源的许可（见每页页脚）；Violin Toolkit 添加的指法和排版以 CC0 发布。', 'Opening the score…': '正在打开乐谱…', 'Downloading this tune…': '正在下载这首曲子…', 'This tune downloads the first time you play it. Connect to the internet and choose it again.': '这首曲子第一次播放时需要下载。请连接网络后再选择一次。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'Serenade': '小夜曲', 'Serenade (K525), 1st movement': '小夜曲（K525）· 第一乐章', 'Autumn (L\'autunno), 1st movement': '秋 · 第一乐章', 'Por una Cabeza': '一步之遥', 'Winter (L\'inverno), 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only drums or sound effects.': '这个文件只有打击乐或音效。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
+    'Symbols': '符号', 'MIDI Player': 'MIDI 播放器', 'Play': '播放', 'Pause': '暂停', 'MIDI player': 'MIDI 播放器', 'Play a tune and watch it on the fingerboard': '播放乐曲，在指板上看指法', 'Import': '导入', 'Delete this file': '删除这个文件', 'This file plays now, but there is no room to keep it for next time.': '这个文件现在可以播放，但没有空间留到下次。', 'Tune': '曲目', 'Back to start': '回到开头', 'Loop': '循环', 'Mixer': '混音', 'Violin': '小提琴', 'Accompaniment': '伴奏', 'Violin volume': '小提琴音量', 'Accompaniment volume': '伴奏音量', 'Metronome volume': '节拍器音量', 'This tune has no accompaniment.': '这首曲子没有伴奏。', 'Full screen': '全屏', 'Exit full screen': '退出全屏', 'This is not a MIDI or MusicXML file.': '这不是 MIDI 或 MusicXML 文件。', 'This MusicXML file could not be read.': '无法读取这个 MusicXML 文件。', 'This browser can’t open compressed MusicXML (.mxl). Export the score as uncompressed MusicXML (.musicxml) instead.': '这个浏览器无法打开压缩的 MusicXML（.mxl）。请把乐谱导出为未压缩的 MusicXML（.musicxml）。', 'This file has no score in it.': '这个文件里没有乐谱。', 'This MusicXML file is in the timewise layout, which the player can’t read. Export it again as MusicXML from your notation app.': '这个 MusicXML 文件是按时间排列的格式，播放器无法读取。请在打谱软件中重新导出为 MusicXML。', 'This file could not be read.': '无法读取这个文件。', 'Repeat a passage (A–B)': '反复播放一段（A–B）', 'Repeat bars': '反复小节', 'From bar (A)': '从第几小节（A）', 'To bar (B)': '到第几小节（B）', 'Repeat': '反复', 'Cancel': '取消', 'Imported piece': '导入的曲谱', 'Delete this file?': '删除这个文件？', 'Privacy policy': '隐私政策', 'Privacy policy updated': '隐私政策已更新', 'Read the full policy': '阅读完整政策', 'Accept': '同意', 'Decline': '不同意', 'Not accepted': '尚未同意', 'The app needs your agreement to the privacy policy to run.': '需要你同意隐私政策才能使用本应用。', 'You are offline. The full policy opens when you are online; the summary above covers it.': '现在离线。联网后可以打开完整政策；上面的摘要已涵盖要点。', 'Violin Toolkit has no accounts and no cookies. Your settings, practice time and imported tunes stay on this device. The only time the app goes online is to check for a new version (it sends the app version, the kind of app and a random number made on this device, which we count) and, on the phone builds, to fetch a built-in tune the first time you play it.': 'Violin Toolkit 没有账号，不使用 Cookie。你的设置、练习时间和导入的曲目都只存在这台设备上。应用只在两种情况下联网：检查新版本（会发送应用版本、应用类型和在这台设备上生成的一个随机数，我们会统计这些），以及在手机版里首次播放某首内置曲目时下载它。', 'Delete': '删除', 'This piece was imported from your own file. The exported pages are for your personal use. Before sharing or selling them, make sure the original score\'s licence or copyright allows it.': '这首曲子来自你导入的文件。导出的乐谱仅供个人使用。分享或出售之前，请先确认原乐谱的许可或版权允许这样做。', 'Only the fingerings added by Violin Toolkit are CC0.': '只有 Violin Toolkit 添加的指法以 CC0 发布。', 'Choose a MIDI or MusicXML file (.mid, .midi, .musicxml, .xml or .mxl).': '请选择 MIDI 或 MusicXML 文件（.mid、.midi、.musicxml、.xml 或 .mxl）。', 'Vibrato on long notes': '长音揉弦', 'Updates come from Google Play': '更新通过 Google Play 进行', 'Choose a built-in tune or one you imported.': '选择内置曲目或你导入的曲目。', 'Play counts in, then each note lights up on the fingerboard as the score scrolls by with its fingering. − and + change the speed; Loop and A–B repeat the tune or a passage.': '播放前先数拍，然后每个音在指板上亮起，乐谱带着指法滚动。− 和 + 调整速度；循环和 A–B 可反复整首或一段。', 'Levels for the violin, accompaniment and metronome, and vibrato on long notes.': '调节小提琴、伴奏和节拍器的音量，以及长音揉弦。', 'A bigger score and the whole fingerboard. On a phone, just turn it sideways.': '更大的乐谱和完整的指板。手机上只要横过来即可。', 'Add a MIDI or MusicXML file. The violin part lights up and the other parts play along.': '添加 MIDI 或 MusicXML 文件。小提琴声部会亮起，其他声部一起伴奏。', 'Play and follow along': '播放并跟着看', 'Import your own': '导入自己的文件', 'Touch a coloured note to hear it.': '按住彩色音符即可听到它。', 'Hold for 3 seconds and it keeps sounding, like a tuning fork. Tap anywhere to stop.': '按住 3 秒后松手也会继续发声，像音叉一样。点任意处停止。', 'Pick a major or minor key; swipe a row for more. Notes outside the key are grey.': '选择大调或小调，左右滑动查看更多。调外的音显示为灰色。', 'Tap here to pick a major or minor key. Notes outside the key are grey.': '点这里选择大调或小调。调外的音显示为灰色。', 'Equal, Just or Pythagorean tuning. The notes on the board move to match.': '平均律、纯律或五度相生律。指板上的音会随之移动。', 'Switch the hand between 1st, 2nd and 3rd position. Each note shows the finger that plays it.': '在一把位、二把位和三把位之间切换。每个音都标有所用的手指。', 'Tap it and play a note: a disc shows where it lands. On the note is in tune, below is sharp, above is flat.': '点它然后演奏一个音：圆盘显示它的位置。在音符上为准，偏下为偏高，偏上为偏低。', '1 Hz lower': '降低 1 Hz', '1 Hz higher': '升高 1 Hz', 'Update in Google Play': '在 Google Play 中更新', 'Update on the App Store': '在 App Store 中更新', 'Fingerings': '指法谱', 'Marks the violin part with fingerings, exports a PDF': '把谱面标上指法，导出 PDF', 'Fingerings, strings and positions are marked automatically and may contain mistakes.': '指法、弦和把位均为自动标注，可能有误。', 'Fingered violin part': '标有指法的小提琴分谱', 'Fingerings: this tune on pages, as a PDF': '指法谱：把这首曲子排成页面，导出 PDF', 'Automatic fingerings · PDF': '自动指法 · PDF', 'Play in the MIDI player': '在 MIDI 播放器中播放', 'Export': '导出', 'Export as PDF': '导出 PDF', 'Minuet in G': 'G 大调小步舞曲', 'Gavotte': '加沃特舞曲', 'Air (BWV 1068)': 'G弦上的咏叹调（原调）', 'Ave Maria': '圣母颂', 'Ständchen (Serenade)': '舒伯特小夜曲', 'The Swan (Le Cygne)': '天鹅', 'Humoresque No. 7': '幽默曲（第七首）', 'Habanera (Carmen)': '哈巴涅拉（卡门）', 'Grande Valse brillante (opening)': '华丽大圆舞曲（开头）', 'Spring (La primavera), 1st movement': '春 · 第一乐章', 'Score credits': '曲谱来源', 'The built-in tunes and the editions they come from. The compositions are public domain; each edition is used under the licence shown.': '内置曲目及其所用的乐谱版本。乐曲本身均属公有领域；各版本按所示许可使用。', 'Fingerings pages made from the built-in tunes carry the licence of their source, shown at the foot of each page; the fingerings and layout added by Violin Toolkit are released under CC0.': '用内置曲目生成的指法谱沿用其来源的许可（见每页页脚）；Violin Toolkit 添加的指法和排版以 CC0 发布。', 'Opening the score…': '正在打开乐谱…', 'Downloading this tune…': '正在下载这首曲子…', 'This tune downloads the first time you play it. Connect to the internet and choose it again.': '这首曲子第一次播放时需要下载。请连接网络后再选择一次。', 'Playback position': '播放进度', 'Twinkle, Twinkle, Little Star': '小星星', 'Ode to Joy': '欢乐颂', 'Canon': '卡农', 'In the Hall of the Mountain King': '在山魔王的宫殿里', 'Serenade': '小夜曲', 'Serenade (K525), 1st movement': '小夜曲（K525）· 第一乐章', 'Autumn (L\'autunno), 1st movement': '秋 · 第一乐章', 'Por una Cabeza': '一步之遥', 'Winter (L\'inverno), 1st movement': '冬 · 第一乐章', 'This is not a MIDI file.': '这不是 MIDI 文件。', 'This MIDI file keeps time in a way the player can’t read.': '播放器无法读取这个 MIDI 文件的计时方式。', 'This file has no notes.': '这个文件里没有音符。', 'This file has only drums or sound effects.': '这个文件只有打击乐或音效。', 'Multiple sound tracks detected. The MIDI player only supports MIDI files with a single violin solo track.': '检测到多个音轨。MIDI 播放器只支持仅含一个小提琴独奏音轨的 MIDI 文件。', 'Every note in this file is below the violin’s G string.': '这个文件的所有音符都低于小提琴的 G 弦。', 'This MIDI file could not be read.': '无法读取这个 MIDI 文件。', 'The tune was added, but it could not be shown. Choose it again from the list.': '乐曲已添加，但无法显示。请在列表中重新选择它。', 'Music symbols': '乐谱符号', 'Tap for the meaning': '点按查看含义', 'Look up music signs and what they mean': '查找乐谱符号及其含义', 'Search': '搜索', 'Search symbols': '搜索符号', 'No symbols match.': '没有匹配的符号。', 'Notes': '音符', 'Bowing': '弓法', 'Accidentals': '变音记号',
     'Quaver (eighth note)': '八分音符', 'Crotchet (quarter note)': '四分音符', 'Minim (half note)': '二分音符', 'Semibreve (whole note)': '全音符',
     '½ beat in 4/4': '4/4 拍中占半拍', '1 beat in 4/4': '4/4 拍中占 1 拍', '2 beats in 4/4': '4/4 拍中占 2 拍', '4 beats in 4/4': '4/4 拍中占 4 拍',
     'Up bow': '上弓', 'Push, tip to frog': '推弓：弓尖到弓根', 'Down bow': '下弓', 'Pull, frog to tip': '拉弓：弓根到弓尖',
@@ -7837,6 +7931,8 @@ function noteGate() {
     [/^(\d+) h$/, function (m, h) { return h + ' 小时'; }],
     [/^(\d+) h (\d+) min$/, function (m, h, n) { return h + '\u00a0小时 ' + n + '\u00a0分'; }],   /* each number stays with its unit when a narrow box wraps (Hermes F24) */
     [/^Version ([\d.]+(?:-test)?)$/, function (m, v) { return '版本 ' + v; }],
+    [/^Last updated (\d{4}-\d{2}-\d{2})$/, function (m, d) { return '最后更新：' + d; }],
+    [/^Accepted (\d{4}-\d{2}-\d{2})$/, function (m, d) { return '已同意：' + d; }],
     [/^Version ([\d.]+(?:-test)?) is ready\. Update now\?$/, function (m, v) { return '版本 ' + v + ' 已推出，现在更新吗？'; }],
     [/^Version ([\d.]+) is available\. Download the new Android app from the website to update\.$/, function (m, v) { return '版本 ' + v + ' 已推出。请从网站下载新的安卓应用来更新。'; }],
     [/^Version ([\d.]+) available$/, function (m, v) { return '有新版本 ' + v; }],
