@@ -1171,7 +1171,8 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 #view-fingering .fg-pdf:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 /* white paper and black ink whatever the theme (the player's score box styles undone) */
 #view-fingering .fg-pages.mp-score { --sc-bg: #FFFFFF; --sc-ink: #1A1A1A; --sc-fing: 8%; height: auto; overflow: visible; margin: 0; border-radius: 0; background: none; box-shadow: none; color: var(--sc-ink); }
-#view-fingering .fg-page { display: block; width: 100%; height: auto; margin: 0 0 16px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.08); }
+#view-fingering .fg-pages.zoomed { overflow-x: auto; }   /* Ctrl + wheel zoom (Trix): wider pages scroll sideways */
+#view-fingering .fg-page { display: block; width: calc(100% * var(--fgz, 1)); max-width: none; height: auto; margin: 0 auto 16px; cursor: pointer; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.08); }
 .fg-page .fg-paper { fill: #fff; }
 .fg-page .fg-title { fill: #1A1A1A; font: 700 22px 'Times New Roman', 'Noto Serif', 'Songti SC', serif; text-anchor: middle; }
 .fg-page .fg-sub { fill: #333; font: 400 13px 'Times New Roman', 'Noto Serif', 'Songti SC', serif; text-anchor: middle; }
@@ -1190,6 +1191,7 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
   html.fg-printing, html.fg-printing body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
   html.fg-printing body > :not(#shell), html.fg-printing #shell > :not(#main), html.fg-printing #main > :not(#view-fingering), html.fg-printing #view-fingering > * > :not(.fg-pages) { display: none !important; }
   html.fg-printing #shell, html.fg-printing #main, html.fg-printing #view-fingering, html.fg-printing #fg { display: block !important; margin: 0 !important; padding: 0 !important; max-width: none !important; width: auto !important; border: 0 !important; box-shadow: none !important; }
+  html.fg-printing .fg-pages { overflow: visible !important; }
   html.fg-printing .fg-page { width: 210mm !important; height: 297mm !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; break-after: page; page-break-after: always; }
   html.fg-printing .fg-page:last-child { break-after: auto; page-break-after: auto; }
 }
@@ -2110,7 +2112,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-204329" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-204639" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -6670,6 +6672,10 @@ function noteGate() {
     for (var i = 0; i < fgMap.length; i++) { if (fgMap[i].b0 <= beat + 1e-6) m = fgMap[i]; else break; }
     var x = m.ox + (fgR.xAt(Math.min(beat, m.b1)) + m.tx) * PG_K, y0 = m.oy + (Y0 - 22) * PG_K, y1 = m.oy + (Y0 + 4 * S + 22) * PG_K;
     var L = m.line; L.setAttribute('x1', x.toFixed(1)); L.setAttribute('x2', x.toFixed(1)); L.setAttribute('y1', y0.toFixed(1)); L.setAttribute('y2', y1.toFixed(1)); L.style.display = '';
+    if (fgPages.classList.contains('zoomed') && (playing || counting)) {   /* zoomed in: follow the line sideways too */
+      var lr = L.getBoundingClientRect(), pr = fgPages.getBoundingClientRect();
+      if (lr.left < pr.left + 20 || lr.right > pr.right - 20) fgPages.scrollLeft += lr.left - pr.left - pr.width * 0.25;
+    }
     /* a new line of music: keep it on screen (Trix), about a quarter of the way down; only while the music moves, or on opening */
     if (m.si !== fgSys) {
       fgSys = m.si;
@@ -6683,6 +6689,28 @@ function noteGate() {
     fgSel.addEventListener('change', function () { songSel.value = fgSel.value; load(+songSel.value); });   /* one current tune for both tools */
     $('fgImport').addEventListener('click', function () { $('mpImport').click(); });   /* the same import, the same list */
     $('fgDel').addEventListener('click', function () { APP.askDelete(fgSel); });   /* the player's delete, after asking: the same list (Trix) */
+    /* a click or tap on the pages plays / pauses, like the play button (Trix); not after a drag (text selection, scrolling) */
+    var fgDown = null;
+    fgPages.addEventListener('pointerdown', function (e) { fgDown = [e.clientX, e.clientY]; });
+    fgPages.addEventListener('click', function (e) {
+      if (!song || !fgDown || Math.abs(e.clientX - fgDown[0]) > 6 || Math.abs(e.clientY - fgDown[1]) > 6) return;
+      if (window.getSelection && String(window.getSelection())) return;
+      $('fgPlay').click();
+    });
+    /* Ctrl + mouse wheel zooms the pages (Trix), 50 % to 300 %, keeping the point under the pointer still; the PDF is not affected */
+    var fgZoom = 1;
+    fgPages.addEventListener('wheel', function (e) {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      var z0 = fgZoom, z1 = Math.max(0.5, Math.min(3, z0 * Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.002))));
+      if (Math.abs(z1 - z0) < 1e-3) return;
+      var r = fgPages.getBoundingClientRect(), px = e.clientX - r.left + fgPages.scrollLeft, py = e.clientY - r.top, k = z1 / z0;
+      fgZoom = z1;
+      fgPages.style.setProperty('--fgz', z1.toFixed(3));
+      fgPages.classList.toggle('zoomed', z1 > 1.001);
+      fgPages.scrollLeft = Math.max(0, px * k - (e.clientX - r.left));
+      window.scrollBy(0, py * k - py);
+    }, { passive: false });
     $('fgPlay').addEventListener('click', function () {   /* play / pause the MIDI player from here, staying on the pages (Trix); its speed, loop and A–B */
       if (!song) return;
       if (playing || counting) { pause(); return; }
