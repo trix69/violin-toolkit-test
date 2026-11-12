@@ -1174,7 +1174,8 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 @keyframes fgFlashStill { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
 @media print { #view-fingering .fg-flash { display: none !important; } }
 /* full width / back (Trix): a round button over the pages' top right corner, staying in view while scrolling */
-#view-fingering .fg-fitbar { position: sticky; top: 10px; z-index: 5; height: 0; display: flex; justify-content: flex-end; pointer-events: none; }
+#view-fingering .fg-fitbar { position: sticky; top: 10px; z-index: 5; height: 0; display: flex; justify-content: flex-end; gap: 8px; pointer-events: none; }
+#view-fingering .fg-fitbar .fg-play { pointer-events: auto; margin-top: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }   /* play / pause floats with the pages too (Trix) */
 #view-fingering .fg-fitbar.zoomed { width: var(--fgvw); margin-left: var(--fgml); }   /* over the widened pages' right edge */
 #view-fingering .fg-fitbar.zoomed .fg-fit { margin-right: 26px; }   /* the full-width page keeps 16 px from the window edge */
 #view-fingering .fg-fit { pointer-events: auto; margin: 10px 10px 0 0; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--fg); box-shadow: 0 2px 8px rgba(0,0,0,.15); cursor: pointer; }
@@ -1191,7 +1192,7 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 #view-fingering .fg-pages.mp-score { --sc-bg: #FFFFFF; --sc-ink: #1A1A1A; --sc-fing: 8%; height: auto; overflow: visible; margin: 0; border-radius: 0; background: none; box-shadow: none; color: var(--sc-ink); }
 #view-fingering .fg-pages.zoomed { width: var(--fgvw); max-width: none; margin-left: var(--fgml); overflow-x: auto; }   /* Ctrl + wheel zoom (Trix): past 100 % the pages use the whole browser width, then scroll sideways */
 #view-fingering .fg-pages.zoomed .fg-page { width: calc(var(--fgw) * var(--fgz)); }
-#view-fingering .fg-page { display: block; width: calc(100% * var(--fgz, 1)); max-width: none; height: auto; margin: 0 auto 16px; cursor: pointer; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.08); }
+#view-fingering .fg-page { display: block; width: calc(100% * var(--fgz, 1)); max-width: none; height: auto; margin: 0 auto 16px; cursor: default; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.08); }
 .fg-page .fg-paper { fill: #fff; }
 .fg-page .fg-title { fill: #1A1A1A; font: 700 22px 'Times New Roman', 'Noto Serif', 'Songti SC', serif; text-anchor: middle; }
 .fg-page .fg-sub { fill: #333; font: 400 13px 'Times New Roman', 'Noto Serif', 'Songti SC', serif; text-anchor: middle; }
@@ -1679,12 +1680,11 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
   </div>
   <div class="fg-bar">
     <p class="fg-note">Violin Toolkit has marked the fingerings, strings and positions automatically and can make mistakes.</p>
-    <button type="button" class="fg-play" id="fgPlay" aria-label="Play" title="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13M16 5.5v13"/></svg></button>
     <button type="button" class="fg-pdf" id="fgPdf" title="Export as PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5"/><path d="M7.5 8L12 3.5 16.5 8"/><path d="M8 11H6a1.5 1.5 0 0 0-1.5 1.5v6.5A1.5 1.5 0 0 0 6 20.5h12a1.5 1.5 0 0 0 1.5-1.5v-6.5A1.5 1.5 0 0 0 18 11h-2"/></svg>Export</button>
   </div>
   <p class="mp-msg" id="fgMsg" role="status" hidden></p>
   <div class="fg-flash" id="fgFlash" aria-hidden="true" hidden></div>
-  <div class="fg-fitbar"><button type="button" class="fg-fit" id="fgFit" aria-label="Full width" title="Full width"><svg class="i-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="i-in" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button></div>
+  <div class="fg-fitbar"><button type="button" class="fg-play" id="fgPlay" aria-label="Play" title="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13M16 5.5v13"/></svg></button><button type="button" class="fg-fit" id="fgFit" aria-label="Full width" title="Full width"><svg class="i-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="i-in" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button></div>
   <div class="fg-pages mp-score" id="fgPages" translate="no" aria-label="Fingered violin part"></div>
 </div>
 
@@ -2133,7 +2133,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-210415" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-210855" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -6725,14 +6725,37 @@ function noteGate() {
     fgSel.addEventListener('change', function () { songSel.value = fgSel.value; load(+songSel.value); });   /* one current tune for both tools */
     $('fgImport').addEventListener('click', function () { $('mpImport').click(); });   /* the same import, the same list */
     $('fgDel').addEventListener('click', function () { APP.askDelete(fgSel); });   /* the player's delete, after asking: the same list (Trix) */
-    /* a click or tap on the pages plays / pauses, like the play button (Trix); not after a drag (text selection, scrolling) */
+    /* a click or tap on a note jumps there (Trix), as on the MIDI player's score: paused, it shows lit with its fingering;
+       playing, the music goes on from it. The nearest note in the system clicked, within 28 score units sideways.
+       Not after a drag (text selection, scrolling). */
     var fgDown = null;
     fgPages.addEventListener('pointerdown', function (e) { fgDown = [e.clientX, e.clientY]; });
+    function fgNoteAt(e) {
+      var svg = e.target.closest && e.target.closest('svg.fg-page'); if (!svg || !fgR || !song) return -1;
+      var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+      var p = pt.matrixTransform(svg.getScreenCTM().inverse()), best = null, bd = Infinity;
+      fgMap.forEach(function (m) {
+        if (m.svg !== svg) return;
+        var mid = m.oy + (Y0 + 2 * S) * PG_K, d = Math.abs(p.y - mid);
+        if (d < bd && d < (2 * S + 50) * PG_K) { bd = d; best = m; }
+      });
+      if (!best) return -1;
+      var xi = (p.x - best.ox) / PG_K - best.tx, k = -1, dx = 28;
+      song.notes.forEach(function (n, i) {
+        if (n.b < best.b0 - 1e-6 || n.b >= best.b1 - 1e-6 || n.grace) return;
+        var d = Math.abs(fgR.xAt(n.b) - xi); if (d < dx) { dx = d; k = i; }
+      });
+      return k;
+    }
     fgPages.addEventListener('click', function (e) {
       if (!song || !fgDown || Math.abs(e.clientX - fgDown[0]) > 6 || Math.abs(e.clientY - fgDown[1]) > 6) return;
       if (window.getSelection && String(window.getSelection())) return;
-      $('fgPlay').click();
-      fgFlash(playing || counting ? 'play' : 'pause');
+      var k = fgNoteAt(e); if (k < 0) return;
+      var t = song.notes[k].t;
+      if (counting) { stopCount(); seekTo(Math.max(0, t - 0.001)); go(); return; }   /* during the count-in: straight on from the note */
+      if (playing) { seekTo(Math.max(0, t - 0.001)); accStart(); return; }   /* playing: on from the note, the accompaniment with it */
+      if (t < 0.01) { seekTo(0); showAt(true); }   /* the first note: at the top (the count-in still comes), shown */
+      else seekTo(t + 0.001);   /* just inside the note, so it shows lit and resumes sounding */
     });
     /* Ctrl + mouse wheel zooms the pages (Trix), 50 % to 300 %, keeping the point under the pointer still; the PDF is not affected */
     var fgZoom = 1;
