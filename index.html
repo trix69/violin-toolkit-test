@@ -2110,7 +2110,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-203855" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-204329" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -6793,6 +6793,7 @@ function noteGate() {
     warnGo.addEventListener('click', function () { var f = warnThen; closeWarn(); if (f) f(); });   /* still inside the tap: printing and sharing are allowed */
     fgPdf.addEventListener('click', function () {
       if (!song) return;
+      if (playing || counting) pause();   /* Export pauses the music first (Trix): the print / share window would leave a note sounding */
       if (fgReady) { sharePdf(); return; }
       var s = songs[+songSel.value];
       if (s && s.kept) { warnThen = exportPdf; warnOpener = fgPdf; warn.hidden = false; window.addEventListener('keydown', onWarnKey, true); warnGo.focus(); return; }
