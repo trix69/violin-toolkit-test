@@ -2151,7 +2151,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-212755" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-214929" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -7518,7 +7518,7 @@ function noteGate() {
     function ask(j, now) {   /* now: asked for (Check for updates), so not held back by the automatic-check setting */
       if ((!APP.autoUpd && !now) || busy) return;
       var tips = document.getElementById('coach');   /* a first-use tour makes the rest of the page inert: wait for it */
-      if (anyBusy() || document.hidden || (tips && !tips.hidden) || (APP.ppOpen && APP.ppOpen())) { setTimeout(function () { ask(j); }, tips && !tips.hidden ? 1000 : 5000); return; }
+      if (anyBusy() || document.hidden || (tips && !tips.hidden) || (APP.ppOpen && APP.ppOpen())) { setTimeout(function () { ask(j, now); }, tips && !tips.hidden ? 1000 : 5000); return; }   /* keeps 'asked for' across the wait (Hermes F43) */
       pending = j; offered = j.build || j.version;
       document.getElementById('updMsg').textContent = STORE ? 'Version ' + j.version + ' is available.' : APK ? 'Version ' + j.version + ' is available. Download the new Android app from the website to update.' : 'Version ' + j.version + ' is ready. Update now?';
       if (STORE) { updNow.textContent = PLAY ? 'Update in Google Play' : 'Update on the App Store'; }
