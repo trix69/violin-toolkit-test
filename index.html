@@ -1171,7 +1171,8 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 #view-fingering .fg-pdf:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 /* white paper and black ink whatever the theme (the player's score box styles undone) */
 #view-fingering .fg-pages.mp-score { --sc-bg: #FFFFFF; --sc-ink: #1A1A1A; --sc-fing: 8%; height: auto; overflow: visible; margin: 0; border-radius: 0; background: none; box-shadow: none; color: var(--sc-ink); }
-#view-fingering .fg-pages.zoomed { overflow-x: auto; }   /* Ctrl + wheel zoom (Trix): wider pages scroll sideways */
+#view-fingering .fg-pages.zoomed { width: var(--fgvw); max-width: none; margin-left: var(--fgml); overflow-x: auto; }   /* Ctrl + wheel zoom (Trix): past 100 % the pages use the whole browser width, then scroll sideways */
+#view-fingering .fg-pages.zoomed .fg-page { width: calc(var(--fgw) * var(--fgz)); }
 #view-fingering .fg-page { display: block; width: calc(100% * var(--fgz, 1)); max-width: none; height: auto; margin: 0 auto 16px; cursor: pointer; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.08); }
 .fg-page .fg-paper { fill: #fff; }
 .fg-page .fg-title { fill: #1A1A1A; font: 700 22px 'Times New Roman', 'Noto Serif', 'Songti SC', serif; text-anchor: middle; }
@@ -2112,7 +2113,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-204639" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-205153" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -6699,17 +6700,31 @@ function noteGate() {
     });
     /* Ctrl + mouse wheel zooms the pages (Trix), 50 % to 300 %, keeping the point under the pointer still; the PDF is not affected */
     var fgZoom = 1;
+    function fgWide() {   /* past 100 %: the box spans the browser window, edge to edge (its column's own left offset undone) */
+      var on = fgZoom > 1.001;
+      fgPages.classList.remove('zoomed');
+      if (on) {
+        var left = fgPages.getBoundingClientRect().left + window.scrollX;
+        fgPages.style.setProperty('--fgml', -left + 'px');
+        fgPages.style.setProperty('--fgvw', document.documentElement.clientWidth + 'px');
+        fgPages.classList.add('zoomed');
+      }
+    }
+    window.addEventListener('resize', function () { if (fgZoom > 1.001) { var sl = fgPages.scrollLeft; fgWide(); fgPages.scrollLeft = sl; } });
     fgPages.addEventListener('wheel', function (e) {
       if (!e.ctrlKey) return;
       e.preventDefault();
       var z0 = fgZoom, z1 = Math.max(0.5, Math.min(3, z0 * Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.002))));
       if (Math.abs(z1 - z0) < 1e-3) return;
-      var r = fgPages.getBoundingClientRect(), px = e.clientX - r.left + fgPages.scrollLeft, py = e.clientY - r.top, k = z1 / z0;
+      var p0 = fgPages.querySelector('.fg-page'); if (!p0) return;
+      var a = p0.getBoundingClientRect(), dx = e.clientX - a.left, dy = e.clientY - a.top, k = z1 / z0;
+      if (!fgPages.classList.contains('zoomed')) fgPages.style.setProperty('--fgw', fgPages.clientWidth + 'px');   /* the column width = 100 % */
       fgZoom = z1;
       fgPages.style.setProperty('--fgz', z1.toFixed(3));
-      fgPages.classList.toggle('zoomed', z1 > 1.001);
-      fgPages.scrollLeft = Math.max(0, px * k - (e.clientX - r.left));
-      window.scrollBy(0, py * k - py);
+      fgWide();
+      var b = p0.getBoundingClientRect();   /* keep the point under the pointer still */
+      fgPages.scrollLeft += b.left + dx * k - e.clientX;
+      window.scrollBy(0, b.top + dy * k - e.clientY);
     }, { passive: false });
     $('fgPlay').addEventListener('click', function () {   /* play / pause the MIDI player from here, staying on the pages (Trix); its speed, loop and A–B */
       if (!song) return;
