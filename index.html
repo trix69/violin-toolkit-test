@@ -1169,6 +1169,7 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 #view-fingering .fg-flash { position: fixed; left: 50%; top: 50%; z-index: 60; transform: translate(-50%, -50%); display: grid; place-items: center; min-width: 96px; height: 96px; padding: 0 22px; box-sizing: border-box; border-radius: 48px; background: rgba(20, 28, 24, .72); color: #fff; font: 600 26px var(--font-note); white-space: nowrap; pointer-events: none; animation: fgFlash .9s ease-out forwards; }
 #view-fingering .fg-flash svg { width: 44px; height: 44px; fill: currentColor; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
 #view-fingering .fg-flash.txt { height: 64px; border-radius: 32px; }
+#view-fingering .fg-flash.cnt { width: 110px; height: 110px; border-radius: 50%; padding: 0; font: 700 56px/1 var(--font-note); }   /* the count-in, 4 3 2 1 (Trix) */
 @keyframes fgFlash { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.85); } 15% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 65% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #view-fingering .fg-flash { animation: fgFlashStill 1s linear forwards; } }
 @keyframes fgFlashStill { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
@@ -2148,7 +2149,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-211817" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-212021" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -5884,6 +5885,7 @@ function noteGate() {
       if (k === 0) { counting = false; countEl.hidden = true; then(); return; }
       APP.board.click(k === n);
       countEl.textContent = k; countEl.hidden = false;
+      fgFlash('count', k);   /* the count on the Fingerings page too (Trix) */
       countEl.classList.remove('beat'); void countEl.offsetWidth; countEl.classList.add('beat');
       k--; countT = setTimeout(beat, step);
     })();
@@ -6295,10 +6297,12 @@ function noteGate() {
   });
   /* d: +-0.05 = the buttons and - / + keys, to the next multiple of 5 % (83 -> 85 or 80); +-0.01 = the arrow keys, 1 % (Trix) */
   var flashT = 0;
-  function fgFlash(what) {   /* Fingerings only (Trix): 'play' / 'pause' icon, or 'speed' = the new tempo and percentage */
+  function fgFlash(what, n) {   /* Fingerings only (Trix): 'play' / 'pause' icon, 'speed' = the new tempo and percentage, 'count' = the count-in's n */
     var el = $('fgFlash'); if (!el || !fgShown || !song) return;
     clearTimeout(flashT);
     el.classList.toggle('txt', what === 'speed');
+    el.classList.toggle('cnt', what === 'count');
+    if (what === 'count') { el.textContent = n; el.hidden = true; void el.offsetWidth; el.hidden = false; flashT = setTimeout(function () { el.hidden = true; }, 1000); return; }
     el.innerHTML = what === 'play' ? '<svg viewBox="0 0 24 24"><path d="M8 5.5v13L19 12z"/></svg>' : what === 'pause' ? '<svg viewBox="0 0 24 24"><path d="M8 5.5v13M16 5.5v13"/></svg>'
       : '♩ = ' + Math.round(song.bpm * speed) + ' · ' + Math.round(speed * 100) + '%';
     el.hidden = true; void el.offsetWidth; el.hidden = false;   /* restart the fade */
