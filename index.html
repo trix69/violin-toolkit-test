@@ -1197,6 +1197,7 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 #view-fingering .fg-fitbar .mp-mixpop, #view-fingering .fg-fitbar .mp-abpop { pointer-events: auto; top: calc(100% + 8px); bottom: auto; left: auto; right: 0; transform: none; }
 #view-fingering .fg-fit { pointer-events: auto; margin: 0; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--fg); box-shadow: 0 2px 8px rgba(0,0,0,.15); cursor: pointer; }
 #view-fingering .fg-fit svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#view-fingering .fg-fit[hidden] { display: none; }
 #view-fingering .fg-fit .i-in, #view-fingering .fg-fit.back .i-out { display: none; }
 #view-fingering .fg-fit.back .i-in { display: block; }
 #view-fingering .fg-fit:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -2150,7 +2151,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-212609" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.44" data-build="20261112-212755" data-cache="violin-toolkit-test-"><span>Version 1.44-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -6796,7 +6797,7 @@ function noteGate() {
         fgPages.classList.add('zoomed'); if (bar) bar.classList.add('zoomed');
       }
     }
-    window.addEventListener('resize', function () { if (fgZoom > 1.001) { var sl = fgPages.scrollLeft; fgWide(); fgPages.scrollLeft = sl; } });
+    window.addEventListener('resize', function () { if (fgZoom > 1.001) { var sl = fgPages.scrollLeft; fgWide(); fgPages.scrollLeft = sl; } if (fgShown && window.APP && APP.fgZoomUi) APP.fgZoomUi(); });
     function setZoom(z1, cx, cy) {   /* cx, cy: the screen point that stays still */
       var z0 = fgZoom; z1 = Math.max(0.5, Math.min(3, z1));
       if (Math.abs(z1 - z0) < 1e-3) return;
@@ -6820,6 +6821,9 @@ function noteGate() {
     var fgFit = $('fgFit');
     function zoomUi() {
       var big = Math.abs(fgZoom - 1) > 0.01;
+      /* only where full width gains something (Trix): not on an upright phone; always while zoomed, to come back */
+      var col = fgPages.classList.contains('zoomed') ? parseFloat(getComputedStyle(fgPages).getPropertyValue('--fgw')) || fgPages.clientWidth : fgPages.clientWidth;
+      fgFit.hidden = !big && !(col > 0 && (document.documentElement.clientWidth - 32) / col > 1.1);
       fgFit.classList.toggle('back', big);
       fgFit.setAttribute('aria-label', big ? 'Back to normal size' : 'Full width');
       fgFit.title = big ? 'Back to normal size' : 'Full width';
@@ -6832,7 +6836,7 @@ function noteGate() {
       setZoom(Math.min(3, full / col), cx, cy);
       if (fgZoom <= 1.001) zoomUi();   /* a window no wider than the column: nothing to gain */
     });
-    zoomUi();
+    zoomUi(); APP.fgZoomUi = zoomUi;
     /* more controls (Trix): each one presses the MIDI player's own button; the Mixer and A–B panels move under the
        floating buttons while open from here, and back to the player's bar when opened there */
     var fgMore = $('fgMore'), fgx = $('fgx'), fgx2 = $('fgx2'), mpBarEl = $('mpBar'), fitBar = fgPages.parentNode.querySelector('.fg-fitbar');
@@ -7001,7 +7005,7 @@ function noteGate() {
     window.addEventListener('afterprint', function () { document.documentElement.classList.remove('fg-printing'); });
     APP.fgPrinted = function () { document.documentElement.classList.remove('fg-printing'); document.documentElement.classList.remove('fg-shot'); };   /* the apps call this when their print screen closes */
     APP.views.fingering = {
-      show: function () { fgShown = true; fgOptions(); if (fgDirty) fgRender(); fgSys = -1; fgHead(true); },
+      show: function () { fgShown = true; fgOptions(); if (fgDirty) fgRender(); fgSys = -1; fgHead(true); if (APP.fgZoomUi) APP.fgZoomUi(); },
       hide: function () {
         fgShown = false;
         if (bg && APP.nextView !== 'midi') { bg = false; pause(); APP.board.player(false); }   /* playing on from the player: it stops when neither tool shows */
