@@ -2,7 +2,7 @@
    A new release is saved as soon as it is out, but the page shown stays the one the user is on until
    they choose Update (Settings version line, or the "new version" popup): the page writes that build
    stamp to META 'current'. So Later, or Settings > Automatic update check Off, keeps the old version. */
-const VERSION = 'violin-toolkit-test-20261114-084315';
+const VERSION = 'violin-toolkit-test-20261114-084508';
 const PREFIX = 'violin-toolkit-test-', META = PREFIX + 'meta';
 /* only this site's saved copies: production and test share trix69.github.io, so never touch the other's */
 const MINE = k => /^violin-toolkit-test-\d{8}-\d{6}$/.test(k);
