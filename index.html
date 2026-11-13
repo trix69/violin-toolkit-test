@@ -2357,7 +2357,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-105522" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-105718" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8379,7 +8379,7 @@ function noteGate() {
     var bars = song.bars || [], recBeat = song.toBeat(recEnd), recBars = bars.filter(function (b) { return b.beat < recBeat - 1e-6; });
     var sum = ASSESS.summarise(an, recBars.length ? recBars : bars.slice(0, 1));
     var total = bars.length ? bars[bars.length - 1].num : '', lastRec = recBars.length ? recBars[recBars.length - 1].num : '';
-    if (recBars.length && recBars.length < bars.length) sum.partial = 'Only bars ' + bars[0].num + '–' + lastRec + ' of ' + total + ' were recorded.';
+    if (recBars.length && recBars.length < bars.length) sum.partial = bars[0].num === lastRec ? 'Only bar ' + lastRec + ' of ' + total + ' was recorded.' : 'Only bars ' + bars[0].num + '–' + lastRec + ' of ' + total + ' were recorded.';   /* one bar: singular (Hermes F82) */
     sum.temper = APP.temper ? APP.temper.id : 'equal';
     sum.bars.forEach(function (b, i) { b.idx = i; });
     return sum;
@@ -9792,6 +9792,7 @@ function noteGate() {
   var RX = [
     [/^Bar (\S+)$/, function (m, n) { return '第 ' + n + ' 小节'; }],   /* Play-along (跟音练习) */
     [/^Page (\d+) of (\d+)$/, function (m, a, b) { return '第 ' + a + ' 页，共 ' + b + ' 页'; }],
+    [/^Only bar (\S+) of (\S+) was recorded\.$/, function (m, a, n) { return '只录到第 ' + a + ' 小节（共 ' + n + ' 小节）。'; }],
     [/^Only bars (\S+)–(\S+) of (\S+) were recorded\.$/, function (m, a, b, n) { return '只录到第 ' + a + '–' + b + ' 小节（共 ' + n + ' 小节）。'; }],
     [/^Pitch: (\d+) % of notes within 10 ¢$/, function (m, n) { return '音准：' + n + '% 的音在 10 音分以内'; }],
     [/^Timing: (\d+) % within 25 ms$/, function (m, n) { return '节奏：' + n + '% 的音在 25 毫秒以内'; }],
