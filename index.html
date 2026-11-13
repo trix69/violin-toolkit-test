@@ -1177,6 +1177,12 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 .mp-lvmenu button[aria-checked="true"]::before { content: '✓'; position: absolute; left: 11px; color: var(--accent); font-weight: 700; }
 .mp-lvmenu button:hover, .mp-lvmenu button:focus-visible { background: color-mix(in srgb, var(--accent) 12%, transparent); outline: none; }
 
+/* swiping between the MIDI player and Fingerings (Trix): the new page slides in from the side it comes from */
+@keyframes vt-slide-l { from { transform: translateX(28%); opacity: .3; } to { transform: none; opacity: 1; } }
+@keyframes vt-slide-r { from { transform: translateX(-28%); opacity: .3; } to { transform: none; opacity: 1; } }
+.slide-l { animation: vt-slide-l 240ms ease-out; }
+.slide-r { animation: vt-slide-r 240ms ease-out; }
+
 /* ---- fingerings ---- */
 /* Fingerings (指法谱, Trix): the violin part on A4 pages, the same drawing as the MIDI player's score */
 #view-fingering .fg-bar { display: flex; align-items: center; gap: 12px; margin: 10px 0 12px; }
@@ -1279,6 +1285,78 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
 /* the hand only over the music, where a click jumps to a note (Hermes F69) */
 #view-fingering .fg-page > g { cursor: pointer; }
 
+/* ---- play-along ---- */
+/* Play-along (跟音练习): the take bar over the pages or the live view, the headphone gate, the result */
+.pa { display: grid; gap: 8px; margin: 0 0 10px; }
+.pa-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pa-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--panel); }
+.pa-seg button { border: 0; background: none; color: var(--fg); font: 600 14px var(--font-body); padding: 8px 14px; min-height: 40px; cursor: pointer; }
+.pa-seg button[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
+.pa-seg button:focus-visible, .pa-rec:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* the record control: a dot to start, a square while recording; always with its label, so it reads without colour */
+.pa-rec { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 16px 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: 700 15px var(--font-body); cursor: pointer; }
+.pa-sym { width: 14px; height: 14px; border-radius: 50%; background: #d23b2f; flex: none; }
+.pa-rec.rec .pa-sym { border-radius: 2px; background: currentColor; }
+.pa-rec.rec { border-color: #d23b2f; }
+.pa-rec:disabled { opacity: .5; cursor: default; }
+.pa-time { font: 500 14px var(--font-mono); color: var(--muted); white-space: nowrap; }
+.pa-meter { position: relative; flex: 1 1 60px; min-width: 50px; max-width: 160px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.pa-lvl { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent); transition: width 60ms linear; }
+/* one bar for the whole piece, with a tick at each page */
+.pa-prog { position: relative; height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+.pa-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent); }
+.pa-ticks i { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--panel); }
+.pa-info { display: flex; justify-content: space-between; gap: 10px; font: 500 13px var(--font-mono); color: var(--muted); }
+.pa-hp { display: flex; align-items: center; gap: 6px; margin: 0; font: 500 13px var(--font-body); color: var(--muted); }
+.pa-hp svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.pa-warn { margin: 0; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, var(--t-bad, #c0392b) 14%, transparent); color: var(--fg); font: 600 14px var(--font-body); }
+/* live view: the note heard against the one due, a needle over ±50 cents */
+.pa-needle { display: flex; align-items: center; gap: 10px; font: 600 15px var(--font-mono); }
+.pa-nname { min-width: 3.5em; font: 700 18px var(--font-note); }
+.pa-gauge { position: relative; flex: 1; max-width: 220px; height: 18px; border-radius: 9px; background: var(--line); }
+.pa-zero { position: absolute; left: 50%; top: 2px; bottom: 2px; width: 2px; margin-left: -1px; background: var(--muted); }
+.pa-pin { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; margin-left: -2px; border-radius: 2px; background: var(--accent); transition: left 60ms linear; }
+.pa-needle.off .pa-pin { background: #d23b2f; }
+.pa-ncents { min-width: 4.5em; }
+/* the result */
+.pa-res { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--panel); display: grid; gap: 6px; }
+.pa-res p { margin: 0; }
+.pa-partial { font: 700 15px var(--font-body); }
+.pa-stats { font: 600 15px var(--font-body); }
+.pa-temper, .pa-tap { font: 400 13px var(--font-body); color: var(--muted); }
+.pa-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 400 13px var(--font-body); }
+.pa-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { display: inline-block; width: 22px; height: 14px; border-radius: 3px; flex: none; }
+.sw-amber { background: rgba(232, 164, 32, .45); }
+.sw-red { background: repeating-linear-gradient(135deg, rgba(214, 48, 39, .55) 0 3px, rgba(214, 48, 39, .18) 3px 6px); }
+.sw-time { height: 4px; background: #2f6fd6; }
+.sw-na { background: rgba(128, 128, 128, .25); }
+.pa-worst-h { font: 700 14px var(--font-body); margin-top: 4px !important; }
+.pa-worst { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
+.pa-worst button { border: 0; background: none; color: var(--accent); font: 600 14px var(--font-body); padding: 4px 0; cursor: pointer; text-align: left; }
+/* the tints: on the pages (SVG rects) and on the strip (divs); red is hatched so it does not rely on colour */
+.pa-t { cursor: pointer; }
+.pa-t.amber { fill: rgba(232, 164, 32, .32); background: rgba(232, 164, 32, .28); }
+.pa-t.red { fill: url(#paHatch); background: repeating-linear-gradient(135deg, rgba(214, 48, 39, .42) 0 4px, rgba(214, 48, 39, .12) 4px 8px); }
+.pa-t.na { fill: rgba(128, 128, 128, .16); background: rgba(128, 128, 128, .14); }
+.pa-t.ok { fill: rgba(0, 0, 0, 0); background: transparent; }
+.pa-te { fill: #2f6fd6; background: #2f6fd6; pointer-events: none; }
+.pa-tints { position: absolute; left: 0; top: 0; height: 100%; pointer-events: none; }
+.pa-tints > div { position: absolute; pointer-events: auto; }
+/* the gate: blocking, nothing behind it reachable */
+.pa-gate { position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; padding: 20px; background: rgba(0, 0, 0, .45); }
+.pa-gate[hidden] { display: none; }
+.pa-gate-card { box-sizing: border-box; width: min(100%, 440px); max-height: calc(100dvh - 40px); overflow-y: auto; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 18px 50px rgba(0, 0, 0, .3); outline: none; }
+.pa-gate-card h2 { margin: 0 0 10px; font: 700 22px var(--font-display); }
+.pa-gate-card p { margin: 0 0 16px; font: 400 15px/1.5 var(--font-body); }
+.pa-gate-btns { display: grid; gap: 8px; }
+.pa-gate-btns button { min-height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: 600 15px var(--font-body); cursor: pointer; padding: 8px 12px; }
+.pa-gate-btns button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.pa-gate-btns button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* inside the tool: the player's and the pages' own playback controls are not used (the take drives them) */
+.shell[data-view="playalong"] #mpBar, .shell[data-view="playalong"] .fg-fitbar, .shell[data-view="playalong"] .fg-bar, .shell[data-view="playalong"] #mpFull { display: none !important; }
+@media (max-width: 380px) { .pa-seg button { padding: 8px 10px; } .pa-rec { padding: 8px 12px 8px 10px; } .pa-meter { min-width: 40px; } }
+
 /* ---- start overlay ---- */
 .launch {
   position: fixed; inset: 0; z-index: 100;
@@ -1304,7 +1382,7 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
 @media (min-width: 640px) { .launch-grid { gap: 16px; } }
 @media (min-width: 900px) {   /* five in a row: a wider card so each name fits on one line (Trix) */
   .launch-card { width: min(100%, 900px); }
-  .launch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }   /* six tools: 3 x 2 */ .launch-grid > :last-child:nth-child(odd) { grid-column: auto; }
+  .launch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }   /* seven tools: 3 x 3, the last across */ .launch-grid > :last-child:nth-child(odd) { grid-column: auto; } .launch-grid > :last-child:nth-child(3n+1) { grid-column: 1 / -1; }
   .launch-btn b { white-space: nowrap; }
 }
 @media (max-width: 480px) { .launch-btn { padding: 16px 10px; min-height: 0; gap: 6px; } .launch-btn b { font-size: 18px; } .launch-btn span { font-size: 13px; } }
@@ -1671,6 +1749,10 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <h1><span class="ttl-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12"/><ellipse cx="6.6" cy="17.6" rx="2.6" ry="2" fill="currentColor"/><ellipse cx="16.6" cy="15.6" rx="2.6" ry="2" fill="currentColor"/><path d="M9 9.5l10-2"/></svg></span>MIDI Player</h1>
       <p class="appsub" id="ttl-midi-sub"></p>
     </div>
+    <div id="ttl-playalong" hidden>
+      <h1><span class="ttl-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5v4"/><path d="M8.5 21.5h7"/></svg></span>Play-along</h1>
+      <p class="appsub" id="ttl-playalong-sub">Play the piece · see each bar</p>
+    </div>
     <div id="ttl-fingering" hidden>
       <h1><span class="ttl-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5l3.5 3.5v13.5H6z"/><path d="M14.5 3.5V7H18"/><path d="M8.5 12.5h7M8.5 15.5h7"/><text x="9" y="10.4" font-size="5.5" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">1 3</text></svg></span>Fingerings</h1>
       <p class="appsub">Automatic fingerings · PDF</p>
@@ -1682,12 +1764,59 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" class="tab" data-view="midi" aria-label="MIDI Player" title="MIDI Player"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12"/><ellipse cx="6.6" cy="17.6" rx="2.6" ry="2" fill="currentColor"/><ellipse cx="16.6" cy="15.6" rx="2.6" ry="2" fill="currentColor"/><path d="M9 9.5l10-2"/></svg></button>
       <button type="button" class="tab" data-view="fingering" aria-label="Fingerings" title="Fingerings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5l3.5 3.5v13.5H6z"/><path d="M14.5 3.5V7H18"/><path d="M8.5 12.5h7M8.5 15.5h7"/><text x="9" y="10.4" font-size="5.5" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">1 3</text></svg></button>
       <button type="button" class="tab" data-view="symbols" aria-label="Symbols" title="Symbols"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3-1.2 6-1 8.5.8 2.5-1.8 5.5-2 8.5-.8v13.2c-3-1.2-6-1-8.5.8-2.5-1.8-5.5-2-8.5-.8z"/><path d="M12 6.3v13.2"/><path d="M16.2 9v5.2"/><ellipse cx="15.2" cy="14.4" rx="1.3" ry="1" fill="currentColor"/></svg></button>
+
       <button type="button" class="tab" id="switchTool" aria-label="Switch tool" title="Switch tool" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg></button>
       <button type="button" class="tab tab-set" id="openSettings" aria-label="Settings" title="Settings" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </nav>
   </header>
 
   <main id="main" tabindex="-1">
+  <section id="view-playalong" aria-label="Play-along" hidden>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><pattern id="paHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="rgba(214,48,39,.14)"/><rect width="4" height="8" fill="rgba(214,48,39,.42)"/></pattern></defs></svg>
+<div class="pa" id="pa">
+  <div class="pa-bar">
+    <div class="pa-seg" id="paSeg" role="radiogroup" aria-label="View">
+      <button type="button" role="radio" data-v="pages" aria-checked="true">Pages</button>
+      <button type="button" role="radio" data-v="live" aria-checked="false">Live</button>
+    </div>
+    <button type="button" class="pa-rec" id="paRec"><span class="pa-sym" aria-hidden="true"></span><span id="paRecTxt">Start</span></button>
+    <span class="pa-time" id="paTime" translate="no">0:00 / 0:00</span>
+    <span class="pa-meter" id="paMeter" role="meter" aria-label="Microphone level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="pa-lvl" id="paLvl"></span></span>
+  </div>
+  <div class="pa-prog" id="paProg" aria-hidden="true"><div class="pa-fill" id="paFill"></div><div class="pa-ticks" id="paTicks"></div></div>
+  <div class="pa-info"><span id="paPage"></span><span id="paBarNow"></span></div>
+  <p class="pa-hp" id="paHp" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg><span id="paHpTxt">Headphones only: the microphone is on.</span></p>
+  <p class="pa-warn" id="paWarn" role="status" hidden>The microphone can not hear the violin.</p>
+  <div class="pa-needle" id="paNeedle" aria-hidden="true" hidden><span class="pa-nname" id="paNName" translate="no"></span><span class="pa-gauge"><span class="pa-zero"></span><span class="pa-pin" id="paPin"></span></span><span class="pa-ncents" id="paNCents" translate="no"></span></div>
+  <div class="pa-res" id="paRes" hidden>
+    <p class="pa-partial" id="paPartial" hidden></p>
+    <p class="pa-stats" id="paStats"></p>
+    <p class="pa-temper" id="paTemper"></p>
+    <div class="pa-legend" id="paLegend">
+      <span><i class="sw sw-amber" aria-hidden="true"></i><span>10–25 ¢ off</span></span>
+      <span><i class="sw sw-red" aria-hidden="true"></i><span>more than 25 ¢ off</span></span>
+      <span><i class="sw sw-time" aria-hidden="true"></i><span>timing off by more than 25 ms</span></span>
+      <span><i class="sw sw-na" aria-hidden="true"></i><span>not assessed</span></span>
+    </div>
+    <p class="pa-worst-h" id="paWorstH">The five worst bars</p>
+    <ol class="pa-worst" id="paWorst"></ol>
+    <p class="pa-tap">Tap a bar to practise it in the MIDI player.</p>
+  </div>
+</div>
+<div class="pa-gate" id="paGate" role="dialog" aria-modal="true" aria-labelledby="paGateT" aria-describedby="paGateB" hidden>
+  <div class="pa-gate-card" tabindex="-1">
+    <h2 id="paGateT">Use headphones</h2>
+    <p id="paGateB">The microphone is on for the whole take. With the phone on speaker, any reference or click the app plays reaches it and is scored as your own playing. Put on headphones, or start without sound.</p>
+    <div class="pa-gate-btns">
+      <button type="button" class="primary" id="paGo">I'm using headphones — start</button>
+      <button type="button" id="paMute">Start without sound</button>
+      <button type="button" id="paCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+  </section>
+
   <section id="view-midi" aria-label="MIDI player" hidden>
 <div class="mp" id="mp">
   <div class="mp-top" id="mpTop">
@@ -2198,7 +2327,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-065153" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-075751" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -2364,6 +2493,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" class="launch-btn" data-view="midi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V5.5l10-2v12"/><ellipse cx="6.6" cy="17.6" rx="2.6" ry="2" fill="currentColor"/><ellipse cx="16.6" cy="15.6" rx="2.6" ry="2" fill="currentColor"/><path d="M9 9.5l10-2"/></svg><b>MIDI Player</b><span>Play a tune and watch it on the fingerboard</span></button>
       <button type="button" class="launch-btn" data-view="fingering"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5l3.5 3.5v13.5H6z"/><path d="M14.5 3.5V7H18"/><path d="M8.5 12.5h7M8.5 15.5h7"/><text x="9" y="10.4" font-size="5.5" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">1 3</text></svg><b>Fingerings</b><span>Marks the violin part with fingerings, exports a PDF</span></button>
       <button type="button" class="launch-btn" data-view="symbols"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3-1.2 6-1 8.5.8 2.5-1.8 5.5-2 8.5-.8v13.2c-3-1.2-6-1-8.5.8-2.5-1.8-5.5-2-8.5-.8z"/><path d="M12 6.3v13.2"/><path d="M16.2 9v5.2"/><ellipse cx="15.2" cy="14.4" rx="1.3" ry="1" fill="currentColor"/></svg><b>Symbols</b><span>Look up music signs and what they mean</span></button>
+
     </div>
     <button type="button" class="launch-days" id="launchDays" aria-haspopup="dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-4"/><path d="M12 16V7"/><path d="M17 16v-6"/></svg><span class="use-days">Practised on 0 days</span></button>
   </div>
@@ -4119,6 +4249,13 @@ function noteGate() {
       TOPN = on ? Math.max(MAXN, playerN) : MAXN;
       renderedEvenly = null; layout(); if (renderedEvenly === null) { renderedEvenly = false; render(); layout(); }
     },
+    /* a change of key while the tune plays (Trix: the Minuets' bar 33 went silent): the key colours (and the spelling, flats
+       or sharps) change, the notes sounding keep sounding */
+    rekey: function (key, flat) {
+      if (!playerOn) return;
+      playerKey = key || null;
+      if (playerFlat !== !!flat) { playerFlat = !!flat; render(); layout(); } else paint();
+    },
     on: pOn, off: pOff, allOff: pAllOff, hand: setHand, has: function (id) { return pvoices.has(id); },
     click: function (strong, vol) {   /* the MIDI player's count-in and metronome: a tick, the first one stronger; vol 0-1 (the Mixer) */
       if (!ensureCtx()) return;
@@ -4134,6 +4271,21 @@ function noteGate() {
     soloVolume: function (v) { soloVol = v; if (soloBus) soloBus.gain.setTargetAtTime(v, soloBus.context.currentTime, 0.03); },
     audio: function () { return ensureCtx() ? { ctx: ctx, out: master } : null; },   /* for the accompaniment */
     where: function (midi) { return midi >= STRINGS[0].midi && midi <= STRINGS[3].midi + PTOP; },
+    /* Play-along (Trix): the frequency a score note should sound at under Settings > Intonation (an open string at
+       the string's own tuning), and the pitch heard as Pitch Check's disc on the note's string, in the player too */
+    hz: function (midi, si, open) { var st = STRINGS[si]; return midiFreq(midi) * Math.pow(2, (open && st && st.midi === midi ? openCents(st) : stopCents(midi)) / 1200); },
+    heard: function (r) {   /* r: { m: midi (fractional), cents, si } or null */
+      Array.prototype.forEach.call(board.querySelectorAll('.pcm'), function (d, si) {
+        var n = r && (r.si === undefined || r.si < 0 || r.si === si) ? r.m - STRINGS[si].midi - openCents(STRINGS[si]) / 100 : -9;
+        var show = n >= -0.5 && n <= TOPN + 0.5;
+        n = Math.max(-0.02, Math.min(TOPN + 0.15, n));
+        d.classList.toggle('on', show);
+        if (show) {
+          d.style.top = 'calc(var(--head) + ' + mm(n).toFixed(2) + ' * var(--k))';
+          d.style.setProperty('--gp', Math.round(100 * Math.max(0, Math.min(1, (PC_GREY - Math.abs(r.cents)) / (PC_GREY - PC_TOL)))) + '%');
+        }
+      });
+    },
     name: function (midi) { return noteName(midi, true); }
   };
 
@@ -4581,6 +4733,314 @@ function noteGate() {
 })();
 </script>
 <script>
+/* Assessment (Trix): line a performance up against the score and measure it, note by note. Nothing here works out
+   what was played; every note's pitch, time and bar comes from the score (song.notes), and the take is only measured
+   against it.
+   Two halves:
+   - framer(sr, yin): fed the microphone's samples as they come (an AudioWorklet's 128-sample blocks), it keeps per
+     frame only numbers: every 512 samples the loudness and yin pitch of the last 2048 (Pitch Check's detector and gate
+     level), and a fine loudness trace (every 128 samples) for onsets. The audio itself is never stored.
+   - analyse(fr, song, opts): onsets from the loudness trace (and from a change of pitch, for slurred notes), a banded
+     dynamic-programming alignment of onsets to the score's notes, then per note: pitch (median of the note's middle,
+     attack and release dropped), its 5th-95th percentile spread (vibrato), timing against the locally warped score
+     time, missed and extra notes; then per bar and for the piece.
+   Loaded by the page (window.ASSESS) and by the Node checks (module.exports). */
+(function (root) {
+  var WIN = 2048, HOP = 512, BLK = 128, EW = 512, GATE = 0.01;
+  var IN_TUNE = 10, IN_TIME = 25, AMBER = 10, RED = 25;   /* cents, ms: the definitions, kept fixed between builds */
+
+  function framer(sr, yin) {
+    var ring = new Float32Array(WIN), filled = 0, pos = 0, since = 0, n = 0;
+    var fr = { sr: sr, hop: HOP, win: WIN, t: [], rms: [], f: [], et: [], e: [] };
+    var buf = new Float32Array(WIN);
+    fr.push = function (x) {   /* x: Float32Array of any length, in order */
+      for (var i = 0; i < x.length; i++) {
+        ring[pos] = x[i]; pos = (pos + 1) % WIN; if (filled < WIN) filled++;
+        n++; since++;
+        if (n % BLK === 0 && filled >= EW) {   /* fine loudness: the last 512 samples (a cycle of the lowest note fits), every 128 */
+          var s = 0, k, j;
+          for (k = 0; k < EW; k++) { j = (pos - 1 - k + WIN) % WIN; s += ring[j] * ring[j]; }
+          fr.et.push((n - EW / 2) / sr); fr.e.push(Math.sqrt(s / EW));
+        }
+        if (since >= HOP && filled === WIN) {
+          since = 0;
+          var e2 = 0;
+          for (k = 0; k < WIN; k++) { buf[k] = ring[(pos + k) % WIN]; e2 += buf[k] * buf[k]; }
+          var rms = Math.sqrt(e2 / WIN);
+          fr.t.push((n - WIN / 2) / sr); fr.rms.push(rms);
+          fr.f.push(rms > GATE ? yin(buf, sr, 150, 3000) : 0);
+        }
+      }
+    };
+    return fr;
+  }
+
+  function median(a) { if (!a.length) return NaN; var s = a.slice().sort(function (x, y) { return x - y; }), h = s.length >> 1; return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2; }
+  function pct(a, p) { if (!a.length) return NaN; var s = a.slice().sort(function (x, y) { return x - y; }); return s[Math.min(s.length - 1, Math.max(0, Math.round(p * (s.length - 1))))]; }
+  function midiOf(f) { return 69 + 12 * Math.log(f / 440) / Math.LN2; }
+
+  /* onsets: the fine loudness rising through the gate, or jumping (x1.8 over its minimum in the last 130 ms, as the
+     tuner's gate tests an attack); and, for slurred notes with no new attack, a settled change of pitch */
+  function onsetJob(fr) {
+    var gate = GATE, out = [], e = fr.e, et = fr.et, N = e.length, i = 1, phase = 0, si = 0, lastT = -1;
+    var sm = new Float64Array(N), look = Math.round(0.13 * fr.sr / BLK);
+    var lastPeak = -1, dq = new Int32Array(N + 1), qh = 0, qt = 0;
+    var f = fr.f, t = fr.t, seg = [], gapN = 0, segT = [], pi = 0, pcs = [], lvT = null;
+    function push(k) { while (qt > qh && sm[dq[qt - 1]] >= sm[k]) qt--; dq[qt++] = k; }
+    return {
+      done: false, out: out,
+      step: function (n) {   /* about n blocks or frames of work */
+        var stop = 0;
+        if (phase === 0) {   /* ~13 ms smoothing */
+          for (; si < N && stop < n; si++, stop++) { var s0 = 0, c0 = 0; for (var j = Math.max(0, si - 2); j <= Math.min(N - 1, si + 2); j++) { s0 += e[j]; c0++; } sm[si] = s0 / c0; }
+          if (si >= N) phase = 1;
+          return;
+        }
+        if (phase === 1) {
+          for (; i < N && stop < n; i++, stop++) {
+            /* the window: the last 130 ms, but not back past the last attack's peak (a held note is not a new jump) */
+            push(i - 1);
+            var from = Math.max(0, i - look, lastPeak + 1);
+            while (qh < qt && dq[qh] < from) qh++;
+            if (sm[i] < gate) continue;
+            var lo = qh < qt ? sm[dq[qh]] : Infinity;
+            var rise = sm[i - 1] < gate || sm[i] > Math.max(lo, gate * 0.3) * 1.8;
+            if (!rise || et[i] - lastT < 0.06) continue;
+            /* the onset: where the rise starts, back to the first block above a fifth of the level it reaches */
+            var peakI = i; while (peakI + 1 < N && sm[peakI + 1] > sm[peakI] && et[peakI + 1] - et[i] < 0.08) peakI++;
+            var k2 = i; while (k2 > 0 && sm[k2 - 1] > sm[peakI] * 0.2 && sm[k2 - 1] < sm[k2] && et[i] - et[k2 - 1] < 0.08) k2--;
+            out.push({ t: et[k2], how: 'level' }); lastT = et[i];
+            while (i + 1 < N && sm[i + 1] >= sm[i]) { i++; push(i - 1); }   /* past this rise */
+            lastPeak = i;
+          }
+          if (i >= N) phase = 2;
+          return;
+        }
+        if (phase === 2) {
+          /* pitch changes (a slur: no new attack): three frames agreeing with each other (within 30 cents) and more than
+             half a semitone from the settled pitch of the note before. The onset is midway between the last frame still
+             on the old pitch and the first on the new one (the frames between straddle both) */
+          for (; pi < f.length && stop < n; pi++, stop++) {
+            if (!f[pi]) { gapN++; if (fr.rms[pi] <= GATE || gapN > 4) { seg = []; segT = []; } continue; }
+            gapN = 0;
+            seg.push(midiOf(f[pi])); segT.push(t[pi]);
+            if (seg.length < 6) continue;
+            if (seg.length > 64) { seg = seg.slice(-32); segT = segT.slice(-32); }
+            var n3 = seg.slice(-3), lo3 = Math.min(n3[0], n3[1], n3[2]), hi3 = Math.max(n3[0], n3[1], n3[2]);
+            if (hi3 - lo3 > 0.3) continue;
+            var base = median(seg.slice(Math.max(0, seg.length - 23), -3)), nw = median(n3);
+            if (Math.abs(nw - base) <= 0.5) continue;
+            var k = seg.length - 4;
+            while (k > 0 && Math.abs(seg[k] - base) > 0.25) k--;   /* the last frame still on the old pitch */
+            var k3 = k + 1; while (k3 < seg.length - 3 && Math.abs(seg[k3] - nw) > 0.25) k3++;   /* the first on the new */
+            var tc = (segT[k] + segT[k3]) / 2, near = false;
+            if (!lvT) lvT = out.map(function (o) { return o.t; });   /* the level onsets, in time order */
+            var lb = lowerBound(lvT, tc);
+            near = (lb < lvT.length && Math.abs(lvT[lb] - tc) < 0.07) || (lb > 0 && Math.abs(lvT[lb - 1] - tc) < 0.07);
+            for (var q = pcs.length - 1; q >= 0 && q >= pcs.length - 4; q--) if (Math.abs(pcs[q].t - tc) < 0.07) near = true;
+            if (!near) pcs.push({ t: tc, how: 'pitch' });
+            seg = seg.slice(k3); segT = segT.slice(k3);
+          }
+          if (pi >= f.length) { pcs.forEach(function (o) { out.push(o); }); out.sort(function (a, b) { return a.t - b.t; }); this.done = true; }
+        }
+      }
+    };
+  }
+  /* onsets: the fine loudness rising through the gate, or jumping (x1.8 over its minimum in the last 130 ms, as the
+     tuner's gate tests an attack); and, for slurred notes with no new attack, a settled change of pitch */
+  function onsets(fr) { var j = onsetJob(fr); while (!j.done) j.step(1e9); return j.out; }
+
+  function lowerBound(a, x) { var lo = 0, hi = a.length; while (lo < hi) { var m = (lo + hi) >> 1; if (a[m] < x) lo = m + 1; else hi = m; } return lo; }
+  /* the frames between two times whose window lies inside them, as cents from a frequency (octave slips folded) */
+  function centsIn(fr, a, b, hz) {
+    var half = fr.win / 2 / fr.sr, out = [], i, i0 = lowerBound(fr.t, a - 0.06), i1 = lowerBound(fr.t, b + 0.06);
+    function c(i) { var v = 1200 * Math.log(fr.f[i] / hz) / Math.LN2; while (v > 600) v -= 1200; while (v < -600) v += 1200; return v; }   /* an octave slip of the detector, not of the player */
+    for (i = i0; i < i1; i++) if (!(fr.t[i] - half < a - 0.005 || fr.t[i] + half > b + 0.005) && fr.f[i] && fr.rms[i] > GATE) out.push(c(i));
+    if (!out.length) for (i = i0; i < i1; i++) if (fr.t[i] >= a && fr.t[i] <= b && fr.f[i] && fr.rms[i] > GATE) out.push(c(i));   /* a short note: frames centred inside it */
+    return out;
+  }
+
+  /* the score's events: each onset of the solo (a chord's notes share one), graces left out */
+  function events(song) {
+    var ev = [];
+    song.notes.forEach(function (n, k) {
+      if (n.grace) return;
+      var last = ev[ev.length - 1];
+      if (last && Math.abs(last.t - n.t) < 1e-4) { last.idx.push(k); last.chord = true; last.e = Math.max(last.e, n.e); return; }
+      ev.push({ t: n.t, e: n.e, m: n.m, idx: [k], chord: false, b: n.b });
+    });
+    return ev;
+  }
+
+  /* alignment: onsets (time, pitch) to events (time, pitch), keeping their order. Matching costs the change of lag
+     from the last match (allowed only within 35 % of the expected gap, plus 40 ms) and the pitch distance; an
+     unmatched onset is an extra, an unmatched event a missed note. Built row by row (aligner.rows), so the page can
+     do it in slices */
+  function aligner(P, E) {
+    var n = P.length, m = E.length, W = m + 1, INF = 1e18, X = 1.2, M = 1.5, row = 0;
+    var cost = new Float64Array((n + 1) * W).fill(INF), lag = new Float64Array((n + 1) * W), lastE = new Float64Array((n + 1) * W), from = new Int8Array((n + 1) * W), has = new Uint8Array((n + 1) * W);
+    cost[0] = 0;
+    function cell(i, j) {
+      var c = i * W + j; if (i === 0 && j === 0) return;
+      var best = INF, bf = 0, bl = 0, be = 0, bh = 0, k;
+      if (i > 0) { k = (i - 1) * W + j; if (cost[k] + X < best) { best = cost[k] + X; bf = 1; bl = lag[k]; be = lastE[k]; bh = has[k]; } }
+      if (j > 0) { k = i * W + j - 1; if (cost[k] + M < best) { best = cost[k] + M; bf = 2; bl = lag[k]; be = lastE[k]; bh = has[k]; } }
+      if (i > 0 && j > 0) {
+        k = (i - 1) * W + j - 1;
+        if (cost[k] < INF) {
+          var p = P[i - 1], e = E[j - 1], L = p.t - e.t, step;
+          if (has[k]) {
+            var gap = Math.max(0.05, e.t - lastE[k]), dl = L - lag[k];
+            step = Math.abs(dl) <= 0.35 * gap + 0.04 ? Math.pow(dl / (0.35 * gap + 0.04), 2) : INF;
+          } else step = Math.abs(L) < 2.5 ? Math.abs(L) * 0.4 : INF;   /* the first note: near where the count-in put it */
+          if (step < INF) {
+            var pc = 0;
+            if (!e.chord && p.m !== null) { var d = Math.abs(p.m - e.m); d = Math.min(d, Math.abs(d - 12), Math.abs(d - 24)) + (d > 6 ? 0.5 : 0); pc = d < 0.5 ? 0 : Math.min(d, 4) * 0.6; }
+            else if (!e.chord) pc = 0.5;
+            if (cost[k] + step + pc < best) { best = cost[k] + step + pc; bf = 3; bl = L; be = e.t; bh = 1; }
+          }
+        }
+      }
+      cost[c] = best; from[c] = bf; lag[c] = bl; lastE[c] = be; has[c] = bh;
+    }
+    return {
+      done: function () { return row > n; },
+      rows: function (k) { for (var end = Math.min(n, row + k - 1); row <= end; row++) for (var j = 0; j <= m; j++) cell(row, j); },
+      result: function () {
+        var pairs = [], extra = [], ii = n, jj = m;
+        while (ii > 0 || jj > 0) {
+          var f2 = from[ii * W + jj];
+          if (f2 === 3) { pairs.push([ii - 1, jj - 1]); ii--; jj--; } else if (f2 === 1) { extra.push(ii - 1); ii--; } else { jj--; }
+        }
+        pairs.reverse(); extra.reverse();
+        return { pairs: pairs, extra: extra };
+      }
+    };
+  }
+  function align(P, E) { var a = aligner(P, E); while (!a.done()) a.rows(64); return a.result(); }
+
+  function now() { return typeof performance !== 'undefined' ? performance.now() : Date.now(); }
+  /* the whole analysis as a job done in slices: job.step(ms) works for about that long and says when it is finished
+     (the page runs it between frames after Stop; the Node checks run it in one go) */
+  function job(fr, song, opts) {
+    opts = opts || {};
+    var hzOf = opts.hz || function (n) { return 440 * Math.pow(2, (n.m - 69) / 12); };
+    var J = { done: false, stage: 0, result: null }, E, O, OJ, A, AL, oi = 0, byE, lags, G, res = [], ej = 0, WN = opts.warpN || 16;
+    function warpAt(j) {   /* opts.local: a line through the 33 notes around (no reference playing); else the take's clock */
+      var q0 = Math.max(0, Math.min(j - WN, E.length - 1 - 2 * WN)), q1 = Math.min(E.length - 1, q0 + 2 * WN), pts = [];
+      for (var q = q0; q <= q1; q++) if (lags[q] !== null) pts.push([E[q].t - E[j].t, lags[q]]);
+      if (pts.length < 4) return pts.length ? median(pts.map(function (p) { return p[1]; })) : 0;
+      var a = 0, b = 0, use = pts;
+      for (var it = 0; it < 3; it++) {
+        var n = use.length, sx = 0, sy = 0, sxx = 0, sxy = 0;
+        use.forEach(function (p) { sx += p[0]; sy += p[1]; sxx += p[0] * p[0]; sxy += p[0] * p[1]; });
+        var den = n * sxx - sx * sx; b = den > 1e-9 ? (n * sxy - sx * sy) / den : 0; a = (sy - b * sx) / n;
+        var rr = pts.map(function (p) { return Math.abs(p[1] - (a + b * p[0])); }), mad = median(rr);
+        var keep = pts.filter(function (p, k) { return rr[k] <= Math.max(0.02, 2.5 * mad); });
+        if (keep.length < 4) break;
+        use = keep;
+      }
+      return a;
+    }
+    /* the take's clock (play-along: the player follows the app's reference, so on time means the score's clock):
+       one tempo ratio for the whole take, the median of the slopes between pairs of matched notes at least a second
+       apart, and one offset (latency, a late start) at the most common lag, so the notes played on time set it and
+       the early and late ones do not pull it */
+    function clock() {
+      var pts = []; lags.forEach(function (L, j) { if (L !== null) pts.push([E[j].t, L]); });
+      if (pts.length < 2) return { a: pts.length ? pts[0][1] : 0, b: 0 };
+      var sl = [], step = Math.max(1, Math.floor(pts.length * pts.length / 40000));
+      for (var i = 0, c = 0; i < pts.length; i++) for (var k = i + 1; k < pts.length; k++) if (pts[k][0] - pts[i][0] >= 1 && (c++ % step) === 0) sl.push((pts[k][1] - pts[i][1]) / (pts[k][0] - pts[i][0]));
+      var b = sl.length ? median(sl) : 0;
+      var r = pts.map(function (p) { return p[1] - b * p[0]; }).sort(function (x, y) { return x - y; }), best = -1, at = 0, lo = 0, hi = 0;
+      for (i = 0; i < r.length; i++) {   /* the densest lag: an 8 ms triangle kernel over the sorted lags */
+        while (r[i] - r[lo] >= 0.008) lo++;
+        while (hi < r.length && r[hi] - r[i] < 0.008) hi++;
+        var w = 0; for (k = lo; k < hi; k++) w += 1 - Math.abs(r[k] - r[i]) / 0.008;
+        if (w > best) { best = w; at = r[i]; }
+      }
+      var near = r.filter(function (x) { return Math.abs(x - at) <= 0.01; });
+      return { a: near.reduce(function (s2, x) { return s2 + x; }, 0) / near.length, b: b };
+    }
+    function note(e, j) {
+      var r = { t: e.t, b: e.b, m: e.m, idx: e.idx, chord: e.chord };
+      r.warp = opts.local ? warpAt(j) : G.a + G.b * e.t;
+      if (byE[j] === undefined) { r.missed = true; return r; }
+      var o = O[byE[j]], nextT = byE[j] + 1 < O.length ? O[byE[j] + 1].t : Infinity;
+      r.onset = o.t; r.timing = Math.round((o.t - (e.t + r.warp)) * 1000);
+      if (e.chord) { r.skip = 'chord'; return r; }
+      /* the window: from the onset to the next onset (an open string ringing on is not measured past it), and no
+         longer than the note's own length allows; attack 80 ms and release 120 ms left out (less for short notes) */
+      var dur = (e.e - e.t), end = Math.min(nextT, o.t + dur * 1.25 + 0.1), L = end - o.t;
+      var a = o.t + Math.min(0.08, 0.2 * L), b = end - Math.min(0.12, 0.2 * L);
+      var hz = hzOf(song.notes[e.idx[0]]), cs = centsIn(fr, a, b, hz);
+      if (!cs.length) { r.missed = true; r.timing = null; return r; }
+      r.cents = Math.round(median(cs) * 10) / 10;
+      r.hz = hz;
+      if (cs.length >= 8) r.spread = Math.round((pct(cs, 0.95) - pct(cs, 0.05)) * 10) / 10;   /* vibrato: the 5th-95th percentile, beside the median */
+      return r;
+    }
+    J.step = function (ms) {
+      var t0 = now();
+      while (!J.done && now() - t0 < ms) {
+        if (J.stage === 0) { if (!OJ) { E = events(song); OJ = onsetJob(fr); } OJ.step(4000); if (OJ.done) { O = OJ.out; J.stage = 1; } }
+        else if (J.stage === 1) {   /* each onset's pitch: the median of its frames until the next onset (for the alignment only) */
+          for (var c = 0; c < 64 && oi < O.length; c++, oi++) {
+            var o = O[oi], end = oi + 1 < O.length ? O[oi + 1].t : o.t + 2, fs = [], i0 = lowerBound(fr.t, o.t + 0.03), i1 = lowerBound(fr.t, end - 0.02);
+            for (var i = i0; i < i1; i++) if (fr.f[i]) fs.push(midiOf(fr.f[i]));
+            o.m = fs.length ? median(fs) : null;
+          }
+          if (oi >= O.length) { AL = aligner(O, E); J.stage = 2; }
+        }
+        else if (J.stage === 2) { AL.rows(Math.max(1, Math.floor(40000 / (E.length + 1)))); if (AL.done()) { A = AL.result(); byE = {}; A.pairs.forEach(function (pr) { byE[pr[1]] = pr[0]; }); lags = E.map(function (e, j) { return byE[j] !== undefined ? O[byE[j]].t - e.t : null; }); J.stage = 3; } }
+        else if (J.stage === 3) { G = clock(); J.stage = 4; }
+        else if (J.stage === 4) { for (var k = 0; k < 32 && ej < E.length; k++, ej++) res.push(note(E[ej], ej)); if (ej >= E.length) J.stage = 5; }
+        else { J.result = { notes: res, extra: A.extra.map(function (k2) { return { t: O[k2].t, m: O[k2].m }; }), onsets: O.length, clock: G }; J.done = true; }
+      }
+      return J.done;
+    };
+    return J;
+  }
+  function analyse(fr, song, opts) { var j = job(fr, song, opts); j.step(Infinity); return j.result; }
+
+  /* per bar and for the piece, by the definitions (Trix's spec): in tune |cents| <= 10, in time |ms| <= 25; a bar
+     with a chord is not assessed (v1 does not guess which string is which) */
+  function summarise(an, bars) {
+    var B = bars.map(function (b, k) { return { num: b.num, beat: b.beat, next: k + 1 < bars.length ? bars[k + 1].beat : Infinity, notes: [] }; });
+    an.notes.forEach(function (r) { for (var k = 0; k < B.length; k++) if (r.b >= B[k].beat - 1e-6 && r.b < B[k].next - 1e-6) { B[k].notes.push(r); break; } });
+    B.forEach(function (b) {
+      if (b.notes.some(function (r) { return r.chord; })) { b.state = 'na'; return; }
+      var ok = b.notes.filter(function (r) { return r.cents !== undefined; });
+      b.missed = b.notes.filter(function (r) { return r.missed; }).length;
+      if (!ok.length) { b.state = b.notes.length ? 'na' : 'empty'; return; }
+      b.cents = ok.reduce(function (s, r) { return s + Math.abs(r.cents); }, 0) / ok.length;
+      b.worst = ok.reduce(function (w, r) { return Math.abs(r.cents) > Math.abs(w.cents) ? r : w; });
+      var tm = ok.filter(function (r) { return r.timing !== null && r.timing !== undefined; });
+      b.timing = tm.length ? tm.reduce(function (s, r) { return s + r.timing; }, 0) / tm.length : 0;
+      b.absTiming = tm.length ? tm.reduce(function (s, r) { return s + Math.abs(r.timing); }, 0) / tm.length : 0;
+      b.state = b.cents > RED ? 'red' : b.cents > AMBER ? 'amber' : 'ok';
+      b.clean = b.state === 'ok' && b.absTiming <= IN_TIME && !b.missed;
+    });
+    var all = an.notes.filter(function (r) { return r.cents !== undefined; });
+    var timed = all.filter(function (r) { return r.timing !== null && r.timing !== undefined; });
+    var assessed = B.filter(function (b) { return b.cents !== undefined; });
+    var run = 0, longest = 0, from = null, best = null;
+    B.forEach(function (b) { if (b.clean) { if (!run) from = b; run++; if (run > longest) { longest = run; best = [from.num, b.num]; } } else if (b.state !== 'empty') run = 0; });
+    return {
+      bars: B,
+      inTune: all.length ? Math.round(100 * all.filter(function (r) { return Math.abs(r.cents) <= IN_TUNE; }).length / all.length) : null,
+      inTime: timed.length ? Math.round(100 * timed.filter(function (r) { return Math.abs(r.timing) <= IN_TIME; }).length / timed.length) : null,
+      worst: assessed.slice().sort(function (a, b) { return b.cents - a.cents; }).slice(0, 5),
+      cleanRun: { bars: longest, from: best && best[0], to: best && best[1] },
+      notes: all.length, missed: an.notes.filter(function (r) { return r.missed; }).length, extra: an.extra.length
+    };
+  }
+
+  root.ASSESS = { framer: framer, onsets: onsets, events: events, align: align, analyse: analyse, job: job, summarise: summarise, median: median,
+    WIN: WIN, HOP: HOP, GATE: GATE, IN_TUNE: IN_TUNE, IN_TIME: IN_TIME, AMBER: AMBER, RED: RED };
+})(typeof window !== 'undefined' ? window : module.exports);
+</script>
+<script>
 (function () {
   /* MIDI player (Trix, 2026-11-06): play a one-part violin MIDI file. The fingerboard below lights each note
      as it sounds (APP.board, from board.html: every note grey, the played one in its string colour with the
@@ -4593,6 +5053,7 @@ function noteGate() {
   var scoreEl = $('mpScore'), svg = $('mpSvg'), keySvg = $('mpKey'), headEl = $('mpHead'), subEl = $('ttl-midi-sub');
   var songs = [], song = null, pos = 0, speed = 1, playing = false, ni = 0, active = [], last = 0, raf = 0, shown = false;
   var loop = false, loopBtn = $('mpLoop');
+  var paMute = false, paOn = false, paTake = null;   /* Play-along: a take without sound (nothing scheduled at all), the tool open, the take running */
   /* Metronome (Trix): clicks with the tune, on its own beats (time signature, tempo, speed), the first of each bar
      stronger; remembered */
   var lastTick = -1;   /* since the Mixer (Trix): no button; it clicks when its fader is above 0 */   /* Loop: start again from the top at the end (Trix), remembered */
@@ -4615,6 +5076,7 @@ function noteGate() {
     return accBus;
   }
   function accNote(n, from) {   /* from: song seconds where it starts sounding (a note already under way on resume) */
+    if (paMute) return;
     var bus = accOut(); if (!bus) return;
     var c = bus.context, now = c.currentTime;
     var t0 = now + Math.max(0, (from - pos) / speed), t1 = now + Math.max(0.03, (n.e - pos) / speed);
@@ -6203,7 +6665,7 @@ function noteGate() {
     var bt = '♩ = ' + Math.round(curBpm() * speed); if (bpmEl.textContent !== bt) bpmEl.textContent = bt;
     if (song.keyAt && boardKey !== null) {   /* a new key under the playhead: the fingerboard's key notes change with it */
       var kn = song.keyAt(Math.max(0, counting ? countBase : beat));
-      if (kn.sf + (kn.minor ? 'm' : '') !== boardKey) { boardBeat = Math.max(0, counting ? countBase : beat); fit(); return; }
+      if (kn.sf + (kn.minor ? 'm' : '') !== boardKey) { boardBeat = Math.max(0, counting ? countBase : beat); boardKey = kn.sf + (kn.minor ? 'm' : ''); APP.board.rekey(keySet(), kn.sf < 0); }   /* not fit(): that resets the board and silenced the notes sounding (Trix) */
     }
     var w = scoreEl.clientWidth / z, x = xAt(beat), hx = full ? X0 + 50 : Math.max(w * 0.36, X0 + 50);   /* full screen: the playhead at the left, just after the clef and key (Trix) */
     headEl.style.left = hx * z + 'px';
@@ -6258,7 +6720,7 @@ function noteGate() {
     if (!playing) return;
     pos += (now - last) / 1000 * speed;
     var k = Math.floor(song.toBeat(pos) / (4 / song.sig.den) + 1e-6);   /* the beat is tracked even at 0, so raising the fader clicks from the next beat */
-    if (k > lastTick) { lastTick = k; if (pos < song.end && mix.m > 0) APP.board.click(k % song.sig.num === 0, mix.m); }
+    if (k > lastTick) { lastTick = k; if (pos < song.end && mix.m > 0 && !paMute) APP.board.click(k % song.sig.num === 0, mix.m); }
     last = now;
     if (song.acc.length) accAhead();
     var ns = song.notes;
@@ -6273,7 +6735,7 @@ function noteGate() {
       /* a note under a quarter of a second just lights up: no string wobble, rings or glow (Trix: fast pieces lagged) */
       var quick = (ns[ni].e - ns[ni].t) / speed < 0.25;
       APP.board.hand(ns[ni].hand);   /* before on(): a new position centres the board first */
-      APP.board.on(ns[ni].m, 'n' + ni, !quick, ns[ni].si, ns[ni].b, false, toneOf(ns[ni]), lvlOf(ns[ni]));   /* a harmonic sounds pure, pizzicato plucked */   /* its string, and its chord (both notes of a double stop stay lit) */
+      APP.board.on(ns[ni].m, 'n' + ni, !quick && !paMute, ns[ni].si, ns[ni].b, paMute, toneOf(ns[ni]), lvlOf(ns[ni]));   /* a take without sound: lit, not sounded */   /* a harmonic sounds pure, pizzicato plucked */   /* its string, and its chord (both notes of a double stop stay lit) */
       noteEls[ni].classList.add('on');
       noteEls[ni].classList.toggle('quick', quick);
       active.push(ni); ni++;
@@ -6283,7 +6745,8 @@ function noteGate() {
     scroll(); ui();
     var rr = abRange();
     if (rr && pos >= rr.eT - 0.005) { seekTo(rr.aT); playing = false; countIn(go, rr.aB); return; }   /* A–B: round again from A, after the count-in (Trix) */
-    if (pos >= song.end && !active.length) {
+    if (paTake && (pos >= song.end + 1 || pos >= 600)) { paStop(); return; }   /* a take ends with the piece (a second after its last note), or at 10 minutes */
+    if (pos >= song.end && !active.length && !paTake) {
       if (!loop) { pause(); seekTo(song.end); return; }
       seekTo(0); playing = false; countIn(go); return;   /* round again, after the count-in */
     }
@@ -6309,7 +6772,7 @@ function noteGate() {
     (function beat() {
       if (!counting) return;
       if (k === 0) { counting = false; countEl.hidden = true; then(); return; }
-      APP.board.click(k === n);
+      if (!paMute) APP.board.click(k === n);
       countEl.textContent = k; countEl.hidden = false;
       fgFlash('count', k);   /* the count on the Fingerings page too (Trix) */
       countEl.classList.remove('beat'); void countEl.offsetWidth; countEl.classList.add('beat');
@@ -6820,7 +7283,7 @@ function noteGate() {
      the player shows, not while typing or with a window open; Space never also presses the focused button */
   var spaceKey = false;
   function keyOk(e) {
-    if (!(shown || fgShown) || e.ctrlKey || e.metaKey || e.altKey) return false;   /* Fingerings plays the same player (Trix) */
+    if (!(shown || fgShown) || paOn || e.ctrlKey || e.metaKey || e.altKey) return false;   /* Play-along: the take drives the player, not the keys */   /* Fingerings plays the same player (Trix) */
     var t = e.target, tag = t && t.tagName;
     if (tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return false;
     if (tag === 'INPUT' && !/^(range|button|checkbox)$/i.test(t.type)) return false;
@@ -7636,6 +8099,342 @@ function noteGate() {
       }
     };
   }
+  /* ---------- Play-along (跟音练习, Trix) ----------
+     One take, two views of it: Pages (the Fingerings pages, turning with the take) and Live (the player's score strip and
+     the fingerboard, with the note due and the note heard). The take is the player playing the tune from the top
+     (with sound only after the player says they wear headphones) while the microphone is turned into numbers (assess.js
+     framer: a pitch and a level every 512 samples; the audio itself is never kept). Stop ends a take for good; the
+     analysis runs after it, in slices, and tints each bar. */
+  var paView = 'pages', paRes = null, paSaved = null, paRaf = 0;
+  try { paView = localStorage.getItem('violin-pa-view') === 'live' ? 'live' : 'pages'; } catch (e) {}
+  var paSeg = $('paSeg'), paRec = $('paRec'), paRecTxt = $('paRecTxt'), paTime = $('paTime'), paLvl = $('paLvl'), paMeter = $('paMeter');
+  var paFill = $('paFill'), paTicks = $('paTicks'), paPage = $('paPage'), paBarNow = $('paBarNow'), paHp = $('paHp'), paWarn = $('paWarn');
+  var paNeedle = $('paNeedle'), paNName = $('paNName'), paPin = $('paPin'), paNCents = $('paNCents'), paResEl = $('paRes'), paGate = $('paGate');
+  var PA_CAP = 'class PaCap extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(1024);this.n=0}' +
+    'process(i){var x=i[0]&&i[0][0];if(!x)return true;for(var k=0;k<x.length;k++){this.b[this.n++]=x[k];if(this.n===1024){this.port.postMessage({f:currentFrame+k+1-1024,x:this.b},[this.b.buffer]);this.b=new Float32Array(1024);this.n=0}}return true}}' +
+    'registerProcessor("pa-cap",PaCap);';
+  APP.paShows = function (n) { return paView === 'live' ? n === 'midi' || n === 'board' : n === 'fingering'; };
+  function paZh() { return window.I18N && I18N.lang === 'zh'; }
+  function paLayout() {
+    ['midi', 'board', 'fingering'].forEach(function (n) { var v = document.getElementById('view-' + n); if (v) v.hidden = !APP.paShows(n); });
+    Array.prototype.forEach.call(paSeg.children, function (b) { b.setAttribute('aria-checked', b.dataset.v === paView ? 'true' : 'false'); });
+    if (paView === 'live') { fgShown = false; shown = true; fit(); }
+    else { shown = false; fgShown = true; fgOptions(); if (fgDirty) fgRender(); fgSys = -1; fgHead(true); }
+    paRetint(); paUi();
+  }
+  paSeg.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || b.dataset.v === paView) return;
+    paView = b.dataset.v;   /* a change of view only: the take goes on */
+    try { localStorage.setItem('violin-pa-view', paView); } catch (err) {}
+    if (paOn) paLayout();
+  });
+  paSeg.addEventListener('keydown', function (e) {   /* arrow keys between the two, as a radio group */
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault(); paSeg.querySelector('[data-v="' + (paView === 'pages' ? 'live' : 'pages') + '"]').click(); paSeg.querySelector('[aria-checked="true"]').focus();
+  });
+  /* the record control: Start (a dot), Stop (a square) while a take runs, Start again (a dot) after one; never resume */
+  function paUi() {
+    var rec = !!paTake, busy = paTake && paTake.state === 'analysing';
+    paRec.classList.toggle('rec', rec && !busy);
+    paRecTxt.textContent = busy ? 'Analysing…' : rec ? 'Stop' : paRes ? 'Start again' : 'Start';
+    paRec.disabled = !!busy || !song;
+    paRec.setAttribute('aria-label', paRecTxt.textContent);
+    paHp.hidden = !rec || busy;
+    var hpTxt = $('paHpTxt'); if (hpTxt && paTake) hpTxt.textContent = paTake.sound ? 'Headphones only: the microphone is on.' : 'No sound: the microphone is on.';
+    paNeedle.hidden = !(rec && !busy && paView === 'live');
+    paResEl.hidden = !paRes || rec;
+    if (songSel) songSel.disabled = rec; if (fgSel) fgSel.disabled = rec;
+    paClock();
+  }
+  function paClock() {
+    if (!song) { paTime.textContent = ''; return; }
+    var p = Math.min(pos, song.end);
+    paTime.textContent = fmt(p) + ' / ' + fmt(song.end);
+    paFill.style.width = (song.end ? 100 * p / song.end : 0).toFixed(2) + '%';
+    var beat = counting ? Math.max(0, countBeat) : song.toBeat(p), bo = song.barAt ? song.barAt(Math.max(0, beat)) : null;
+    paBarNow.textContent = bo && (paTake || pos > 0.01) ? 'Bar ' + bo.num : '';
+    var pg = null; if (fgMap.length) { var wb = writtenBeat(beat); fgMap.forEach(function (m) { if (m.b0 <= wb + 1e-6) pg = m.pi; }); }
+    var nPg = fgMap.length ? fgMap[fgMap.length - 1].pi + 1 : 0;
+    paPage.textContent = nPg && pg !== null ? 'Page ' + (pg + 1) + ' of ' + nPg : '';
+  }
+  function paTickMarks() {   /* a tick where each page starts */
+    paTicks.textContent = '';
+    if (!song || !fgMap.length) return;
+    var seen = {};
+    fgMap.forEach(function (m) {
+      if (!m.pi || seen[m.pi]) return; seen[m.pi] = 1;
+      var i = document.createElement('i'); i.style.left = (100 * song.beatSec(m.b0) / song.end).toFixed(2) + '%'; paTicks.appendChild(i);
+    });
+  }
+  /* the gate: before the microphone is even asked for (Cancel opens nothing), every take, never remembered */
+  var paGateFrom = null;
+  function paGateOpen() { paGateFrom = document.activeElement; paGate.hidden = false; $('paGo').focus(); }
+  function paGateClose() { paGate.hidden = true; if (paGateFrom && paGateFrom.focus) paGateFrom.focus(); }
+  paGate.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); paGateClose(); }
+    else if (e.key === 'Tab') {   /* focus stays inside */
+      var bs = Array.prototype.slice.call(paGate.querySelectorAll('button')), i = bs.indexOf(document.activeElement);
+      e.preventDefault(); bs[(i + (e.shiftKey ? bs.length - 1 : 1)) % bs.length].focus();
+    }
+  });
+  $('paCancel').addEventListener('click', paGateClose);
+  $('paGo').addEventListener('click', function () { paGateClose(); paBegin(true); });
+  $('paMute').addEventListener('click', function () { paGateClose(); paBegin(false); });
+  paRec.addEventListener('click', function () {
+    if (paTake) { if (paTake.state !== 'analysing') paStop(); return; }
+    if (!song) return;
+    paGateOpen();
+  });
+  function paSay(text) { paWarn.textContent = text; paWarn.hidden = !text; }
+  function paBegin(sound) {
+    if (!APP.board.prime()) return;   /* inside the tap: the sound engine may start (iPhone) */
+    var au = APP.board.audio(), ctx = au && au.ctx;
+    if (!ctx || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { paSay('The microphone is not available.'); return; }
+    var T = paTake = { state: 'starting', sound: sound, ctx: ctx, f0: -1, next: -1, fr: ASSESS.framer(ctx.sampleRate, window.yin), quietSince: 0, warned: false, ctxGo: 0, recEnd: 0 };
+    paRes = null; paClearTints(); paSay(''); paUi();
+    APP.mic('pa', true);
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }).then(function (stream) {
+      if (paTake !== T) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
+      T.stream = stream; T.src = ctx.createMediaStreamSource(stream);
+      T.sink = ctx.createGain(); T.sink.gain.value = 0; T.sink.connect(ctx.destination);   /* pulls the capture node; silent */
+      function feed(f, x) {
+        if (paTake !== T || T.state === 'analysing') return;
+        if (T.f0 < 0) { T.f0 = f; T.next = f; }
+        if (f > T.next && f - T.next < ctx.sampleRate) T.fr.push(new Float32Array(f - T.next));   /* a dropped block: silence keeps the clock */
+        T.fr.push(x); T.next = f + x.length;
+      }
+      var ready = ctx.audioWorklet && window.AudioWorkletNode
+        ? ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([PA_CAP], { type: 'application/javascript' }))).then(function () {
+            var n = new AudioWorkletNode(ctx, 'pa-cap'); n.port.onmessage = function (e) { feed(e.data.f, e.data.x); }; return n;
+          })
+        : Promise.resolve().then(function () {   /* older browsers: a script processor */
+            var n = ctx.createScriptProcessor(1024, 1, 1);
+            n.onaudioprocess = function (e) { feed(Math.round(e.playbackTime * ctx.sampleRate), new Float32Array(e.inputBuffer.getChannelData(0))); };
+            return n;
+          });
+      return ready.then(function (node) {
+        if (paTake !== T) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
+        T.node = node; T.src.connect(node); node.connect(T.sink);
+        paStartTake(T);
+      });
+    }).catch(function (err) {
+      if (paTake !== T) return;
+      APP.mic('pa', false); paTake = null;
+      paSay(err && err.name === 'NotAllowedError' ? 'The microphone is blocked.' : 'The microphone is not available.');
+      paUi();
+    });
+  }
+  function paStartTake(T) {
+    /* the take: from the top, at the score's tempo, no loop or A–B; without sound nothing is scheduled at all */
+    paSaved = { speed: speed, loop: loop, ab: ab };
+    pause(); speed = 1; loop = false; ab = null; abUi(); seekTo(0);
+    if (paView === 'pages') fit();   /* the board plays the violin part, so it is in player mode even while the pages show */
+    paMute = !T.sound;
+    T.state = 'count';
+    countIn(function () { T.ctxGo = T.ctx.currentTime; T.state = 'rec'; go(); });
+    paUi(); paLoop();
+  }
+  function paLoop() {
+    cancelAnimationFrame(paRaf);
+    paRaf = requestAnimationFrame(function () {
+      var T = paTake; if (!T || T.state === 'analysing') return;
+      var fr = T.fr, k = fr.rms.length - 1, rms = k >= 0 ? fr.rms[k] : 0, f = k >= 0 ? fr.f[k] : 0;
+      var db = rms > 0 ? 20 * Math.log(rms) / Math.LN10 : -90, lv = Math.max(0, Math.min(100, (db + 60) / 60 * 100));
+      paLvl.style.width = lv.toFixed(0) + '%'; paMeter.setAttribute('aria-valuenow', Math.round(lv));
+      if (T.state === 'rec') {   /* 2 s below the gate during the take: said once */
+        var nowT = performance.now();
+        if (rms > ASSESS.GATE) T.quietSince = 0; else if (!T.quietSince) T.quietSince = nowT;
+        if (!T.warned && T.quietSince && nowT - T.quietSince > 2000) { T.warned = true; paSay('The microphone can not hear the violin.'); }
+        if (rms > ASSESS.GATE * 2 && T.warned && !paWarn.hidden) paSay('');
+      }
+      if (paView === 'live') paHeard(f, rms);
+      paClock();
+      paLoop();
+    });
+  }
+  /* live: the note due (lit on the board by the player, on its string and finger) against the note heard (Pitch
+     Check's disc on that string, and a needle over ±50 cents); a pitch with no note due: a disc alone */
+  function paHeard(f, rms) {
+    if (!f || rms <= ASSESS.GATE) { APP.board.heard(null); paNeedle.classList.add('quiet'); paNName.textContent = ''; paNCents.textContent = ''; paPin.style.left = '50%'; return; }
+    var due = null, ns = song.notes;
+    for (var k = Math.max(0, ni - 4); k < ns.length && ns[k].t <= pos + 0.02; k++) if (ns[k].e > pos - 0.05 && !ns[k].grace) due = ns[k];
+    var m = 69 + 12 * Math.log(f / (APP.a4 || 440)) / Math.LN2;
+    if (!due) { APP.board.heard({ m: m, cents: 99, si: -1 }); paNName.textContent = APP.board.name(Math.round(m)); paNCents.textContent = '—'; paPin.style.left = '50%'; return; }
+    var c = 1200 * Math.log(f / APP.board.hz(due.m, due.si, due.fg === 0)) / Math.LN2;
+    while (c > 600) c -= 1200; while (c < -600) c += 1200;
+    APP.board.heard({ m: due.m + c / 100, cents: c, si: due.si });
+    paNName.textContent = APP.board.name(due.m);
+    paNCents.textContent = (c >= 0 ? '+' : '−') + Math.abs(Math.round(c)) + ' ¢';
+    paPin.style.left = (50 + Math.max(-50, Math.min(50, c))).toFixed(1) + '%';
+    paNeedle.classList.toggle('off', Math.abs(c) > 10);
+  }
+  /* Stop: the take is over for good (Start again begins a new one); what was captured is analysed */
+  function paStop() {
+    var T = paTake; if (!T || T.state === 'analysing') return;
+    var started = T.state === 'rec';
+    T.recEnd = Math.min(pos, song.end);
+    T.state = 'analysing';
+    if (T.stream) T.stream.getTracks().forEach(function (t) { t.stop(); });
+    try { if (T.src) T.src.disconnect(); if (T.node) { T.node.disconnect(); if (T.node.port) T.node.port.onmessage = null; } if (T.sink) T.sink.disconnect(); } catch (e) {}
+    APP.mic('pa', false);
+    pause(); stopCount(); paMute = false;
+    if (paSaved) { speed = paSaved.speed; loop = paSaved.loop; ab = paSaved.ab; abUi(); paSaved = null; }
+    APP.board.heard(null); paSay(''); ui();
+    paUi();
+    if (!started || T.f0 < 0) { paTake = null; paRes = { empty: true, bars: [], partial: 'Nothing was recorded.' }; paShowResult(); return; }
+    /* the score on the take's clock: a note at song time t was due at frame time t + shift */
+    var shift = T.ctxGo - T.f0 / T.ctx.sampleRate, cut = T.recEnd + 0.05;
+    var notes = song.notes.filter(function (n) { return n.t < cut; }).map(function (n) { return { t: n.t + shift, e: n.e + shift, m: n.m, b: n.b, grace: n.grace, si: n.si, fg: n.fg }; });
+    var job = ASSESS.job(T.fr, { notes: notes }, { hz: function (n) { return APP.board.hz(n.m, n.si, n.fg === 0); } }), t0 = performance.now();
+    (function slice() {
+      if (paTake !== T) return;
+      if (!job.step(30)) { setTimeout(slice, 0); return; }
+      T.fr = null;   /* the numbers from the microphone go too: only the per-note results stay, for this session */
+      paTake = null;
+      paRes = paSummarise(job.result, T.recEnd); paRes.secs = (performance.now() - t0) / 1000;
+      paShowResult();
+    })();
+  }
+  APP.paAnalysisSecs = function () { return paRes && paRes.secs; };   /* tests */
+  function paSummarise(an, recEnd) {
+    var bars = song.bars || [], recBeat = song.toBeat(recEnd), recBars = bars.filter(function (b) { return b.beat < recBeat - 1e-6; });
+    var sum = ASSESS.summarise(an, recBars.length ? recBars : bars.slice(0, 1));
+    var total = bars.length ? bars[bars.length - 1].num : '', lastRec = recBars.length ? recBars[recBars.length - 1].num : '';
+    if (recBars.length && recBars.length < bars.length) sum.partial = 'Only bars ' + bars[0].num + '–' + lastRec + ' of ' + total + ' were recorded.';
+    sum.temper = APP.temper ? APP.temper.id : 'equal';
+    sum.bars.forEach(function (b, i) { b.idx = i; });
+    return sum;
+  }
+  function paShowResult() {
+    var R = paRes; paUi();
+    var part = $('paPartial'); part.textContent = R.partial || ''; part.hidden = !R.partial;
+    var st = $('paStats'); st.textContent = '';
+    if (!R.empty) [
+      R.inTune === null ? '' : R.inTune + ' % of notes within 10 ¢',
+      R.inTime === null ? '' : R.inTime + ' % within 25 ms',
+      R.missed ? R.missed + ' missed' : '', R.extra ? R.extra + ' extra' : ''
+    ].filter(Boolean).forEach(function (t, i) { if (i) st.appendChild(document.createTextNode(' · ')); var sp = document.createElement('span'); sp.textContent = t; st.appendChild(sp); });
+    $('paTemper').textContent = R.empty ? '' : { equal: 'Measured against Equal temperament.', just: 'Measured against Just intonation.', pyth: 'Measured against Pythagorean tuning.' }[R.temper] || 'Measured against Equal temperament.';
+    $('paLegend').hidden = $('paWorstH').hidden = !!R.empty;
+    var ol = $('paWorst'); ol.textContent = '';
+    (R.worst || []).forEach(function (b) {
+      var li = document.createElement('li'), bt = document.createElement('button'); bt.type = 'button';
+      var w = b.worst, wtxt = w ? APP.board.name(w.m) + ' ' + (w.cents >= 0 ? '+' : '−') + Math.abs(Math.round(w.cents)) + ' ¢' : '';
+      bt.textContent = 'Bar ' + b.num + ': ' + Math.round(b.cents) + ' ¢' + (wtxt ? ' (' + wtxt + ')' : '');
+      bt.addEventListener('click', function () { paOpenBar(b.idx); });
+      li.appendChild(bt); ol.appendChild(li);
+    });
+    paRetint();
+  }
+  /* a bar tapped (on the tints or in the list): A–B on that bar, and the player opens there */
+  function paOpenBar(i) {
+    if (!song || !song.bars[i]) return;
+    ab = { a: i, b: i }; abUi(); pause(); seekTo(abRange().aT);
+    APP.show('midi');
+  }
+  /* the tints: per bar (per printed bar on the pages, both times through a repeat together), amber 10-25 cents, red
+     above (hatched, not colour alone), grey not assessed, and a thin blue edge where the timing is off by >25 ms */
+  function paClearTints() {
+    Array.prototype.forEach.call(document.querySelectorAll('.pa-tint'), function (el) { el.remove(); });
+  }
+  function paKind(b) { return b.state === 'red' || b.state === 'amber' || b.state === 'na' ? b.state : b.state === 'ok' ? 'ok' : null; }
+  function paRetint() {
+    paClearTints();
+    if (!paRes || paRes.empty || !song) return;
+    var R = paRes, bars = song.bars || [];
+    if (fgMap.length && fgR) {   /* the pages */
+      var byMi = {};
+      R.bars.forEach(function (b, i) { var k = bars[i] && bars[i].mi !== undefined ? bars[i].mi : 'p' + i; (byMi[k] = byMi[k] || []).push(b); });
+      Object.keys(byMi).forEach(function (k) {
+        var list = byMi[k], first = list[0], i = first.idx, bb = bars[i].beat, next = bars[i + 1] ? bars[i + 1].beat : song.beats;
+        var notes = []; list.forEach(function (b) { b.notes.forEach(function (r) { notes.push(r); }); });
+        var ok = notes.filter(function (r) { return r.cents !== undefined; }), chord = notes.some(function (r) { return r.chord; });
+        var mean = ok.length ? ok.reduce(function (s0, r) { return s0 + Math.abs(r.cents); }, 0) / ok.length : null;
+        var tm = ok.filter(function (r) { return r.timing !== null && r.timing !== undefined; }), mt = tm.length ? tm.reduce(function (s0, r) { return s0 + Math.abs(r.timing); }, 0) / tm.length : 0;
+        var kind = chord || mean === null ? 'na' : mean > ASSESS.RED ? 'red' : mean > ASSESS.AMBER ? 'amber' : 'ok';
+        var m = null; fgMap.forEach(function (e) { if (e.b0 <= bb + 1e-6 && bb < e.b1 - 1e-6) m = e; });
+        if (!m) return;
+        var x0b = null, x1b = null; fgR.bars.forEach(function (q) { if (Math.abs(q.beat - bb) < 1e-6) x0b = q.x; if (Math.abs(q.beat - next) < 1e-6) x1b = q.x; });
+        if (x0b === null) return; if (x1b === null) x1b = fgR.xAt(next) - 6;
+        var x = m.ox + (x0b + m.tx) * PG_K, w = (x1b - x0b) * PG_K, y = m.oy + (Y0 - 6) * PG_K, h = (4 * S + 12) * PG_K;
+        var NS = 'http://www.w3.org/2000/svg', g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'pa-tint');
+        var rc = document.createElementNS(NS, 'rect'); rc.setAttribute('class', 'pa-t ' + kind); rc.setAttribute('x', x.toFixed(1)); rc.setAttribute('y', y.toFixed(1)); rc.setAttribute('width', Math.max(1, w).toFixed(1)); rc.setAttribute('height', h.toFixed(1));
+        rc.addEventListener('click', function (ev) { ev.stopPropagation(); paOpenBar(i); });
+        var tt = document.createElementNS(NS, 'title'); tt.textContent = 'Bar ' + bars[i].num; rc.appendChild(tt);
+        g.appendChild(rc);
+        if (mt > ASSESS.IN_TIME) { var te = document.createElementNS(NS, 'rect'); te.setAttribute('class', 'pa-te'); te.setAttribute('x', x.toFixed(1)); te.setAttribute('y', (y + h + 1).toFixed(1)); te.setAttribute('width', Math.max(1, w).toFixed(1)); te.setAttribute('height', (3 * PG_K).toFixed(1)); g.appendChild(te); }
+        m.svg.insertBefore(g, m.svg.children[1] || null);
+      });
+    }
+    if (xAt && svg) {   /* the strip */
+      var box = document.createElement('div'); box.className = 'pa-tints pa-tint';
+      R.bars.forEach(function (b, i) {
+        var kind = paKind(b); if (!kind || !bars[i]) return;
+        var x0 = xAt(bars[i].beat) - 14, x1 = (bars[i + 1] ? xAt(bars[i + 1].beat) : xAt(song.beats)) - 14;
+        var d = document.createElement('div'); d.className = 'pa-t ' + kind;
+        d.style.cssText = 'left:' + x0.toFixed(1) + 'px;width:' + Math.max(2, x1 - x0).toFixed(1) + 'px;top:' + (Y0 - 6) + 'px;height:' + (4 * S + 12) + 'px';
+        d.title = 'Bar ' + bars[i].num;
+        d.addEventListener('click', function (ev) { ev.stopPropagation(); paOpenBar(i); });
+        box.appendChild(d);
+        if (b.absTiming > ASSESS.IN_TIME) { var e2 = document.createElement('div'); e2.className = 'pa-te'; e2.style.cssText = 'left:' + x0.toFixed(1) + 'px;width:' + Math.max(2, x1 - x0).toFixed(1) + 'px;top:' + (Y0 + 4 * S + 8) + 'px;height:3px'; box.appendChild(e2); }
+      });
+      svg.insertBefore(box, svg.firstChild);
+    }
+  }
+  /* the pages and the strip redraw themselves (a resize, a new layout): the tints come back */
+  var paFgRender0 = fgRender; fgRender = function () { paFgRender0(); if (paOn) { paRetint(); paTickMarks(); } };
+  var paDraw0 = drawScore; drawScore = function () { paDraw0(); if (paOn) paRetint(); };
+  /* while the tool shows, a tap on the pages or the strip does not move the player (the take drives it) */
+  [fgPages, scoreEl].forEach(function (el) {
+    if (!el) return;
+    el.addEventListener('click', function (e) { if (paOn && !(e.target.closest && e.target.closest('.pa-t'))) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+  });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && paTake) paStop(); });   /* the phone locks or another app opens: the take ends there */
+  document.addEventListener('i18n', function () { if (paOn) { paUi(); if (paRes) paShowResult(); } });
+  APP.views.playalong = {
+    show: function () { paOn = true; bg = false; appCall('rotate', false); paLayout(); paTickMarks(); if (paRes) paShowResult(); },
+    hide: function () {
+      if (paTake) paStop();   /* leaving the tool ends the take (the analysis still runs) */
+      paOn = false; cancelAnimationFrame(paRaf); APP.board.heard(null);
+      shown = false; fgShown = false; setMixOpen(false); setABOpen(false);
+      if (APP.nextView !== 'midi' && APP.nextView !== 'fingering') { pause(); APP.board.player(false); }
+      ['midi', 'board', 'fingering'].forEach(function (n) { var v = document.getElementById('view-' + n); if (v && APP.nextView !== n && !(APP.nextView === 'midi' && n === 'board')) v.hidden = true; });
+    }
+  };
+  APP.paState = function () { return { take: paTake ? paTake.state : null, view: paView, result: paRes, mute: paMute }; };   /* tests */
+  /* swipe between the two tools (Trix): the MIDI player is the left page, Fingerings the right one; a swipe left on the
+     player opens Fingerings, a swipe right on Fingerings opens the player, sliding in like a page. Not from the
+     fingerboard (its notes take touches), a slider, a list, an open panel, full screen, zoomed pages that scroll
+     sideways, or Play-along */
+  (function () {
+    var sx = 0, sy = 0, st = 0, ok = false;
+    function from(t) {
+      if (paOn || full || !(shown || fgShown)) return false;
+      if (!t.closest) return true;
+      if (t.closest('#view-board, input, select, textarea, .mp-mixpop, .mp-abpop, .mp-lvmenu, [role="dialog"], .sheet')) return false;
+      if (fgShown && fgPages.classList.contains('zoomed') && fgPages.scrollWidth > fgPages.clientWidth + 2) return false;
+      return true;
+    }
+    document.addEventListener('touchstart', function (e) {
+      ok = e.touches.length === 1 && from(e.target);
+      if (!ok) return;
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = performance.now();
+    }, { passive: true });
+    document.addEventListener('touchend', function (e) {
+      if (!ok) return; ok = false;
+      var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+      if (performance.now() - st > 700 || Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
+      var to = shown && dx < 0 ? 'fingering' : fgShown && dx > 0 ? 'midi' : null;
+      if (!to) return;
+      APP.show(to);
+      var sec = document.getElementById('view-' + to);
+      if (sec && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+        sec.classList.remove('slide-l', 'slide-r'); void sec.offsetWidth;
+        sec.classList.add(dx < 0 ? 'slide-l' : 'slide-r');
+        setTimeout(function () { sec.classList.remove('slide-l', 'slide-r'); }, 260);
+      }
+    }, { passive: true });
+  })();
   APP.views.midi = {
     show: function () { bg = false; appCall('rotate', true); shown = true; fit(); if (phone() && innerWidth > innerHeight && !full) setFull(true, true); },   /* the phone apps turn only in the MIDI player (Trix) */   /* opened on a phone held sideways: full screen (Trix) */
     hide: function () {
@@ -7651,7 +8450,7 @@ function noteGate() {
 (function () {
   /* Each tool registers APP.views[name] = { show, hide } and has a #view-name section,
      a #ttl-name heading block and a .tab button with data-view="name". */
-  var names = ['tuner', 'board', 'metronome', 'symbols', 'midi', 'fingering'];
+  var names = ['tuner', 'board', 'metronome', 'symbols', 'midi', 'fingering', 'playalong'];
   var shell = document.getElementById('shell');
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab[data-view]'));
   var cur = null;
@@ -7664,10 +8463,10 @@ function noteGate() {
     cur = name;
     /* the tuner listens through the microphone and the MIDI player plays its own time (Trix), so the metronome
        stops when either opens; the fingerboard and Symbols leave it running */
-    if ((name === 'tuner' || name === 'midi') && APP.views.metronome && APP.views.metronome.stop) APP.views.metronome.stop();
+    if ((name === 'tuner' || name === 'midi' || name === 'playalong') && APP.views.metronome && APP.views.metronome.stop) APP.views.metronome.stop();
     names.forEach(function (n) {
       var v = document.getElementById('view-' + n), t = document.getElementById('ttl-' + n);
-      if (v) v.hidden = n !== name && !(name === 'midi' && n === 'board');   /* the MIDI player shows the fingerboard below its own part */
+      if (v) v.hidden = n !== name && !(name === 'midi' && n === 'board') && !(name === 'playalong' && APP.paShows && APP.paShows(n));   /* the MIDI player shows the fingerboard below its own part; Play-along the pages, or the player and the board */
       if (t) t.hidden = n !== name;
     });
     tabs.forEach(function (b) {
