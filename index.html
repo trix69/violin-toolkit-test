@@ -1810,8 +1810,6 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <span><i class="sw sw-time" aria-hidden="true"></i><span>timing off by more than 25 ms</span></span>
       <span><i class="sw sw-na" aria-hidden="true"></i><span>not assessed</span></span>
     </div>
-    <p class="pa-worst-h" id="paWorstH">The five worst bars</p>
-    <ol class="pa-worst" id="paWorst"></ol>
     <p class="pa-tap">Tap a bar to practise it in the MIDI player.</p>
   </div>
 </div>
@@ -2339,7 +2337,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-103652" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-104100" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8375,15 +8373,7 @@ function noteGate() {
       R.missed ? R.missed + ' missed' : '', R.extra ? R.extra + ' extra' : ''
     ].filter(Boolean).forEach(function (t, i) { if (i) st.appendChild(document.createTextNode(' · ')); var sp = document.createElement('span'); sp.textContent = t; st.appendChild(sp); });
     $('paTemper').textContent = R.empty ? '' : { equal: 'Measured against Equal temperament.', just: 'Measured against Just intonation.', pyth: 'Measured against Pythagorean tuning.' }[R.temper] || 'Measured against Equal temperament.';
-    $('paLegend').hidden = $('paWorstH').hidden = !!R.empty;
-    var ol = $('paWorst'); ol.textContent = '';
-    (R.worst || []).forEach(function (b) {
-      var li = document.createElement('li'), bt = document.createElement('button'); bt.type = 'button';
-      var w = b.worst, wtxt = w ? APP.board.name(w.m) + ' ' + (w.cents >= 0 ? '+' : '−') + Math.abs(Math.round(w.cents)) + ' ¢' : '';
-      bt.textContent = 'Bar ' + b.num + ': ' + Math.round(b.cents) + ' ¢' + (wtxt ? ' (' + wtxt + ')' : '');
-      bt.addEventListener('click', function () { paOpenBar(b.idx); });
-      li.appendChild(bt); ol.appendChild(li);
-    });
+    $('paLegend').hidden = !!R.empty;   /* no list of the worst bars (Trix): the tints show them, a tap opens one */
     paRetint();
   }
   /* a bar tapped (on the tints or in the list): A–B on that bar, and the player opens there */
