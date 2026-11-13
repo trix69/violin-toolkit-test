@@ -1370,6 +1370,11 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
 .pa-mic svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .pa-mic .pa-meter { flex: 1; min-width: 40px; max-width: none; height: 6px; }
 
+/* the needle row keeps one height whether a pitch is heard or not (Trix: the page jumped up and down during a take) */
+.pa-needle { height: 30px; box-sizing: border-box; overflow: hidden; }
+.pa-nname, .pa-ncents { line-height: 30px; height: 30px; white-space: nowrap; }
+.pa-needle.quiet .pa-pin { opacity: .35; }
+
 /* ---- start overlay ---- */
 .launch {
   position: fixed; inset: 0; z-index: 100;
@@ -2337,7 +2342,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-104259" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-104541" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8313,7 +8318,8 @@ function noteGate() {
   /* live: the note due (lit on the board by the player, on its string and finger) against the note heard (Pitch
      Check's disc on that string, and a needle over ±50 cents); a pitch with no note due: a disc alone */
   function paHeard(f, rms) {
-    if (!f || rms <= ASSESS.GATE) { APP.board.heard(null); paNeedle.classList.add('quiet'); paNName.textContent = ''; paNCents.textContent = ''; paPin.style.left = '50%'; return; }
+    if (!f || rms <= ASSESS.GATE) { APP.board.heard(null); paNeedle.classList.add('quiet'); paNName.textContent = '\u00a0'; paNCents.textContent = '\u00a0'; paPin.style.left = '50%'; return; }
+    paNeedle.classList.remove('quiet');
     var due = null, ns = song.notes;
     for (var k = Math.max(0, ni - 4); k < ns.length && ns[k].t <= pos + 0.02; k++) if (ns[k].e > pos - 0.05 && !ns[k].grace) due = ns[k];
     var m = 69 + 12 * Math.log(f / (APP.a4 || 440)) / Math.LN2;
