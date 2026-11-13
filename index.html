@@ -1231,7 +1231,7 @@ html.fg-printing .fg-head, html.fg-shot .fg-head { display: none !important; }  
 #view-fingering .fg-pages.mp-score { --sc-bg: #FFFFFF; --sc-ink: #1A1A1A; --sc-fing: 8%; height: auto; overflow: visible; margin: 0; border-radius: 0; background: none; box-shadow: none; color: var(--sc-ink); }
 #view-fingering .fg-pages.zoomed { width: var(--fgvw); max-width: none; margin-left: var(--fgml); overflow-x: auto; }   /* Ctrl + wheel zoom (Trix): past 100 % the pages use the whole browser width, then scroll sideways */
 #view-fingering .fg-pages.zoomed .fg-page { width: calc(var(--fgw) * var(--fgz)); }
-#view-fingering .fg-page { display: block; width: calc(100% * var(--fgz, 1)); max-width: none; height: auto; margin: 0 auto 16px; cursor: default; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.08); }
+#view-fingering .fg-page { display: block; width: calc(100% * var(--fgz, 1)); max-width: none; height: auto; margin: 0 auto 16px; cursor: pointer; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.08); }
 .fg-page .fg-paper { fill: #fff; }
 .fg-page .fg-title { fill: #1A1A1A; font: 700 22px 'Times New Roman', 'Noto Serif', 'Songti SC', serif; text-anchor: middle; }
 .fg-page .fg-sub { fill: #333; font: 400 13px 'Times New Roman', 'Noto Serif', 'Songti SC', serif; text-anchor: middle; }
@@ -2191,7 +2191,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.45" data-build="20261113-164311" data-cache="violin-toolkit-test-"><span>Version 1.45-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.45" data-build="20261113-172343" data-cache="violin-toolkit-test-"><span>Version 1.45-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8044,7 +8044,10 @@ function noteGate() {
   document.getElementById('reportIssue').addEventListener('click', function () {
     var kind = window.VTPlay ? 'Android app (Google Play)' : window.VTiOSApp ? 'iPhone app' : location.hostname === 'appassets.androidplatform.net' ? 'Android app (website download)' : (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone ? 'Installed web app' : 'Website';
     var v = document.getElementById('verBtn').getAttribute('data-version') || '', bd = document.getElementById('verBtn').getAttribute('data-build') || '';   /* Hermes F58 */
-    this.href = 'https://github.com/trix69/violin-toolkit/issues/new?body=' + encodeURIComponent('\n\n---\nViolin Toolkit ' + v + (bd ? ' (' + bd + ')' : '') + ', ' + kind);
+    var zh = window.I18N && I18N.lang === 'zh', tpl = zh   /* a template that says the issue is public (Trix) */
+      ? '发生了什么：\n\n你期望的结果：\n\n（公开问题——请不要写姓名、邮箱或其他个人信息。）'
+      : 'What happened:\n\nWhat you expected:\n\n(Public issue — please don\'t include names, e-mail addresses or other personal details.)';
+    this.href = 'https://github.com/trix69/violin-toolkit/issues/new?body=' + encodeURIComponent(tpl + '\n\n---\nViolin Toolkit ' + v + (bd ? ' (' + bd + ')' : '') + ', ' + kind);
   }, true);
   /* any link that leaves the app asks first (Trix): what opens and where; Google Play and the App Store go straight
      there (the store is where the app lives). Our own site's pages, read in the website, are not leaving it. Links
@@ -8076,7 +8079,9 @@ function noteGate() {
       e.preventDefault(); e.stopPropagation();
       link = a; back = a;
       var zh = window.I18N && I18N.lang === 'zh', host = u.hostname.replace(/^www\./, '');
-      document.getElementById('extAskMsg').textContent = zh ? '将在浏览器中打开“' + host + '”。' : '“' + host + '” opens in your browser.';
+      document.getElementById('extAskMsg').textContent = a.id === 'reportIssue'   /* Report an issue: say the page is public (Trix) */
+        ? (zh ? 'GitHub——应用之外的公开页面。任何人都能看到你写的内容，请不要写姓名、邮箱或其他个人信息。' : 'GitHub — a public page outside the app. Anyone can read what you write, so leave out names, e-mail addresses and anything else personal.')
+        : (zh ? '将在浏览器中打开“' + host + '”。' : '“' + host + '” opens in your browser.');
       box.hidden = false; window.addEventListener('keydown', key, true); go.focus();
     }, true);
   })();
