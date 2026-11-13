@@ -1165,8 +1165,8 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 
 /* ---- fingerings ---- */
 /* Fingerings (指法谱, Trix): the violin part on A4 pages, the same drawing as the MIDI player's score */
-#view-fingering .fg-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 10px 0 12px; }
-#view-fingering .fg-note { flex: 1 1 100%; margin: 0; font: 400 13px var(--font-body); color: var(--muted); }
+#view-fingering .fg-bar { display: flex; align-items: center; gap: 12px; margin: 10px 0 12px; }
+#view-fingering .fg-note { flex: 1; margin: 0; font: 400 13px var(--font-body); color: var(--muted); }
 #view-fingering .fg-pdf { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--accent); color: var(--on-accent); font: 600 15px var(--font-note); cursor: pointer; }
 #view-fingering .fg-play { flex: none; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--fg); cursor: pointer; }
 #view-fingering .fg-play svg { width: 26px; height: 26px; fill: currentColor; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }   /* the MIDI player's triangle: same size, outline and centre (Trix) */
@@ -1251,15 +1251,16 @@ html.fg-shot #shell, html.fg-shot #main, html.fg-shot #view-fingering, html.fg-s
 html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
 .fg-page .fg-tempo.at-note { text-anchor: start; }   /* starts at the first note */
 
-/* the density control in the tune row (Trix): Full · Medium · Minimum */
-.fg-lv { display: inline-flex; flex: none; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); }
-.fg-lv button { font: 600 13px/1 'DM Sans', system-ui, sans-serif; color: var(--fg); background: none; border: 0; padding: 0 9px; min-height: 44px; cursor: pointer; }
-.fg-lv button + button { border-left: 1px solid var(--line); }
-.fg-lv button[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
-.fg-lv button:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
-#view-fingering .fg-lv { margin-right: auto; }   /* the control on the left, Export on the right */
-@media (min-width: 760px) { #view-fingering .fg-note { flex: 1 1 200px; } #view-fingering .fg-lv { margin-right: 0; } }
-@media (max-width: 360px) { .fg-lv button { padding: 0 6px; font-size: 12.5px; } #view-fingering .fg-bar { column-gap: 8px; } }
+
+/* fingerings shown (Trix): a drop-down in the floating controls; the same setting is in Settings */
+#view-fingering .fg-lvwrap { position: relative; pointer-events: auto; }
+#view-fingering .fg-lvbtn { font: 700 11px/1 'DM Mono', ui-monospace, monospace; letter-spacing: -0.04em; }
+#view-fingering .fg-lvbtn[aria-expanded="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+#view-fingering .fg-lvmenu { position: absolute; top: 38px; right: 0; display: grid; min-width: 150px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+#view-fingering .fg-lvmenu[hidden] { display: none; }
+#view-fingering .fg-lvmenu button { text-align: left; min-height: 44px; padding: 0 12px 0 32px; border: 0; border-radius: 8px; background: none; color: var(--fg); font: 500 15px var(--font-body); cursor: pointer; position: relative; }
+#view-fingering .fg-lvmenu button[aria-checked="true"]::before { content: '✓'; position: absolute; left: 11px; color: var(--accent); font-weight: 700; }
+#view-fingering .fg-lvmenu button:hover, #view-fingering .fg-lvmenu button:focus-visible { background: color-mix(in srgb, var(--accent) 12%, transparent); outline: none; }
 
 /* ---- start overlay ---- */
 .launch {
@@ -1720,14 +1721,11 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
   </div>
   <div class="fg-bar">
     <p class="fg-note">Violin Toolkit has marked the fingerings, strings and positions automatically and can make mistakes.</p>
-    <div class="fg-lv" role="radiogroup" aria-label="Fingerings shown" id="fgLv">
-      <button type="button" role="radio" aria-checked="true" data-lv="full" title="Full">Full</button><button type="button" role="radio" aria-checked="false" data-lv="medium" title="Medium">Medium</button><button type="button" role="radio" aria-checked="false" data-lv="minimum" title="Minimum">Minimum</button>
-    </div>
     <button type="button" class="fg-pdf" id="fgPdf" title="Export as PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5"/><path d="M7.5 8L12 3.5 16.5 8"/><path d="M8 11H6a1.5 1.5 0 0 0-1.5 1.5v6.5A1.5 1.5 0 0 0 6 20.5h12a1.5 1.5 0 0 0 1.5-1.5v-6.5A1.5 1.5 0 0 0 18 11h-2"/></svg>Export</button>
   </div>
   <p class="mp-msg" id="fgMsg" role="status" hidden></p>
   <div class="fg-flash" id="fgFlash" aria-hidden="true" hidden></div>
-  <div class="fg-fitbar"><button type="button" class="fg-mini fg-more" id="fgMore" aria-expanded="false" aria-controls="fgx fgx2" aria-label="More controls" title="More controls"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg></button><div class="fgx" id="fgx" hidden><button type="button" class="fg-mini" data-for="mpStart" aria-label="Back to start" title="Back to start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path d="M18 5.5v13L8.5 12z" fill="currentColor"/></svg></button><button type="button" class="fg-mini" data-for="mpSlower" aria-label="Slower" title="Slower">−</button></div><button type="button" class="fg-play" id="fgPlay" aria-label="Play" title="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13M16 5.5v13"/></svg></button><div class="fgx" id="fgx2" hidden><button type="button" class="fg-mini" data-for="mpFaster" aria-label="Faster" title="Faster">+</button><button type="button" class="fg-mini fgx-mix" data-for="mpMix" aria-expanded="false" aria-label="Mixer" title="Mixer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M12 4v16M18 4v16"/><rect x="3.5" y="13" width="5" height="3" rx="1" fill="currentColor"/><rect x="9.5" y="7" width="5" height="3" rx="1" fill="currentColor"/><rect x="15.5" y="11" width="5" height="3" rx="1" fill="currentColor"/></svg></button><button type="button" class="fg-mini" data-for="mpLoop" aria-pressed="false" aria-label="Loop" title="Loop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button><button type="button" class="fg-mini fgx-ab" data-for="mpAB" aria-pressed="false" aria-expanded="false" aria-label="Repeat a passage (A–B)" title="Repeat a passage (A–B)" translate="no">A–B</button></div><button type="button" class="fg-fit" id="fgFit" aria-label="Full width" title="Full width"><svg class="i-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="i-in" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button></div>
+  <div class="fg-fitbar"><button type="button" class="fg-mini fg-more" id="fgMore" aria-expanded="false" aria-controls="fgx fgx2" aria-label="More controls" title="More controls"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg></button><div class="fgx" id="fgx" hidden><button type="button" class="fg-mini" data-for="mpStart" aria-label="Back to start" title="Back to start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path d="M18 5.5v13L8.5 12z" fill="currentColor"/></svg></button><button type="button" class="fg-mini" data-for="mpSlower" aria-label="Slower" title="Slower">−</button></div><button type="button" class="fg-play" id="fgPlay" aria-label="Play" title="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13M16 5.5v13"/></svg></button><div class="fgx" id="fgx2" hidden><button type="button" class="fg-mini" data-for="mpFaster" aria-label="Faster" title="Faster">+</button><button type="button" class="fg-mini fgx-mix" data-for="mpMix" aria-expanded="false" aria-label="Mixer" title="Mixer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M12 4v16M18 4v16"/><rect x="3.5" y="13" width="5" height="3" rx="1" fill="currentColor"/><rect x="9.5" y="7" width="5" height="3" rx="1" fill="currentColor"/><rect x="15.5" y="11" width="5" height="3" rx="1" fill="currentColor"/></svg></button><button type="button" class="fg-mini" data-for="mpLoop" aria-pressed="false" aria-label="Loop" title="Loop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button><button type="button" class="fg-mini fgx-ab" data-for="mpAB" aria-pressed="false" aria-expanded="false" aria-label="Repeat a passage (A–B)" title="Repeat a passage (A–B)" translate="no">A–B</button></div><div class="fg-lvwrap"><button type="button" class="fg-mini fg-lvbtn" id="fgLvBtn" aria-haspopup="true" aria-expanded="false" aria-controls="fgLvMenu" aria-label="Fingerings shown" title="Fingerings shown" translate="no"><span id="fgLvGlyph">123</span></button><div class="fg-lvmenu" id="fgLvMenu" role="menu" aria-label="Fingerings shown" hidden><button type="button" role="menuitemradio" aria-checked="true" data-lv="full">Full</button><button type="button" role="menuitemradio" aria-checked="false" data-lv="medium">Medium</button><button type="button" role="menuitemradio" aria-checked="false" data-lv="minimum">Minimum</button></div></div><button type="button" class="fg-fit" id="fgFit" aria-label="Full width" title="Full width"><svg class="i-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="i-in" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button></div>
   <div class="fg-pages mp-score" id="fgPages" translate="no" aria-label="Fingered violin part"></div>
 </div>
 
@@ -2134,6 +2132,12 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       <button type="button" role="radio" aria-checked="false" data-temper="just">Just</button>
       <button type="button" role="radio" aria-checked="false" data-temper="pyth">Pythagorean</button>
     </div>
+    <h3 id="lblFgLv">Fingerings shown</h3>
+    <div class="segc" role="radiogroup" aria-labelledby="lblFgLv" id="segFgLv">
+      <button type="button" role="radio" aria-checked="true" data-lv="full">Full</button>
+      <button type="button" role="radio" aria-checked="false" data-lv="medium">Medium</button>
+      <button type="button" role="radio" aria-checked="false" data-lv="minimum">Minimum</button>
+    </div>
     <h3 id="lblKeys">Key list</h3>
     <div class="segc two" role="radiogroup" aria-labelledby="lblKeys" id="segKeys">
       <button type="button" role="radio" aria-checked="false" data-keys="fold">Folded</button>
@@ -2177,7 +2181,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.45" data-build="20261113-105226" data-cache="violin-toolkit-test-"><span>Version 1.45-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.45" data-build="20261113-112455" data-cache="violin-toolkit-test-"><span>Version 1.45-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -5406,6 +5410,9 @@ function noteGate() {
         var against = prev && fg > 0 && prev.fg > 0 && prev.si === n.si && prev.hand === n.hand && ((n.m > prev.m && fg < prev.fg) || (n.m < prev.m && fg > prev.fg));
         show = !!(keep || phrase || deliberate || against);
       }
+      /* the same pitch again on the same string and finger says nothing new (Trix): hidden at Medium and Minimum, over
+         every other rule except a written fingering and a page's first note */
+      if (prev && n.m === prev.m && n.si === prev.si && fg === prev.fg && un.length === 1 && n.xfg === undefined && !forced[n.b.toFixed(3)]) show = false;
       un.forEach(function (x) { x._fs = show || x.xfg !== undefined; });
       if (show) shown = { si: n.si, fg: fg, bar: bar, m: n.m };
       prev = n; first = false;
@@ -5415,6 +5422,7 @@ function noteGate() {
     if (lv === undefined) return FG_LEVEL;
     if (FG_LEVELS.indexOf(lv) < 0 || lv === FG_LEVEL) return FG_LEVEL;
     FG_LEVEL = lv; try { localStorage.setItem('violin-fg-level', lv); } catch (e) {}
+    if (APP.fgLvUi) APP.fgLvUi();
     if (song) { var y = window.scrollY, sl = fgPages ? fgPages.scrollLeft : 0; drawScore(); scroll(); fgDirty = true; if (fgShown) fgRender(); window.scrollTo(0, y); if (fgPages) fgPages.scrollLeft = sl; }
     return FG_LEVEL;
   };
@@ -6755,20 +6763,34 @@ function noteGate() {
   var fgSel = $('fgSong'), fgPages = $('fgPages'), fgMsg = $('fgMsg'), fgPdf = $('fgPdf'), fgShown = false, fgDirty = true, fgHtml = '';
   var PG_W = 794, PG_H = 1123, PG_M = 57, PG_K = 0.62, SYS_H = BOT + 46, FG_IND = 60;   /* FG_IND: the first system's indent, in score units (~10 mm) */   /* A4 at 96 px per inch, 15 mm margins; score at 64 % (a 5.8 mm staff) */
   function fgOptions() { if (!fgSel) return; fgSel.innerHTML = songSel.innerHTML; fgSel.value = songSel.value; }
-  /* the density control (Trix): three radios, arrows move between them as in a radio group */
+  /* the fingerings-shown drop-down in the Fingerings page's floating controls (Trix); Settings has the same choice */
   (function () {
-    var box = $('fgLv'); if (!box) return;
-    var bs = Array.prototype.slice.call(box.querySelectorAll('button'));
-    function ui() { var lv = APP.fgLevel(); bs.forEach(function (b) { var on = b.dataset.lv === lv; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; }); }
-    bs.forEach(function (b, i) {
-      b.addEventListener('click', function () { APP.fgLevel(b.dataset.lv); ui(); });
+    var btn = $('fgLvBtn'), menu = $('fgLvMenu'); if (!btn || !menu) return;
+    var items = Array.prototype.slice.call(menu.querySelectorAll('button'));
+    var GLYPH = { full: '123', medium: '1·3', minimum: '1' };
+    APP.fgLvUi = function () {
+      var lv = APP.fgLevel(), nm = { full: 'Full', medium: 'Medium', minimum: 'Minimum' }[lv];
+      items.forEach(function (b) { b.setAttribute('aria-checked', b.dataset.lv === lv ? 'true' : 'false'); });
+      $('fgLvGlyph').textContent = GLYPH[lv];
+      var zh = window.I18N && I18N.lang === 'zh', lab = (zh ? '显示的指法：' : 'Fingerings shown: ') + (zh ? { full: '全部', medium: '中等', minimum: '最少' }[lv] : nm);
+      btn.setAttribute('aria-label', lab); btn.title = lab;
+    };
+    function open(on, focusIt) {
+      menu.hidden = !on; btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+      if (on && focusIt) (items.filter(function (b) { return b.getAttribute('aria-checked') === 'true'; })[0] || items[0]).focus();
+    }
+    btn.addEventListener('click', function () { open(menu.hidden, true); });
+    items.forEach(function (b, i) {
+      b.addEventListener('click', function () { APP.fgLevel(b.dataset.lv); open(false); btn.focus(); });
       b.addEventListener('keydown', function (e) {
-        var d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
-        if (!d) return; e.preventDefault(); e.stopPropagation();
-        var nb = bs[(i + d + bs.length) % bs.length]; APP.fgLevel(nb.dataset.lv); ui(); nb.focus();
+        var d = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+        if (d) { e.preventDefault(); items[(i + d + items.length) % items.length].focus(); }
+        else if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); open(false); btn.focus(); }
       });
     });
-    ui();
+    document.addEventListener('pointerdown', function (e) { if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) open(false); }, true);
+    document.addEventListener('i18n', function () { APP.fgLvUi(); });
+    APP.fgLvUi();
   })();
   function fgSync() { fgOptions(); var cur = songs[+songSel.value]; $('fgDel').hidden = !(cur && cur.kept); fgDirty = true; if (APP.fgReset) APP.fgReset(); if (fgShown) fgRender(); }
   var fgT = 0;
@@ -7382,6 +7404,7 @@ function noteGate() {
     Array.prototype.forEach.call(segLang.children, function (b) { b.setAttribute('aria-checked', b.dataset.lang === I18N.lang ? 'true' : 'false'); });
     Array.prototype.forEach.call(segA4.children, function (b) { if (b.dataset.a4) b.setAttribute('aria-checked', +b.dataset.a4 === APP.a4 ? 'true' : 'false'); });
     APP.a4Ui();
+    Array.prototype.forEach.call(document.getElementById('segFgLv').children, function (b) { b.setAttribute('aria-checked', b.dataset.lv === (APP.fgLevel ? APP.fgLevel() : 'full') ? 'true' : 'false'); });
     Array.prototype.forEach.call(segTemper.children, function (b) { b.setAttribute('aria-checked', b.dataset.temper === (APP.temper ? APP.temper.id : 'equal') ? 'true' : 'false'); });
     Array.prototype.forEach.call(segApp.children, function (b) { b.setAttribute('aria-checked', b.dataset.mode === THEME.mode ? 'true' : 'false'); });
     Array.prototype.forEach.call(swatches.children, function (b) { b.setAttribute('aria-checked', b.dataset.accent === THEME.accent ? 'true' : 'false'); });
@@ -7697,6 +7720,10 @@ function noteGate() {
   segA4.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b || !b.dataset.a4) return;
     APP.setA4(+b.dataset.a4); syncSheet();
+  });
+  document.getElementById('segFgLv').addEventListener('click', function (e) {   /* fingerings shown: MIDI player and Fingerings (Trix) */
+    var b = e.target.closest('button'); if (!b || !APP.fgLevel) return;
+    APP.fgLevel(b.dataset.lv); syncSheet();
   });
   segTemper.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
