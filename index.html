@@ -1405,6 +1405,11 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
 .sw-tok { background: rgba(46, 160, 67, .28); } .sw-tamber { background: rgba(232, 164, 32, .45); }
 .sw-tred { background: repeating-linear-gradient(135deg, rgba(214, 48, 39, .55) 0 3px, rgba(214, 48, 39, .18) 3px 6px); }
 
+/* never on paper (Hermes F84): the marks are cleared when Play-along closes; this is the backstop */
+html.fg-printing .pa-tr, html.fg-printing .pa-nm, html.fg-printing .pa-tint { display: none !important; }
+html.fg-printing .mp-n.pa-p .head:not(.hollow) { fill: currentColor !important; } html.fg-printing .mp-n.pa-p .head.hollow { stroke: currentColor !important; }
+@media print { .pa-tr, .pa-nm, .pa-tint { display: none !important; } .mp-n.pa-p .head:not(.hollow) { fill: currentColor !important; } .mp-n.pa-p .head.hollow { stroke: currentColor !important; } }
+
 /* ---- start overlay ---- */
 .launch {
   position: fixed; inset: 0; z-index: 100;
@@ -2376,7 +2381,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-110033" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-110229" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8494,7 +8499,7 @@ function noteGate() {
     show: function () { paOn = true; bg = false; appCall('rotate', false); paLayout(); paTickMarks(); if (paRes) paShowResult(); },
     hide: function () {
       if (paTake) paStop();   /* leaving the tool ends the take (the analysis still runs) */
-      paOn = false; cancelAnimationFrame(paRaf); APP.board.heard(null);
+      paOn = false; cancelAnimationFrame(paRaf); APP.board.heard(null); paClearTints();   /* the take's marks belong to Play-along: not on the Fingerings pages or their PDF (Hermes F84); back when it shows again */
       shown = false; fgShown = false; setMixOpen(false); setABOpen(false);
       if (APP.nextView !== 'midi' && APP.nextView !== 'fingering') { pause(); APP.board.player(false); }
       ['midi', 'board', 'fingering'].forEach(function (n) { var v = document.getElementById('view-' + n); if (v && APP.nextView !== n && !(APP.nextView === 'midi' && n === 'board')) v.hidden = true; });
