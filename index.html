@@ -1391,9 +1391,6 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
 
 /* pitch on the notehead, timing behind the note (Trix) */
 .mp-n.pa-p { cursor: pointer; }
-.mp-n.pa-ok .head { fill: #23963a; } .mp-n.pa-ok .head.hollow { fill: none; stroke: #23963a; }
-.mp-n.pa-amber .head { fill: #d68a00; } .mp-n.pa-amber .head.hollow { fill: none; stroke: #d68a00; }
-.mp-n.pa-red .head { fill: #d23b2f; } .mp-n.pa-red .head.hollow { fill: none; stroke: #d23b2f; }
 .mp-n.pa-miss .head { fill: #9a9a9a; } .mp-n.pa-miss .head.hollow { fill: none; stroke: #9a9a9a; }
 .pa-tr { cursor: pointer; }
 .pa-tr.ok { fill: rgba(46, 160, 67, .16); }
@@ -1484,6 +1481,17 @@ html.fg-printing .pa-wrong { display: none !important; } @media print { .pa-wron
 .pa.live .pa-info { display: none; }
 .pa-bar .pa-mic { flex: 0 1 90px; color: var(--muted); margin-left: auto; }
 .pa-bar .pa-mic + .pa-time { margin-left: 0; }
+/* the shadow notes (Trix): dot = pitch (height, colour), line = timing (ends, colour); the written note stays ink */
+.pa-sh { cursor: pointer; }
+.pa-sh .pa-hit { fill: transparent; }
+.pa-sd { opacity: .7; }
+.pa-sd.ok { fill: #23963a; } .pa-sd.amber { fill: #d68a00; } .pa-sd.red { fill: #d23b2f; }
+.pa-sk { stroke-width: 3.5; stroke-linecap: round; opacity: .8; }
+.pa-sk.ok { stroke: #23963a; } .pa-sk.amber { stroke: #e0a020; } .pa-sk.red { stroke: #d23b2f; }
+.shell.pa-result:not(.pa-st) .pa-sk, .shell.pa-result:not(.pa-sp) .pa-sd { display: none; }
+html.fg-printing .pa-sh { display: none !important; } @media print { .pa-sh { display: none !important; } }
+:is(.pa-legend, .pa-bars) .sw-tok, :is(.pa-legend, .pa-bars) .sw-tamber, :is(.pa-legend, .pa-bars) .sw-tred { width: 22px; height: 5px; border-radius: 3px; }
+:is(.pa-legend, .pa-bars) .sw-tok { background: #23963a; } :is(.pa-legend, .pa-bars) .sw-tamber { background: #e0a020; } :is(.pa-legend, .pa-bars) .sw-tred { background: #d23b2f; }
 
 .shell[data-view="midi"] .tabs .tab.tab[data-view="fingering"] { display: none; }
 .shell[data-view="midi"] .tabs .tab[data-view="playalong"], .shell[data-view="playalong"] .tabs .tab[data-view="fingering"] { display: grid; }
@@ -1929,15 +1937,15 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
     </div>
     <div class="pa-legend" id="paLegend">
       <div class="pa-lg pa-lg-pitch">
-        <span class="pa-lh">Note colour, pitch:</span>
+        <span class="pa-lh">Shadow note head, pitch (higher = sharp, lower = flat):</span>
         <span><i class="sw sw-ok" aria-hidden="true"></i><span>within 10 ¢</span></span>
         <span><i class="sw sw-amber" aria-hidden="true"></i><span>10–25 ¢ off</span></span>
         <span><i class="sw sw-red" aria-hidden="true"></i><span>more than 25 ¢ off</span></span>
-        <span><i class="sw sw-na" aria-hidden="true"></i><span>missed or not assessed</span></span>
+        <span><i class="sw sw-na" aria-hidden="true"></i><span>grey note: missed or not assessed</span></span>
         <span><i class="sw sw-wrong" aria-hidden="true"></i><span>red head beside it: the note you played instead</span></span>
       </div>
       <div class="pa-lg pa-lg-time">
-        <span class="pa-lh">Background, timing:</span>
+        <span class="pa-lh">Shadow note stem, timing (moved left = early, right = late; wider = held too long, narrower = too short):</span>
         <span><i class="sw sw-tok" aria-hidden="true"></i><span>within 25 ms</span></span>
         <span><i class="sw sw-tamber" aria-hidden="true"></i><span>25–60 ms off</span></span>
         <span><i class="sw sw-tred" aria-hidden="true"></i><span>more than 60 ms off</span></span>
@@ -2475,7 +2483,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-165512" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-170741" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8395,7 +8403,7 @@ function noteGate() {
     paRec.setAttribute('aria-label', paRecTxt.textContent);
     paHp.hidden = !rec || busy;
     var hpTxt = $('paHpTxt'); if (hpTxt && paTake) hpTxt.textContent = paTake.sound ? 'Headphones only: the microphone is on.' : 'No sound: the microphone is on.';
-    paNeedle.hidden = true;   /* Live (Trix): the fingerboard below shows the pitch; no needle, no page / bar line */
+    paNeedle.hidden = !(rec && !busy && paView === 'live');   /* Live: the pitch needle stays (Trix); no page / bar line */
     var live = paView === 'live', mic = document.querySelector('#pa .pa-mic');
     $('pa').classList.toggle('live', live);
     if (live && mic.nextSibling !== $('paTime')) $('paTime').parentNode.insertBefore(mic, $('paTime'));   /* the microphone level beside the time */
@@ -8624,7 +8632,7 @@ function noteGate() {
     return g;
   }
   function paClearTints() {
-    Array.prototype.forEach.call(document.querySelectorAll('.pa-tint, .pa-nm, .pa-tr, .pa-wrong'), function (el) { el.remove(); });
+    Array.prototype.forEach.call(document.querySelectorAll('.pa-tint, .pa-nm, .pa-tr, .pa-wrong, .pa-sh'), function (el) { el.remove(); });
     Array.prototype.forEach.call(document.querySelectorAll('.mp-n.pa-p'), function (g) { g.classList.remove('pa-p', 'pa-ok', 'pa-amber', 'pa-red', 'pa-miss'); g.removeAttribute('data-pabar'); });
   }
   var PA_RANK = { ok: 0, na: 1, miss: 2, amber: 3, red: 4 };
@@ -8654,11 +8662,11 @@ function noteGate() {
     });
     var r1 = paResOf[list[0]];
     if (r1 && !r1.missed && !r1.chord && r1.cents !== undefined && n0.si >= 0) {
-      if (n0.fg === 0 && Math.abs(r1.cents) > ASSESS.IN_TUNE) line('Open string: tune the ' + PA_SNAME[n0.si] + ' string ' + (r1.cents > 0 ? 'down' : 'up') + ' by ' + Math.abs(Math.round(r1.cents)) + ' ¢.', 'pa-fb-say');   /* no finger to move: the string's tuning */
+      if (n0.fg === 0 && Math.abs(r1.cents) > ASSESS.IN_TUNE && Math.abs(r1.cents) < PA_WRONG) line('Open string: tune the ' + PA_SNAME[n0.si] + ' string ' + (r1.cents > 0 ? 'down' : 'up') + ' by ' + Math.abs(Math.round(r1.cents)) + ' ¢.', 'pa-fb-say');   /* no finger to move: the string's tuning */
       if (paView === 'pages') {   /* Pages only: Live has the big fingerboard (Trix); the board on the right of the text */
         var fb = paFingerSvg(n0, r1, k), txt = document.createElement('div'); txt.className = 'pa-fb-txt';
         while (box.firstChild) txt.appendChild(box.firstChild);
-        if (n0.fg !== 0) txt.appendChild(fb.say); box.appendChild(txt); box.appendChild(fb.svg); box.classList.add('has-fb');
+        if (n0.fg !== 0 && Math.abs(r1.cents) < PA_WRONG) txt.appendChild(fb.say);   /* a wrong note: 'Played B4 instead of A4' says it, the dot shows where */ box.appendChild(txt); box.appendChild(fb.svg); box.classList.add('has-fb');
       }
     }
     /* as the Symbols page does: in the half of the screen away from the note, so the note stays in sight */
@@ -8682,7 +8690,9 @@ function noteGate() {
   function paFingerSvg(n, r, k) {
     /* drawn like the MIDI player's board (Trix): all four strings, every note place from the open string up, the key's notes
        tinted, the written note lit in its string colour with its finger, and a disc where the played pitch puts the finger */
-    var si = n.si, open = PA_OPEN[si], ne = n.m - open, na = Math.max(-0.4, ne + r.cents / 100);
+    var si = n.si, open = PA_OPEN[si], ne = n.m - open, na = ne + r.cents / 100, sa = si;
+    while (na < -0.4 && sa > 0) { sa--; na = n.m + r.cents / 100 - PA_OPEN[sa]; }   /* lower than this open string: where it is played, a string down (Trix) */
+    na = Math.max(-0.4, na);
     function mm(x) { return PA_LEN * (1 - Math.pow(2, -x / 12)); }
     var top = Math.max(7, Math.ceil(Math.max(ne, na)) + 1), COL = ['#66AEE6', '#74C493', '#E3A24C', '#EE6A5E'];
     var W = 150, X0 = 22, DX = (W - 2 * X0) / 3, Y0 = 26, H = Math.max(210, 22 * top + 40), K = (H - Y0 - 14) / mm(top), R = Math.min(10, K * (mm(1) - mm(0)) / 2 - 1);
@@ -8704,7 +8714,7 @@ function noteGate() {
         if (R >= 7) o.push('<text x="' + x + '" y="' + (y + 3).toFixed(1) + '" class="pa-fb-t' + (lit ? ' lit' : '') + '">' + (lit && n.fg > 0 ? n.fg : nm) + '</text>');
       }
     }
-    if (Math.abs(r.cents) > ASSESS.IN_TUNE && n.fg !== 0) o.push('<circle cx="' + (X0 + si * DX) + '" cy="' + Y(na).toFixed(1) + '" r="' + (R * 0.62).toFixed(1) + '" fill="' + kind + '" class="pa-fb-got"/>');   /* in tune or open: the written place only (Trix) */
+    if (Math.abs(r.cents) > ASSESS.IN_TUNE && (n.fg !== 0 || Math.abs(r.cents) >= PA_WRONG)) o.push('<circle cx="' + (X0 + sa * DX) + '" cy="' + Y(na).toFixed(1) + '" r="' + (R * 0.62).toFixed(1) + '" fill="' + kind + '" class="pa-fb-got"/>');   /* in tune or open: the written place only (Trix) */
     o.push('</svg>');
     var w = document.createElement('div'); w.innerHTML = o.join('');
     var d = mm(na) - mm(ne), p0 = document.createElement('p'); p0.className = 'pa-fb-say';
@@ -8731,7 +8741,7 @@ function noteGate() {
         /* far off (Trix: C written, D played): the written note grey, the note played drawn in red where it sits */
         var played = kind === 'red' && Math.abs(r.cents) >= PA_WRONG ? r.m + Math.round(r.cents / 100) : null;
         if (played !== null && played === r.m) played = null;
-        r.idx.forEach(function (k) { st[k] = { kind: kind, time: r.missed ? null : tk(r), played: played }; barOf[k] = bi; paResOf[k] = r; });
+        r.idx.forEach(function (k) { st[k] = { kind: kind, time: r.missed ? null : tk(r), played: played, c: kind === 'na' || r.missed ? null : r.cents, t0: r.missed ? null : r.timing, t1: r.missed ? null : r.exit }; barOf[k] = bi; paResOf[k] = r; });
       });
     });
     function draw(root, merge) {
@@ -8741,15 +8751,27 @@ function noteGate() {
         var k = +g.getAttribute('data-k'), m = merge ? merge[k] || st[k] : st[k], head = g.querySelector('ellipse.head');
         if (!m || !head) return;
         var wrong = m.played !== null && m.played !== undefined;
-        g.classList.add('pa-p', m.kind === 'na' || wrong ? 'pa-miss' : 'pa-' + m.kind);
+        g.classList.add('pa-p'); if (m.kind === 'miss' || m.kind === 'na' || wrong) g.classList.add('pa-miss');   /* the written note stays ink; grey when missed */
         if (wrong) g.parentNode.insertBefore(paPlayedHead(m.played, +head.getAttribute('cx'), +head.getAttribute('cy'), song.notes[k].b), g.nextSibling);
         g.setAttribute('data-pabar', barOf[k]); g.setAttribute('data-pak', (merge ? 'p' : 's') + k);
-        if (m.time) {
-          var cx = +head.getAttribute('cx'), r = document.createElementNS(NS, 'rect');
-          r.setAttribute('class', 'pa-tr ' + m.time);
-          r.setAttribute('x', (cx - 10).toFixed(1)); r.setAttribute('y', Y0 - 10); r.setAttribute('width', 20); r.setAttribute('height', 4 * S + 20); r.setAttribute('rx', 4);
-          r.setAttribute('data-pabar', barOf[k]); r.setAttribute('data-pak', (merge ? 'p' : 's') + k);
-          g.parentNode.insertBefore(r, g);
+        /* the shadow note (Trix): a coloured note behind the written one. Up / down = pitch (half a space per 25 ¢, at most 1.5
+           spaces), head colour = pitch band; left / right = timing (the middle of start and end: left = early overall, 1 px per 7 ms,
+           at most 18 px), stem colour = timing band; wider head = held longer than written, narrower = shorter */
+        if (m.c !== null && m.c !== undefined) {
+          var cx = +head.getAttribute('cx'), cy = +head.getAttribute('cy'), rx = +head.getAttribute('rx') || S * 0.6, ry = +head.getAttribute('ry') || S * 0.45;
+          var t0 = m.t0 == null ? 0 : m.t0, t1 = m.t1 == null ? t0 : m.t1;
+          var dy = wrong ? 0 : -Math.max(-1.5 * S, Math.min(1.5 * S, m.c / 25 * S / 2)), dx = Math.max(-18, Math.min(18, (t0 + t1) / 2 / 7));
+          var wf = Math.max(0.55, Math.min(1.9, 1 + (t1 - t0) / 400)), hx = cx + dx, hy = cy + dy, HR = rx * 1.3 * wf, VR = ry * 1.3;
+          var up = true; Array.prototype.forEach.call(g.querySelectorAll('line'), function (l) {   /* the stem goes the way the written one does */
+            var x1 = +l.getAttribute('x1'), y1 = +l.getAttribute('y1'), y2 = +l.getAttribute('y2');
+            if (Math.abs(x1 - cx) <= rx + 2 && Math.abs(y2 - y1) > 2 * S) up = Math.min(y1, y2) < cy - S;
+          });
+          var sxS = up ? hx + HR - 1.2 : hx - HR + 1.2, sy2 = up ? hy - 3.4 * S : hy + 3.4 * S, sh = document.createElementNS(NS, 'g');
+          sh.setAttribute('class', 'pa-sh'); sh.setAttribute('data-pabar', barOf[k]); sh.setAttribute('data-pak', (merge ? 'p' : 's') + k);
+          sh.innerHTML = '<rect class="pa-hit" x="' + (Math.min(cx, hx) - HR - 4).toFixed(1) + '" y="' + (cy - 2.5 * S).toFixed(1) + '" width="' + (Math.abs(hx - cx) + 2 * HR + 8).toFixed(1) + '" height="' + (5 * S).toFixed(1) + '"/>' +
+            (m.time ? '<line class="pa-sk ' + m.time + '" x1="' + sxS.toFixed(1) + '" y1="' + hy.toFixed(1) + '" x2="' + sxS.toFixed(1) + '" y2="' + sy2.toFixed(1) + '"/>' : '') +
+            (wrong ? '' : '<ellipse class="pa-sd ' + (m.kind === 'na' ? 'ok' : m.kind) + '" cx="' + hx.toFixed(1) + '" cy="' + hy.toFixed(1) + '" rx="' + HR.toFixed(1) + '" ry="' + VR.toFixed(1) + '" transform="rotate(-20 ' + hx.toFixed(1) + ' ' + hy.toFixed(1) + ')"/>');   /* a wrong note: the red played head says the pitch */
+          g.parentNode.insertBefore(sh, g);   /* behind the written note: its shadow */
         }
       });
     }
@@ -8762,7 +8784,9 @@ function noteGate() {
       (paPrinted[w] = paPrinted[w] || []).push(k);
       if (barOf[w] === undefined) barOf[w] = barOf[k];
       var cur = merged[w];
-      if (!cur) { merged[w] = { kind: s0.kind, time: s0.time, played: s0.played }; return; }
+      if (!cur) { merged[w] = { kind: s0.kind, time: s0.time, played: s0.played, c: s0.c, t0: s0.t0, t1: s0.t1 }; return; }
+      if (s0.c !== null && s0.c !== undefined && (cur.c === null || cur.c === undefined || Math.abs(s0.c) > Math.abs(cur.c))) cur.c = s0.c;   /* a repeat: the worse time round shows */
+      if (s0.time && (!cur.time || TR[s0.time] > TR[cur.time])) { cur.t0 = s0.t0; cur.t1 = s0.t1; }
       if (PA_RANK[s0.kind] > PA_RANK[cur.kind]) cur.kind = s0.kind;
       if (s0.played !== null && s0.played !== undefined && (cur.played === null || cur.played === undefined)) cur.played = s0.played;
       if (s0.time && (!cur.time || TR[s0.time] > TR[cur.time])) cur.time = s0.time;
@@ -10062,7 +10086,7 @@ function noteGate() {
     'Simile: keep the same bowing or articulation as before.': 'Simile：继续使用与前面相同的弓法或演奏法。',
     'Attacca: start the next movement without a pause.': 'Attacca：不停顿，直接开始下一乐章。',
     'Volti subito: turn the page quickly, the music carries straight on.': 'Volti subito：快速翻页，音乐紧接着继续。',
-    "Play-along": "跟音练习", "Play the piece · see each bar": "演奏整首 · 查看每小节", "Play a piece to the microphone, see each bar": "对着麦克风演奏，查看每一小节", "View": "视图", "Pages": "谱页", "Live": "实时", "Start": "开始", "Stop": "停止", "Start again": "重新开始", "Analysing…": "正在分析…", "Microphone level": "麦克风音量", "Headphones only: the microphone is on.": "请用耳机：麦克风已打开。", "No sound: the microphone is on.": "静音：麦克风已打开。", "The microphone can not hear the violin.": "麦克风听不到琴声。", "The microphone is not available.": "无法使用麦克风。", "The microphone is blocked.": "麦克风被阻止了。", "10–25 ¢ off": "偏差 10–25 音分", "more than 25 ¢ off": "偏差超过 25 音分", "timing off by more than 25 ms": "节奏偏差超过 25 毫秒", "not assessed": "未评估", "within 10 ¢": "偏差 10 音分以内", "Show": "显示", "Finger in place.": "手指位置正确。", "← scroll": "← 琴头", "bridge →": "琴马 →", "Fingerboard": "指板", "in tune": "音准合格", "on time": "节奏合格", "Pitch": "音准", "Timing": "节奏", "Both": "两者", "red head beside it: the note you played instead": "旁边的红色音符：实际拉出的音", "Not heard.": "没有听到这个音。", "Not recorded.": "没有录到。", "Double stop: not assessed.": "双音：未评估。", "Note colour, pitch:": "音符颜色（音准）：", "Background, timing:": "背景（节奏）：", "within 25 ms": "误差 25 毫秒以内", "25–60 ms off": "误差 25–60 毫秒", "more than 60 ms off": "误差超过 60 毫秒", "missed or not assessed": "漏掉或未评估", "Tap a note to practise its bar in the MIDI player.": "点一个音，到 MIDI 播放器里练习它所在的小节。", "The five worst bars": "最需要练习的五个小节", "Tap a bar to practise it in the MIDI player.": "点一个小节，到 MIDI 播放器里练习它。", "Use headphones": "请使用耳机", "The microphone is on for the whole take. With the phone on speaker, any reference or click the app plays reaches it and is scored as your own playing. Put on headphones, or start without sound.": "整段录音期间麦克风一直开着。如果用外放，应用发出的参考音或节拍都会被录进去，并当成你拉的内容评分。请戴上耳机，或选择静音开始。", "I’m using headphones — start": "已戴耳机，开始", "I'm using headphones — start": "已戴耳机，开始", "Start without sound": "静音开始", "Nothing was recorded.": "没有录到内容。", "Measured against Equal temperament.": "按平均律计算。", "Measured against Just intonation.": "按纯律计算。", "Measured against Pythagorean tuning.": "按五度相生律计算。",
+    "Play-along": "跟音练习", "Play the piece · see each bar": "演奏整首 · 查看每小节", "Play a piece to the microphone, see each bar": "对着麦克风演奏，查看每一小节", "View": "视图", "Pages": "谱页", "Live": "实时", "Start": "开始", "Stop": "停止", "Start again": "重新开始", "Analysing…": "正在分析…", "Microphone level": "麦克风音量", "Headphones only: the microphone is on.": "请用耳机：麦克风已打开。", "No sound: the microphone is on.": "静音：麦克风已打开。", "The microphone can not hear the violin.": "麦克风听不到琴声。", "The microphone is not available.": "无法使用麦克风。", "The microphone is blocked.": "麦克风被阻止了。", "10–25 ¢ off": "偏差 10–25 音分", "more than 25 ¢ off": "偏差超过 25 音分", "timing off by more than 25 ms": "节奏偏差超过 25 毫秒", "not assessed": "未评估", "within 10 ¢": "偏差 10 音分以内", "Show": "显示", "Shadow note head, pitch (higher = sharp, lower = flat):": "影子音符的符头（音准，偏高在上、偏低在下）：", "Shadow note stem, timing (moved left = early, right = late; wider = held too long, narrower = too short):": "影子音符的符干（节奏：左移偏早、右移偏晚；符头变宽＝拉得太长，变窄＝太短）：", "grey note: missed or not assessed": "灰色音符：漏掉或未评估", "Finger in place.": "手指位置正确。", "← scroll": "← 琴头", "bridge →": "琴马 →", "Fingerboard": "指板", "in tune": "音准合格", "on time": "节奏合格", "Pitch": "音准", "Timing": "节奏", "Both": "两者", "red head beside it: the note you played instead": "旁边的红色音符：实际拉出的音", "Not heard.": "没有听到这个音。", "Not recorded.": "没有录到。", "Double stop: not assessed.": "双音：未评估。", "Note colour, pitch:": "音符颜色（音准）：", "Background, timing:": "背景（节奏）：", "within 25 ms": "误差 25 毫秒以内", "25–60 ms off": "误差 25–60 毫秒", "more than 60 ms off": "误差超过 60 毫秒", "missed or not assessed": "漏掉或未评估", "Tap a note to practise its bar in the MIDI player.": "点一个音，到 MIDI 播放器里练习它所在的小节。", "The five worst bars": "最需要练习的五个小节", "Tap a bar to practise it in the MIDI player.": "点一个小节，到 MIDI 播放器里练习它。", "Use headphones": "请使用耳机", "The microphone is on for the whole take. With the phone on speaker, any reference or click the app plays reaches it and is scored as your own playing. Put on headphones, or start without sound.": "整段录音期间麦克风一直开着。如果用外放，应用发出的参考音或节拍都会被录进去，并当成你拉的内容评分。请戴上耳机，或选择静音开始。", "I’m using headphones — start": "已戴耳机，开始", "I'm using headphones — start": "已戴耳机，开始", "Start without sound": "静音开始", "Nothing was recorded.": "没有录到内容。", "Measured against Equal temperament.": "按平均律计算。", "Measured against Just intonation.": "按纯律计算。", "Measured against Pythagorean tuning.": "按五度相生律计算。",
     'Intonation': '律制', 'Equal': '平均律', 'Just': '纯律', 'Pythagorean': '五度相生律',
     'Tap': '点拍', 'Slower': '减慢', 'Faster': '加快', 'Time signature': '拍号', 'Beats per bar': '每小节拍数',
     'Note value': '音符时值', 'Tempo': '速度', 'Start': '开始', 'Stop': '停止',
