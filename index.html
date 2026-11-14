@@ -1480,6 +1480,10 @@ html.fg-printing .pa-wrong { display: none !important; } @media print { .pa-wron
 .pa-tip-body .pa-fb-say { margin-top: 8px; font-weight: 600; }
 .pa-sb .pa-lg { margin-top: 4px; font-size: 13px; }
 .pa-bars { gap: 16px; }
+/* Live (Trix): no page / bar line; the microphone level sits in the top bar beside the time */
+.pa.live .pa-info { display: none; }
+.pa-bar .pa-mic { flex: 0 1 90px; color: var(--muted); margin-left: auto; }
+.pa-bar .pa-mic + .pa-time { margin-left: 0; }
 
 .shell[data-view="midi"] .tabs .tab.tab[data-view="fingering"] { display: none; }
 .shell[data-view="midi"] .tabs .tab[data-view="playalong"], .shell[data-view="playalong"] .tabs .tab[data-view="fingering"] { display: grid; }
@@ -2471,7 +2475,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-165128" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-165512" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8391,7 +8395,11 @@ function noteGate() {
     paRec.setAttribute('aria-label', paRecTxt.textContent);
     paHp.hidden = !rec || busy;
     var hpTxt = $('paHpTxt'); if (hpTxt && paTake) hpTxt.textContent = paTake.sound ? 'Headphones only: the microphone is on.' : 'No sound: the microphone is on.';
-    paNeedle.hidden = !(rec && !busy && paView === 'live');
+    paNeedle.hidden = true;   /* Live (Trix): the fingerboard below shows the pitch; no needle, no page / bar line */
+    var live = paView === 'live', mic = document.querySelector('#pa .pa-mic');
+    $('pa').classList.toggle('live', live);
+    if (live && mic.nextSibling !== $('paTime')) $('paTime').parentNode.insertBefore(mic, $('paTime'));   /* the microphone level beside the time */
+    else if (!live && mic.parentNode !== $('paBarNow').parentNode) $('paBarNow').parentNode.insertBefore(mic, $('paBarNow'));
     paResEl.hidden = !paRes || rec;
     var sh = document.getElementById('shell'); if (sh) { sh.classList.toggle('pa-result', !!(paRes && !paRes.empty) && !rec); sh.classList.toggle('pa-sp', paShowMode !== 'time'); sh.classList.toggle('pa-st', paShowMode !== 'pitch'); }   /* fingerings hidden while a result shows; Pitch | Timing | Both */
     Array.prototype.forEach.call(paShowEl.children, function (b) { b.setAttribute('aria-checked', b.dataset.s === paShowMode ? 'true' : 'false'); });
