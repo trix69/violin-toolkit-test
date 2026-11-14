@@ -1456,7 +1456,7 @@ html.fg-printing .pa-wrong { display: none !important; } @media print { .pa-wron
 .pa-sb { display: grid; gap: 4px; }
 .pa-sb-h { display: flex; align-items: baseline; gap: 8px; }
 .pa-sb-h b { font: 700 15px var(--font-body); min-width: 4.5em; }
-.pa-sb-big { font: 700 22px var(--font-body); color: #23963a; }
+.pa-sb-big { font: 700 22px var(--font-body); color: var(--fg); }   /* the default text colour: green read as "good" even at 0 % (Trix) */
 .pa-sb-h small { font: 500 13px var(--font-body); color: var(--muted); }
 .pa-sb-bar { display: flex; height: 22px; border-radius: 6px; overflow: hidden; background: var(--line); }
 .pa-sb-bar > i { display: grid; place-items: center; min-width: 0; font: 700 11px var(--font-body); font-style: normal; color: #fff; overflow: hidden; white-space: nowrap; }
@@ -2537,7 +2537,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-222307" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-223058" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -7616,7 +7616,11 @@ function noteGate() {
   if (APP.busy) APP.busy.push(function () { return playing || counting; });   /* playing along counts as practice time */
 
   /* the board fits below the app bar, the score and the controls */
-  function topH() { var a = document.querySelector('.appbar'); return (a ? a.offsetHeight + 10 : 0) + top.offsetHeight + 20 + Math.max(0, bar.offsetHeight - 64); }   /* + the board's own margin and padding */
+  function topH() {
+    var a = document.querySelector('.appbar'), h = (a ? a.offsetHeight + 10 : 0) + top.offsetHeight + 20 + Math.max(0, bar.offsetHeight - 64);
+    if (paOn && paView === 'live') { var v = document.getElementById('view-playalong'); if (v) h += v.offsetHeight + 12; }   /* Play-along's own bar above, the pill below: the board fits the window as in the player (Trix) */
+    return h;
+  }   /* + the board's own margin and padding */
   function reach() {   /* semitones above the open string, on the string the board plays each note on */
     /* the board ends at the highest finger the tune uses (Trix: Twinkle only needs the 3rd finger, so the 3rd
        finger sits near the bottom edge and the rows spread out): in 1st position the 1st finger is 1-2 semitones
@@ -8425,8 +8429,10 @@ function noteGate() {
     Array.prototype.forEach.call(paSeg.children, function (b) { b.setAttribute('aria-checked', b.dataset.v === paView ? 'true' : 'false'); });
     if (paView === 'live') { fgShown = false; shown = true; fit(); }
     else { shown = false; fgShown = true; fgOptions(); if (fgDirty) fgRender(); fgSys = -1; fgHead(true); }
-    paRetint(); paUi();
+    paRetint(); paUi(); paFitLive();
   }
+  var paLiveH = -1;
+  function paFitLive() { if (!paOn || paView !== 'live' || !shown) return; var h = $('view-playalong').offsetHeight; if (h !== paLiveH) { paLiveH = h; fit(); } }   /* the needle, a result: Play-along's top changes height, the board refits */
   paSeg.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b || b.dataset.v === paView) return;
     paView = b.dataset.v;   /* a change of view only: the take goes on */
@@ -8467,6 +8473,7 @@ function noteGate() {
     var sh = document.getElementById('shell'); if (sh) { sh.classList.toggle('pa-result', !!(paRes && !paRes.empty) && !rec); sh.classList.toggle('pa-sp', paShowMode !== 'time'); sh.classList.toggle('pa-st', paShowMode !== 'pitch'); }   /* fingerings hidden while a result shows; Pitch | Timing | Both */
     Array.prototype.forEach.call(paShowEl.children, function (b) { b.setAttribute('aria-checked', b.dataset.s === paShowMode ? 'true' : 'false'); });
     if (songSel) songSel.disabled = rec; if (fgSel) fgSel.disabled = rec;
+    paFitLive();
     paClock();
   }
   function paClock() {
