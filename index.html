@@ -2536,7 +2536,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-220919" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-221735" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -9487,6 +9487,7 @@ function noteGate() {
     function newer() {
       return versionJson().then(function (j) {
         if (j && j.pp && APP.ppRemote) APP.ppRemote(j.pp);   /* the policy's date on the site (no extra request) */
+        if (PLAY && j.play) j = { version: j.play, build: 'play-' + j.play, pp: j.pp };   /* the Play app: what Google Play offers, not the website's release, which Play may not have yet (Trix) */
         if (APK || IOSAPP) return num(j.version) > num(btn.dataset.version) ? j : null;   /* the app: only a higher version number */
         /* a different build stamp means a new release (test builds keep the same version number) */
         return (j.build && btn.dataset.build ? j.build !== btn.dataset.build : num(j.version) > num(btn.dataset.version)) ? j : null;
