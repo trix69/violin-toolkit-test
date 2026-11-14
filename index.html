@@ -1283,7 +1283,8 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
 @media (max-width: 420px) {   /* a phone: ten buttons in one row */
   #view-fingering .fg-fitbar, #view-fingering .fg-fitbar .fgx { gap: 3px; }
   #view-fingering .fg-fitbar { padding: 5px 7px; }
-  #view-fingering .fg-fitbar .fg-mini { width: 29px; height: 29px; font-size: 16px; }
+  #view-fingering .fg-fitbar .fg-mini { width: 29px; height: 29px; }
+  #view-fingering .fg-fitbar .fg-mini:not(.fgx-ab) { font-size: 16px; }   /* the A–B label keeps its 10 px (Hermes F101) */
   #view-fingering .fg-fitbar .fg-mini.fgx-ab { width: 36px; }
   #view-fingering .fg-fitbar .fg-play { width: 33px; height: 33px; }
 }
@@ -1291,7 +1292,8 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
 @media (max-width: 367px) {   /* ten buttons in 296 px (Hermes F98): 8 x 25 + 31 + 30 + 9 x 2 gap + 12 padding = 291 */
   #view-fingering .fg-fitbar, #view-fingering .fg-fitbar .fgx { gap: 2px; }
   #view-fingering .fg-fitbar { padding: 5px 6px; }
-  #view-fingering .fg-fitbar .fg-mini { width: 25px; height: 25px; font-size: 15px; }
+  #view-fingering .fg-fitbar .fg-mini { width: 25px; height: 25px; }
+  #view-fingering .fg-fitbar .fg-mini:not(.fgx-ab) { font-size: 15px; }
   #view-fingering .fg-fitbar .fg-mini.fgx-ab { width: 31px; }
   #view-fingering .fg-fitbar .fg-zoom svg { width: 17px; height: 17px; }
   #view-fingering .fg-fitbar .fg-play { width: 30px; height: 30px; }
@@ -2546,7 +2548,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.48" data-build="20261114-233118" data-cache="violin-toolkit-test-"><span>Version 1.48-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.48" data-build="20261114-233324" data-cache="violin-toolkit-test-"><span>Version 1.48-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -5903,7 +5905,7 @@ function noteGate() {
       var t = toSec(n.t0), e = toSec(Math.max(n.t1, n.t0 + 1));
       /* a short break before the next note, like a bow change (Trix: notes sounded too long and ran together) */
       var sb = n.sb !== undefined ? n.sb : n.t0;
-      return { m: n.m, t: t, e: e - Math.min(0.05, (e - t) * 0.15), b: sb / tpq, own: (n.t1 - sb) / tpq, xb: n.xb, gi: n.gi, gn: n.gn, xfg: n.xfg, xs: n.xs, harm: n.harm, pz: n.pz, art: n.art, trem: n.trem, tup: n.tup, wl: n.wl, oacc: n.oacc, wsp: n.wsp, slur: n.slur, vel: n.v || 80, grace: n.grace };
+      return { m: n.m, t: t, e: n.grace ? e : e - Math.min(0.05, (e - t) * 0.15), b: sb / tpq, own: (n.t1 - sb) / tpq, xb: n.xb, gi: n.gi, gn: n.gn, xfg: n.xfg, xs: n.xs, harm: n.harm, pz: n.pz, art: n.art, trem: n.trem, tup: n.tup, wl: n.wl, oacc: n.oacc, wsp: n.wsp, slur: n.slur, vel: n.v || 80, grace: n.grace };
     }).filter(function (n) { return n.m >= 55; });   /* below the G string: left out */
     if (!notes.length) throw fail('Every note in this file is below the violin’s G string.');
     /* whole empty bars before the first note are skipped (Trix): the song starts in the bar of its first note */
