@@ -1410,6 +1410,9 @@ html.fg-printing .pa-tr, html.fg-printing .pa-nm, html.fg-printing .pa-tint { di
 html.fg-printing .mp-n.pa-p .head:not(.hollow) { fill: currentColor !important; } html.fg-printing .mp-n.pa-p .head.hollow { stroke: currentColor !important; }
 @media print { .pa-tr, .pa-nm, .pa-tint { display: none !important; } .mp-n.pa-p .head:not(.hollow) { fill: currentColor !important; } .mp-n.pa-p .head.hollow { stroke: currentColor !important; } }
 
+/* a result on screen (Trix): no fingerings or position marks, so the coloured notes read easily */
+.shell.pa-result[data-view="playalong"] .fing, .shell.pa-result[data-view="playalong"] .mp-pos, .shell.pa-result[data-view="playalong"] .mp-posd { display: none; }
+
 /* ---- start overlay ---- */
 .launch {
   position: fixed; inset: 0; z-index: 100;
@@ -2381,7 +2384,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-110229" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-110502" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8245,6 +8248,7 @@ function noteGate() {
     var hpTxt = $('paHpTxt'); if (hpTxt && paTake) hpTxt.textContent = paTake.sound ? 'Headphones only: the microphone is on.' : 'No sound: the microphone is on.';
     paNeedle.hidden = !(rec && !busy && paView === 'live');
     paResEl.hidden = !paRes || rec;
+    var sh = document.getElementById('shell'); if (sh) sh.classList.toggle('pa-result', !!(paRes && !paRes.empty) && !rec);   /* fingerings hidden while a result shows */
     if (songSel) songSel.disabled = rec; if (fgSel) fgSel.disabled = rec;
     paClock();
   }
