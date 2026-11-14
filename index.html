@@ -1464,6 +1464,22 @@ html.fg-printing .pa-wrong { display: none !important; } @media print { .pa-wron
 .pa-sb-bar.time .s-ok { background: rgba(46, 160, 67, .55); color: #12401c; } .pa-sb-bar.time .s-amber { background: rgba(232, 164, 32, .75); color: #4a2f00; }
 .pa-sb-bar.time .s-red { background: repeating-linear-gradient(135deg, rgba(214, 48, 39, .85) 0 4px, rgba(214, 48, 39, .4) 4px 8px); }
 
+/* the card's fingerboard picture (Trix) */
+.pa-fbw { margin-top: 12px; }
+.pa-fb { display: block; width: 100%; height: auto; }
+.pa-fb-wood { fill: #2f3a35; }
+.pa-fb-str { stroke: #d9d2c0; stroke-width: 2; }
+.pa-fb-tick { stroke: rgba(255, 255, 255, .25); stroke-width: 1; }
+.pa-fb-lab { fill: var(--muted); font: 600 11px var(--font-note); text-anchor: middle; }
+.pa-fb-want { fill: #2f3a35; stroke: #f4efe0; stroke-width: 2.5; }
+.pa-fb-fg { fill: #f4efe0; font: 700 11px var(--font-body); text-anchor: middle; }
+.pa-fb-got { stroke: #fff; stroke-width: 1.5; }
+.pa-fb-end { fill: var(--muted); font: 500 11px var(--font-body); }
+.pa-tip-body .pa-fb-say { margin-top: 4px; font-weight: 600; }
+
+.shell[data-view="midi"] .tabs .tab.tab[data-view="fingering"] { display: none; }
+.shell[data-view="midi"] .tabs .tab[data-view="playalong"], .shell[data-view="playalong"] .tabs .tab[data-view="fingering"] { display: grid; }
+
 /* ---- start overlay ---- */
 .launch {
   position: fixed; inset: 0; z-index: 100;
@@ -2451,7 +2467,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-145109" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-164318" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8621,6 +8637,11 @@ function noteGate() {
       if (r.timing !== null && r.timing !== undefined) line(ms(r.timing, 'Start'));
       if (r.exit !== undefined) line(ms(r.exit, 'End'));
     });
+    var r1 = paResOf[list[0]];
+    if (r1 && !r1.missed && !r1.chord && r1.cents !== undefined && n0.si >= 0) {
+      if (n0.fg === 0) { if (Math.abs(r1.cents) > ASSESS.IN_TUNE) line('Open string: tune the ' + PA_SNAME[n0.si] + ' string ' + (r1.cents > 0 ? 'down' : 'up') + ' by ' + Math.abs(Math.round(r1.cents)) + ' ¢.', 'pa-fb-say'); }   /* no finger to move: the string's tuning */
+      else if (paView === 'pages') box.appendChild(paFingerSvg(n0, r1));   /* Pages only: Live has the big fingerboard (Trix) */
+    }
     /* as the Symbols page does: in the half of the screen away from the note, so the note stays in sight */
     var rr = from && from.getBoundingClientRect ? from.getBoundingClientRect() : null, up = rr ? rr.top + rr.height / 2 > window.innerHeight / 2 : false;
     paCardEl.classList.toggle('up', up);
@@ -8634,6 +8655,36 @@ function noteGate() {
       APP.board.allOff(); APP.board.hand(n0.hand); APP.board.on(n0.m, 'pa-card', false, n0.si, n0.b, true);
       APP.board.heard(r0 && r0.cents !== undefined && !r0.missed ? { m: n0.m + r0.cents / 100, cents: r0.cents, si: Math.abs(r0.cents) >= PA_WRONG ? -1 : n0.si } : null);
     }
+  }
+  /* the card's picture (Trix): the note's string, from the scroll side to the bridge side, zoomed round the note; a ring where
+     the finger should be (the written note, with its finger), a disc where it was (from the pitch played), and how far apart
+     they are on a real violin (328 mm string) */
+  var PA_OPEN = [55, 62, 69, 76], PA_SNAME = ['G', 'D', 'A', 'E'], PA_LEN = 328;
+  function paFingerSvg(n, r) {
+    var open = PA_OPEN[n.si], ne = n.m - open, na = ne + r.cents / 100;
+    function mm(x) { return PA_LEN * (1 - Math.pow(2, -x / 12)); }
+    var lo = Math.max(-0.5, Math.min(ne, na) - 1.2), hi = Math.max(ne, na) + 1.2, W = 280, H = 96, L = 18, R = W - 18;
+    function X(x) { return L + (mm(x) - mm(lo)) / (mm(hi) - mm(lo)) * (R - L); }
+    var kind = Math.abs(r.cents) <= ASSESS.IN_TUNE ? '#23963a' : Math.abs(r.cents) <= ASSESS.RED ? '#d68a00' : '#d23b2f';
+    var o = ['<svg class="pa-fb" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Fingerboard">'];
+    o.push('<rect x="4" y="30" width="' + (W - 8) + '" height="22" rx="6" class="pa-fb-wood"/>');
+    o.push('<line x1="4" y1="41" x2="' + (W - 4) + '" y2="41" class="pa-fb-str"/>');
+    for (var k = Math.ceil(lo); k <= Math.floor(hi); k++) {   /* a tick at each semitone, the note named above it */
+      var x = X(k);
+      o.push('<line x1="' + x.toFixed(1) + '" y1="30" x2="' + x.toFixed(1) + '" y2="52" class="pa-fb-tick"/>');
+      o.push('<text x="' + x.toFixed(1) + '" y="22" class="pa-fb-lab">' + (k === 0 ? PA_SNAME[n.si] : APP.board.name(open + k).replace(/\d+$/, '')) + '</text>');
+    }
+    var xe = X(ne), xa = X(na);
+    o.push('<circle cx="' + xe.toFixed(1) + '" cy="41" r="10" class="pa-fb-want"/>');
+    o.push('<text x="' + xe.toFixed(1) + '" y="45" class="pa-fb-fg">' + (n.fg >= 0 ? n.fg : '') + '</text>');
+    o.push('<circle cx="' + xa.toFixed(1) + '" cy="41" r="6.5" fill="' + kind + '" class="pa-fb-got"/>');
+    o.push('<text x="' + L + '" y="' + (H - 18) + '" class="pa-fb-end" text-anchor="start">← scroll</text><text x="' + R + '" y="' + (H - 18) + '" class="pa-fb-end" text-anchor="end">bridge →</text>');
+    o.push('</svg>');
+    var wrap = document.createElement('div'); wrap.className = 'pa-fbw'; wrap.innerHTML = o.join('');
+    var d = mm(na) - mm(ne), p0 = document.createElement('p'); p0.className = 'pa-fb-say';
+    p0.textContent = Math.abs(r.cents) <= ASSESS.IN_TUNE ? 'Finger in place.' : 'Finger about ' + Math.max(0.1, Math.abs(d)).toFixed(1) + ' mm too close to the ' + (d > 0 ? 'bridge' : 'scroll') + '.';
+    wrap.appendChild(p0);
+    return wrap;
   }
   function paCardClose() { if (paCardEl.hidden) return; paCardEl.hidden = true; APP.board.off('pa-card'); APP.board.heard(null); }
   $('paCardC').addEventListener('click', paCardClose);   /* a tap on the card closes it */
@@ -9985,7 +10036,7 @@ function noteGate() {
     'Simile: keep the same bowing or articulation as before.': 'Simile：继续使用与前面相同的弓法或演奏法。',
     'Attacca: start the next movement without a pause.': 'Attacca：不停顿，直接开始下一乐章。',
     'Volti subito: turn the page quickly, the music carries straight on.': 'Volti subito：快速翻页，音乐紧接着继续。',
-    "Play-along": "跟音练习", "Play the piece · see each bar": "演奏整首 · 查看每小节", "Play a piece to the microphone, see each bar": "对着麦克风演奏，查看每一小节", "View": "视图", "Pages": "谱页", "Live": "实时", "Start": "开始", "Stop": "停止", "Start again": "重新开始", "Analysing…": "正在分析…", "Microphone level": "麦克风音量", "Headphones only: the microphone is on.": "请用耳机：麦克风已打开。", "No sound: the microphone is on.": "静音：麦克风已打开。", "The microphone can not hear the violin.": "麦克风听不到琴声。", "The microphone is not available.": "无法使用麦克风。", "The microphone is blocked.": "麦克风被阻止了。", "10–25 ¢ off": "偏差 10–25 音分", "more than 25 ¢ off": "偏差超过 25 音分", "timing off by more than 25 ms": "节奏偏差超过 25 毫秒", "not assessed": "未评估", "within 10 ¢": "偏差 10 音分以内", "Practise this bar": "练习这一小节", "Show": "显示", "in tune": "音准合格", "on time": "节奏合格", "Pitch": "音准", "Timing": "节奏", "Both": "两者", "red head beside it: the note you played instead": "旁边的红色音符：实际拉出的音", "Not heard.": "没有听到这个音。", "Not recorded.": "没有录到。", "Double stop: not assessed.": "双音：未评估。", "Note colour, pitch:": "音符颜色（音准）：", "Background, timing:": "背景（节奏）：", "within 25 ms": "误差 25 毫秒以内", "25–60 ms off": "误差 25–60 毫秒", "more than 60 ms off": "误差超过 60 毫秒", "missed or not assessed": "漏掉或未评估", "Tap a note to practise its bar in the MIDI player.": "点一个音，到 MIDI 播放器里练习它所在的小节。", "The five worst bars": "最需要练习的五个小节", "Tap a bar to practise it in the MIDI player.": "点一个小节，到 MIDI 播放器里练习它。", "Use headphones": "请使用耳机", "The microphone is on for the whole take. With the phone on speaker, any reference or click the app plays reaches it and is scored as your own playing. Put on headphones, or start without sound.": "整段录音期间麦克风一直开着。如果用外放，应用发出的参考音或节拍都会被录进去，并当成你拉的内容评分。请戴上耳机，或选择静音开始。", "I’m using headphones — start": "已戴耳机，开始", "I'm using headphones — start": "已戴耳机，开始", "Start without sound": "静音开始", "Nothing was recorded.": "没有录到内容。", "Measured against Equal temperament.": "按平均律计算。", "Measured against Just intonation.": "按纯律计算。", "Measured against Pythagorean tuning.": "按五度相生律计算。",
+    "Play-along": "跟音练习", "Play the piece · see each bar": "演奏整首 · 查看每小节", "Play a piece to the microphone, see each bar": "对着麦克风演奏，查看每一小节", "View": "视图", "Pages": "谱页", "Live": "实时", "Start": "开始", "Stop": "停止", "Start again": "重新开始", "Analysing…": "正在分析…", "Microphone level": "麦克风音量", "Headphones only: the microphone is on.": "请用耳机：麦克风已打开。", "No sound: the microphone is on.": "静音：麦克风已打开。", "The microphone can not hear the violin.": "麦克风听不到琴声。", "The microphone is not available.": "无法使用麦克风。", "The microphone is blocked.": "麦克风被阻止了。", "10–25 ¢ off": "偏差 10–25 音分", "more than 25 ¢ off": "偏差超过 25 音分", "timing off by more than 25 ms": "节奏偏差超过 25 毫秒", "not assessed": "未评估", "within 10 ¢": "偏差 10 音分以内", "Practise this bar": "练习这一小节", "Show": "显示", "Finger in place.": "手指位置正确。", "← scroll": "← 琴头", "bridge →": "琴马 →", "Fingerboard": "指板", "in tune": "音准合格", "on time": "节奏合格", "Pitch": "音准", "Timing": "节奏", "Both": "两者", "red head beside it: the note you played instead": "旁边的红色音符：实际拉出的音", "Not heard.": "没有听到这个音。", "Not recorded.": "没有录到。", "Double stop: not assessed.": "双音：未评估。", "Note colour, pitch:": "音符颜色（音准）：", "Background, timing:": "背景（节奏）：", "within 25 ms": "误差 25 毫秒以内", "25–60 ms off": "误差 25–60 毫秒", "more than 60 ms off": "误差超过 60 毫秒", "missed or not assessed": "漏掉或未评估", "Tap a note to practise its bar in the MIDI player.": "点一个音，到 MIDI 播放器里练习它所在的小节。", "The five worst bars": "最需要练习的五个小节", "Tap a bar to practise it in the MIDI player.": "点一个小节，到 MIDI 播放器里练习它。", "Use headphones": "请使用耳机", "The microphone is on for the whole take. With the phone on speaker, any reference or click the app plays reaches it and is scored as your own playing. Put on headphones, or start without sound.": "整段录音期间麦克风一直开着。如果用外放，应用发出的参考音或节拍都会被录进去，并当成你拉的内容评分。请戴上耳机，或选择静音开始。", "I’m using headphones — start": "已戴耳机，开始", "I'm using headphones — start": "已戴耳机，开始", "Start without sound": "静音开始", "Nothing was recorded.": "没有录到内容。", "Measured against Equal temperament.": "按平均律计算。", "Measured against Just intonation.": "按纯律计算。", "Measured against Pythagorean tuning.": "按五度相生律计算。",
     'Intonation': '律制', 'Equal': '平均律', 'Just': '纯律', 'Pythagorean': '五度相生律',
     'Tap': '点拍', 'Slower': '减慢', 'Faster': '加快', 'Time signature': '拍号', 'Beats per bar': '每小节拍数',
     'Note value': '音符时值', 'Tempo': '速度', 'Start': '开始', 'Stop': '停止',
@@ -10084,6 +10135,8 @@ function noteGate() {
     [/^(Start|End): on time \(([+−]\d+) ms\)$/, function (m, w, v) { return (w === 'Start' ? '起音' : '收音') + '：准时（' + v + ' 毫秒）'; }],
     [/^(Start|End): (\d+) ms (late|early)$/, function (m, w, v, d) { return (w === 'Start' ? '起音' : '收音') + '：' + (d === 'late' ? '晚了 ' : '早了 ') + v + ' 毫秒'; }],
     [/^Played (\S+) instead of (\S+) \(([+−])(\d+) ¢\)$/, function (m, p, w, sg, v) { return '拉成了 ' + p + '（应为 ' + w + '，偏' + (sg === '+' ? '高 ' : '低 ') + v + ' 音分）'; }],
+    [/^Open string: tune the ([GDAE]) string (up|down) by (\d+) ¢\.$/, function (m, st, d, v) { return '空弦：把 ' + st + ' 弦调' + (d === 'up' ? '高 ' : '低 ') + v + ' 音分。'; }],
+    [/^Finger about ([\d.]+) mm too close to the (bridge|scroll)\.$/, function (m, v, w) { return '手指离' + (w === 'bridge' ? '琴马' : '琴头') + '近了约 ' + v + ' 毫米。'; }],
     [/^(\d+)(?:st|nd|rd|th) time$/, function (m, n) { return '第 ' + n + ' 遍'; }],
     [/^Bar (\S+)$/, function (m, n) { return '第 ' + n + ' 小节'; }],   /* Play-along (跟音练习) */
     [/^Page (\d+) of (\d+)$/, function (m, a, b) { return '第 ' + a + ' 页，共 ' + b + ' 页'; }],
