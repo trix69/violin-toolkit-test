@@ -1205,33 +1205,15 @@ html.fg-printing .fg-head, html.fg-shot .fg-head { display: none !important; }  
 @media (prefers-reduced-motion: reduce) { #view-fingering .fg-flash { animation: fgFlashStill 1s linear forwards; } }
 @keyframes fgFlashStill { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
 @media print { #view-fingering .fg-flash { display: none !important; } }
-/* full width / back (Trix): a round button over the pages' top right corner, staying in view while scrolling */
-#view-fingering .fg-fitbar { position: sticky; top: 6px; z-index: 5; height: 32px; margin: 0 0 6px; display: flex; justify-content: flex-end; gap: 6px; pointer-events: none; }
-#view-fingering .fg-fitbar .fg-play { pointer-events: auto; margin: 0; width: 32px; height: 32px; box-shadow: 0 2px 6px rgba(0,0,0,.15); }   /* small: clear of the page's header text (Trix) */
-#view-fingering .fg-fitbar .fg-play svg { width: 16px; height: 16px; stroke-width: 2.6; }   /* play / pause floats with the pages too (Trix) */
-#view-fingering .fg-fitbar.zoomed { width: var(--fgvw); margin-left: var(--fgml); }   /* over the widened pages' right edge */
-#view-fingering .fg-fitbar.zoomed .fg-fit { margin-right: 16px; }   /* the full-width page keeps 16 px from the window edge */
-/* more controls (Trix): − + back-to-start mixer loop A–B, between play and full width; they wrap on narrow phones */
-#view-fingering .fg-fitbar { flex-wrap: wrap; height: auto; min-height: 32px; row-gap: 6px; }
-@media (hover: none) and (pointer: coarse) { #view-fingering .fg-fitbar { top: max(48px, calc(env(safe-area-inset-top, 0px) + 12px)); } }   /* phones: clear of the browser's blurred top edge (Trix, iPhone Safari) */
 #view-fingering .fgx { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; pointer-events: none; }
 #view-fingering .fgx[hidden] { display: none; }
 #view-fingering .fg-mini { pointer-events: auto; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--fg); box-shadow: 0 2px 6px rgba(0,0,0,.15); cursor: pointer; font: 600 18px/1 var(--font-note); }
 #view-fingering .fg-mini svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-#view-fingering .fg-more circle { fill: currentColor; stroke: none; }
 #view-fingering .fg-mini.fgx-ab { font: 700 10px/1 var(--font-note); width: 40px; border-radius: 16px; }
 #view-fingering .fg-mini[aria-pressed="true"], #view-fingering .fg-mini[aria-expanded="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 #view-fingering .fg-mini:disabled { opacity: .4; cursor: default; }
 #view-fingering .fg-mini:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 /* the player's Mixer / A–B panel, shown under the floating buttons when opened from here */
-#view-fingering .fg-fitbar { position: sticky; }
-#view-fingering .fg-fitbar .mp-mixpop, #view-fingering .fg-fitbar .mp-abpop { pointer-events: auto; top: calc(100% + 8px); bottom: auto; left: auto; right: 0; transform: none; }
-#view-fingering .fg-fit { pointer-events: auto; margin: 0; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--panel); color: var(--fg); box-shadow: 0 2px 8px rgba(0,0,0,.15); cursor: pointer; }
-#view-fingering .fg-fit svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-#view-fingering .fg-fit[hidden] { display: none; }
-#view-fingering .fg-fit .i-in, #view-fingering .fg-fit.back .i-out { display: none; }
-#view-fingering .fg-fit.back .i-in { display: block; }
-#view-fingering .fg-fit:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media print { #view-fingering .fg-fitbar { display: none !important; } }
 #view-fingering .fg-play:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 #view-fingering .fg-pdf svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -1284,6 +1266,27 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
 
 /* the hand only over the music, where a click jumps to a note (Hermes F69) */
 #view-fingering .fg-page > g { cursor: pointer; }
+
+/* the floating controls (Trix): one pill at the bottom middle, as in Play-along; zoom out / in, then the player's buttons */
+#view-fingering .fg-fitbar { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); transform: translateX(-50%); z-index: 30;
+  display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 94%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, .18); max-width: calc(100vw - 24px); box-sizing: border-box; }
+#view-fingering .fg-fitbar .fgx { flex-wrap: nowrap; pointer-events: auto; }
+#view-fingering .fg-fitbar .fg-mini, #view-fingering .fg-fitbar .fg-play { box-shadow: none; }
+#view-fingering .fg-fitbar .fg-play { width: 36px; height: 36px; }
+#view-fingering .fg-fitbar .fg-play svg { width: 18px; height: 18px; }
+#view-fingering .fg-zoom svg { width: 19px; height: 19px; }
+#view-fingering .fg-fitbar .mp-mixpop, #view-fingering .fg-fitbar .mp-abpop { pointer-events: auto; bottom: calc(100% + 10px); top: auto; left: auto; right: 0; transform: none; }
+#view-fingering .fg-fitbar .fg-lvmenu { top: auto; bottom: calc(100% + 10px); }
+.shell[data-view="fingering"] #main { padding-bottom: 76px; }   /* room under the floating controls */
+@media (max-width: 420px) {   /* a phone: ten buttons in one row */
+  #view-fingering .fg-fitbar, #view-fingering .fg-fitbar .fgx { gap: 3px; }
+  #view-fingering .fg-fitbar { padding: 5px 7px; }
+  #view-fingering .fg-fitbar .fg-mini { width: 29px; height: 29px; font-size: 16px; }
+  #view-fingering .fg-fitbar .fg-mini.fgx-ab { width: 36px; }
+  #view-fingering .fg-fitbar .fg-play { width: 33px; height: 33px; }
+}
 
 /* ---- play-along ---- */
 /* Play-along (跟音练习): the take bar over the pages or the live view, the headphone gate, the result */
@@ -2077,7 +2080,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
   </div>
   <p class="mp-msg" id="fgMsg" role="status" hidden></p>
   <div class="fg-flash" id="fgFlash" aria-hidden="true" hidden></div>
-  <div class="fg-fitbar"><button type="button" class="fg-mini fg-more" id="fgMore" aria-expanded="false" aria-controls="fgx fgx2" aria-label="More controls" title="More controls"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg></button><div class="fgx" id="fgx" hidden><button type="button" class="fg-mini" data-for="mpStart" aria-label="Back to start" title="Back to start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path d="M18 5.5v13L8.5 12z" fill="currentColor"/></svg></button><button type="button" class="fg-mini" data-for="mpSlower" aria-label="Slower" title="Slower">−</button></div><button type="button" class="fg-play" id="fgPlay" aria-label="Play" title="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13M16 5.5v13"/></svg></button><div class="fgx" id="fgx2" hidden><button type="button" class="fg-mini" data-for="mpFaster" aria-label="Faster" title="Faster">+</button><button type="button" class="fg-mini fgx-mix" data-for="mpMix" aria-expanded="false" aria-label="Mixer" title="Mixer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M12 4v16M18 4v16"/><rect x="3.5" y="13" width="5" height="3" rx="1" fill="currentColor"/><rect x="9.5" y="7" width="5" height="3" rx="1" fill="currentColor"/><rect x="15.5" y="11" width="5" height="3" rx="1" fill="currentColor"/></svg></button><button type="button" class="fg-mini" data-for="mpLoop" aria-pressed="false" aria-label="Loop" title="Loop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button><button type="button" class="fg-mini fgx-ab" data-for="mpAB" aria-pressed="false" aria-expanded="false" aria-label="Repeat a passage (A–B)" title="Repeat a passage (A–B)" translate="no">A–B</button></div><div class="fg-lvwrap"><button type="button" class="fg-mini fg-lvbtn" id="fgLvBtn" aria-haspopup="true" aria-expanded="false" aria-controls="fgLvMenu" aria-label="Fingerings shown" title="Fingerings shown" translate="no"><span id="fgLvGlyph">123</span></button><div class="fg-lvmenu" id="fgLvMenu" role="menu" aria-label="Fingerings shown" hidden><button type="button" role="menuitemradio" aria-checked="true" data-lv="full">Full</button><button type="button" role="menuitemradio" aria-checked="false" data-lv="medium">Medium</button><button type="button" role="menuitemradio" aria-checked="false" data-lv="minimum">Minimum</button></div></div><button type="button" class="fg-fit" id="fgFit" aria-label="Full width" title="Full width"><svg class="i-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="i-in" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button></div>
+  <div class="fg-fitbar" role="toolbar" aria-label="Playback"><button type="button" class="fg-mini fg-zoom" id="fgZoomOut" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M7.8 10.5h5.4"/></svg></button><button type="button" class="fg-mini fg-zoom" id="fgZoomIn" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M7.8 10.5h5.4M10.5 7.8v5.4"/></svg></button><div class="fgx" id="fgx"><button type="button" class="fg-mini" data-for="mpStart" aria-label="Back to start" title="Back to start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path d="M18 5.5v13L8.5 12z" fill="currentColor"/></svg></button><button type="button" class="fg-mini" data-for="mpSlower" aria-label="Slower" title="Slower">−</button></div><button type="button" class="fg-play" id="fgPlay" aria-label="Play" title="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L19 12z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13M16 5.5v13"/></svg></button><div class="fgx" id="fgx2"><button type="button" class="fg-mini" data-for="mpFaster" aria-label="Faster" title="Faster">+</button><button type="button" class="fg-mini fgx-mix" data-for="mpMix" aria-expanded="false" aria-label="Mixer" title="Mixer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M12 4v16M18 4v16"/><rect x="3.5" y="13" width="5" height="3" rx="1" fill="currentColor"/><rect x="9.5" y="7" width="5" height="3" rx="1" fill="currentColor"/><rect x="15.5" y="11" width="5" height="3" rx="1" fill="currentColor"/></svg></button><button type="button" class="fg-mini" data-for="mpLoop" aria-pressed="false" aria-label="Loop" title="Loop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button><button type="button" class="fg-mini fgx-ab" data-for="mpAB" aria-pressed="false" aria-expanded="false" aria-label="Repeat a passage (A–B)" title="Repeat a passage (A–B)" translate="no">A–B</button></div><div class="fg-lvwrap"><button type="button" class="fg-mini fg-lvbtn" id="fgLvBtn" aria-haspopup="true" aria-expanded="false" aria-controls="fgLvMenu" aria-label="Fingerings shown" title="Fingerings shown" translate="no"><span id="fgLvGlyph">123</span></button><div class="fg-lvmenu" id="fgLvMenu" role="menu" aria-label="Fingerings shown" hidden><button type="button" role="menuitemradio" aria-checked="true" data-lv="full">Full</button><button type="button" role="menuitemradio" aria-checked="false" data-lv="medium">Medium</button><button type="button" role="menuitemradio" aria-checked="false" data-lv="minimum">Minimum</button></div></div></div>
   <div class="fg-pages mp-score" id="fgPages" translate="no" aria-label="Fingered violin part"></div>
 </div>
 
@@ -2533,7 +2536,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-200823" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-220750" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -5538,6 +5541,7 @@ function noteGate() {
       var info = meta[part.getAttribute('id')] || { name: '', inst: '', ch: pi % 16 }, ch = info.ch;
       var ms = kids(part, 'measure'), notes = [], tie = {}, chordTrem = 0, at = 0, divStart = [], dvw = 1, pz = false, marks = [], graces = [], gFrom = -1, gShift = 0;   /* graces: waiting for their main note */   /* pz: pizz. until arco; marks: dynamics, hairpins, words */
       var ksw = [], kmw = [], kw0 = null, km0 = null;
+      function graceCap(t) { var us = 500000; tempos.forEach(function (tp) { if (tp.tick <= t) us = tp.us; }); return TPQ * 70000 / us; }   /* ticks in about 70 ms at the tempo there */
       function wordMark(t, text) {   /* words on one beat share one mark ("Minuet I" and its ♩ = 120) */
         var same = marks.filter(function (m) { return m.kind === 'words' && m.tick === t; })[0];
         if (same) { if (same.text.indexOf(text) < 0) same.text += '  ' + text; } else marks.push({ tick: t, kind: 'words', text: text });
@@ -5603,7 +5607,7 @@ function noteGate() {
               /* graces marked steal-time-previous, and slashed ones (Trix: the Minuets' bar 8, a quick grace just before the beat): about a
                  32nd each (at most that share of the note before), ending on the beat; the note before gives up the time */
               var prev = null; for (var pq = notes.length - 1; pq >= 0; pq--) if (!notes[pq].grace) { prev = notes[pq]; break; }
-              var cnt2 = graces.length, room = prev ? (t0 - prev.t0) * graces[0].steal / 100 : TPQ / 8, each2 = Math.max(1, Math.round(Math.min(TPQ / 8, room / cnt2))), g0 = Math.max(0, t0 - cnt2 * each2);   /* nothing before the first beat (Hermes F80) */
+              var cnt2 = graces.length, room = prev ? (t0 - prev.t0) * graces[0].steal / 100 : TPQ / 8, each2 = Math.max(1, Math.round(Math.min(TPQ / 8, room / cnt2, graceCap(t0)))), g0 = Math.max(0, t0 - cnt2 * each2);   /* nothing before the first beat (Hermes F80) */
               if (g0 + cnt2 * each2 > t0) t0 = g0 + cnt2 * each2;   /* the file's first note: the grace takes its time from it instead */
               if (prev && prev.t1 > g0) { if (!prev.wl) prev.wl = (prev.t1 - prev.t0) / TPQ; prev.t1 = Math.max(prev.t0 + 1, g0); }   /* drawn at its written value, played a little shorter */
               graces.forEach(function (g, gi) { notes.push({ m: g.m, t0: g0 + gi * each2, t1: g0 + (gi + 1) * each2, sb: Math.max(0, t0 - (cnt2 - gi)), gi: gi, gn: cnt2, ch: ch, v: 90, pz: pz, grace: 'acc' }); });
@@ -5612,7 +5616,7 @@ function noteGate() {
             else if (!chord && graces.length) {
               /* graces not slashed (an appoggiatura, or a run): quick, about a 32nd each (Trix: a very quick grace), on the
                  beat, taking their time from the start of the note that follows */
-              var main = t1 - t0, cnt = graces.length, each = Math.round(Math.min(TPQ / 8, main / (2 * cnt)));
+              var main = t1 - t0, cnt = graces.length, each = Math.max(1, Math.round(Math.min(TPQ / 8, main / (2 * cnt), graceCap(t0))));   /* never longer than about 70 ms: a slow tune (Air, ♩ = 30) made a 32nd last a quarter of a second (Trix) */
               graces.forEach(function (g, gi) { notes.push({ m: g.m, t0: t0 + gi * each, t1: t0 + (gi + 1) * each, sb: Math.max(0, t0 - (cnt - gi)), gi: gi, gn: cnt, ch: ch, v: 90, pz: pz, grace: g.slash || cnt > 1 ? 'acc' : 'app' }); });   /* sb: on the score just before the main note */
               gFrom = t0; gShift = cnt * each; t0 += gShift; graces = [];
             } else if (!chord) { gFrom = -1; gShift = 0; }
@@ -7132,6 +7136,7 @@ function noteGate() {
   }
   function load(i) {
     pause();
+    if (APP.paForget) APP.paForget();   /* another tune: the last tune's Play-along result goes (Trix) */
     song = songs[i].song; boardBeat = 0;
     if (song && !song.composer && songs[i].demo && songs[i].demo.c) song.composer = songs[i].demo.c;   /* a built-in MIDI names no composer: the list does */
     delBtn.hidden = !songs[i].kept;   /* the bin only for an imported file */
@@ -7540,7 +7545,8 @@ function noteGate() {
   /* d: +-0.05 = the buttons and - / + keys, to the next multiple of 5 % (83 -> 85 or 80); +-0.01 = the arrow keys, 1 % (Trix) */
   var flashT = 0;
   function fgFlash(what, n) {   /* Fingerings only (Trix): 'play' / 'pause' icon, 'speed' = the new tempo and percentage, 'count' = the count-in's n */
-    var el = $('fgFlash'); if (!el || !fgShown || !song) return;
+    var el = $('fgFlash'); if (!el || !song || !(fgShown || (what === 'zoom' && paOn))) return;   /* the zoom % in Play-along's pages too */
+    if (what === 'zoom') what = 'text';
     clearTimeout(flashT);
     el.classList.toggle('txt', what === 'speed' || what === 'text');
     el.classList.toggle('cnt', what === 'count');
@@ -8201,25 +8207,11 @@ function noteGate() {
       e.preventDefault();
       setZoom(fgZoom * Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.002)), e.clientX, e.clientY);
     }, { passive: false });
-    /* the button at the top right of the pages (Trix): straight to the browser's full width, and back to the normal size */
-    var fgFit = $('fgFit');
-    function zoomUi() {
-      var big = Math.abs(fgZoom - 1) > 0.01;
-      /* only where full width gains something (Trix): not on an upright phone; always while zoomed, to come back */
-      var col = fgPages.classList.contains('zoomed') ? parseFloat(getComputedStyle(fgPages).getPropertyValue('--fgw')) || fgPages.clientWidth : fgPages.clientWidth;
-      fgFit.hidden = !big && !(col > 0 && (document.documentElement.clientWidth - 32) / col > 1.1);
-      fgFit.classList.toggle('back', big);
-      fgFit.setAttribute('aria-label', big ? 'Back to normal size' : 'Full width');
-      fgFit.title = big ? 'Back to normal size' : 'Full width';
-    }
-    fgFit.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var cx = window.innerWidth / 2, cy = Math.min(window.innerHeight / 2, Math.max(0, fgPages.getBoundingClientRect().top + 40));
-      if (Math.abs(fgZoom - 1) > 0.01) { setZoom(1, cx, cy); return; }
-      var col = fgPages.clientWidth, full = document.documentElement.clientWidth - 32;   /* a 16 px margin each side */
-      setZoom(Math.min(3, full / col), cx, cy);
-      if (fgZoom <= 1.001) zoomUi();   /* a window no wider than the column: nothing to gain */
-    });
+    /* zoom out / in on the floating pill (Trix), as in Play-along; each step shows the new size for a moment */
+    var fgZOut = $('fgZoomOut'), fgZIn = $('fgZoomIn');
+    function zoomUi() { var r = APP.fgZoomStep && APP.fgZoomStep(); if (!r) return; fgZIn.disabled = r.z >= r.top - 0.01; fgZOut.disabled = r.z <= 0.51; }
+    fgZIn.addEventListener('click', function (e) { e.stopPropagation(); APP.fgZoomStep(true); zoomUi(); });
+    fgZOut.addEventListener('click', function (e) { e.stopPropagation(); APP.fgZoomStep(false); zoomUi(); });
     zoomUi(); APP.fgZoomUi = zoomUi;
     /* Play-along's floating zoom (Trix): steps of 25 %, from 50 % up to the window's width (a phone, where that gains nothing: 300 %) */
     APP.fgZoomStep = function (up) {
@@ -8229,12 +8221,12 @@ function noteGate() {
       var z = up ? Math.min(top, fgZoom * 1.25) : Math.max(0.5, fgZoom / 1.25);
       if (Math.abs(z - 1) < 0.06) z = 1;
       setZoom(z, window.innerWidth / 2, Math.min(window.innerHeight / 2, Math.max(0, fgPages.getBoundingClientRect().top + 40)));
+      fgFlash('zoom', Math.round(fgZoom * 100) + '%');   /* the new size, fading (Trix) */
       return { z: fgZoom, top: top };
     };
     /* more controls (Trix): each one presses the MIDI player's own button; the Mixer and A–B panels move under the
        floating buttons while open from here, and back to the player's bar when opened there */
-    var fgMore = $('fgMore'), fgx = $('fgx'), fgx2 = $('fgx2'), mpBarEl = $('mpBar'), fitBar = fgPages.parentNode.querySelector('.fg-fitbar');
-    fgMore.addEventListener('click', function () { fgx.hidden = !fgx.hidden; fgx2.hidden = fgx.hidden; fgMore.setAttribute('aria-expanded', fgx.hidden ? 'false' : 'true'); if (fgx.hidden) { setMixOpen(false); setABOpen(false); } });   /* the player's order: back to start, −, play, +, mixer; then loop, A–B (Trix) */
+    var mpBarEl = $('mpBar'), fitBar = fgPages.parentNode.querySelector('.fg-fitbar');
     Array.prototype.forEach.call(fgPages.parentNode.querySelectorAll('.fg-fitbar [data-for]'), function (b) {
       b.addEventListener('click', function (e) {
         e.stopPropagation();
@@ -8783,6 +8775,7 @@ function noteGate() {
     p0.textContent = Math.abs(r.cents) <= ASSESS.IN_TUNE ? 'Finger in place.' : 'Finger about ' + Math.max(0.1, Math.abs(d)).toFixed(1) + ' mm too close to the ' + (d > 0 ? 'bridge' : 'scroll') + '.';
     return { svg: w.firstChild, say: p0 };
   }
+  APP.paForget = function () { if (paTake || !paRes) return; paRes = null; paBrowse = null; paClearTints(); paSay(''); paCardClose(); paUi(); };
   function paCardClose() { if (paCardEl.hidden) return; paCardEl.hidden = true; APP.board.off('pa-card'); APP.board.heard(null); }
   $('paCardC').addEventListener('click', paCardClose);   /* a tap on the card closes it */
   document.addEventListener('pointerdown', function (e) { if (!paCardEl.hidden && !$('paCardC').contains(e.target)) paCardClose(); }, true);   /* and a tap anywhere else */
@@ -8995,6 +8988,7 @@ function noteGate() {
       ['midi', 'board', 'fingering'].forEach(function (n) { var v = document.getElementById('view-' + n); if (v && APP.nextView !== n && !(APP.nextView === 'midi' && n === 'board')) v.hidden = true; });
     }
   };
+  APP.mpNotes = function () { return song ? song.notes : null; };   /* tests */
   APP.paState = function () { return { take: paTake ? paTake.state : null, view: paView, result: paRes, mute: paMute }; };   /* tests */
   /* swipe between the tools (Trix): MIDI player, Fingerings and Play-along side by side, in that order; a swipe left on the
      player opens Fingerings, a swipe right on Fingerings opens the player, sliding in like a page. From the fingerboard
