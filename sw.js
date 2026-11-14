@@ -2,11 +2,11 @@
    A new release is saved as soon as it is out, but the page shown stays the one the user is on until
    they choose Update (Settings version line, or the "new version" popup): the page writes that build
    stamp to META 'current'. So Later, or Settings > Automatic update check Off, keeps the old version. */
-const VERSION = 'violin-toolkit-test-20261114-231715';
+const VERSION = 'violin-toolkit-test-20261114-232320';
 const PREFIX = 'violin-toolkit-test-', META = PREFIX + 'meta';
 /* only this site's saved copies: production and test share trix69.github.io, so never touch the other's */
 const MINE = k => /^violin-toolkit-test-\d{8}-\d{6}$/.test(k);
-const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
+const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(async c => {
     /* index.html is essential; the rest is best effort so one failure cannot block the install */
