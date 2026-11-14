@@ -1478,9 +1478,8 @@ html.fg-printing .pa-wrong { display: none !important; } @media print { .pa-wron
 .pa-sb .pa-lg { margin-top: 4px; font-size: 13px; }
 .pa-bars { gap: 16px; }
 /* Live (Trix): no page / bar line; the microphone level sits in the top bar beside the time */
-.pa.live .pa-info { display: none; }
+.pa .pa-info { display: none; }   /* no page / bar line in either view (Trix) */
 .pa-bar .pa-mic { flex: 0 1 90px; color: var(--muted); margin-left: auto; }
-.pa-bar .pa-mic + .pa-time { margin-left: 0; }
 /* the shadow notes (Trix): dot = pitch (height, colour), line = timing (ends, colour); the written note stays ink */
 .pa-sh { cursor: pointer; }
 .pa-sh .pa-hit { fill: transparent; }
@@ -1535,6 +1534,13 @@ html.fg-printing .pa-bt { display: none !important; } @media print { .pa-bt { di
   #paFloat .mp-speed small { display: none; }
 }
 .shell.mp-fs[data-view="playalong"] #mpFull { display: grid !important; }   /* full screen: Exit at the board's corner (Hermes F94) */
+/* the pitch needle in the top bar, between Stop and the microphone level (Trix) */
+.pa-bar .pa-needle { flex: 1 1 140px; min-width: 120px; gap: 6px; font-size: 13px; }
+.pa-bar .pa-needle .pa-gauge { max-width: none; }
+.pa-bar .pa-needle[hidden] { display: none; }
+.pa-bar .pa-time { flex: none; }
+.pa-bar .pa-needle { order: 0; }
+.pa-bar .pa-mic { margin-left: auto; }
 
 .shell[data-view="midi"] .tabs .tab.tab[data-view="fingering"] { display: none; }
 .shell[data-view="midi"] .tabs .tab[data-view="playalong"], .shell[data-view="playalong"] .tabs .tab[data-view="fingering"] { display: grid; }
@@ -2527,7 +2533,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-195114" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-200823" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8462,8 +8468,8 @@ function noteGate() {
     paNeedle.hidden = !(rec && !busy);   /* the pitch needle during a take, in both views (Trix); Live has no page / bar line */
     var live = paView === 'live', mic = document.querySelector('#pa .pa-mic');
     $('pa').classList.toggle('live', live); paFloatEl.classList.toggle('live', live); paFloatEl.hidden = !!(rec || busy) || full;   /* not during a take: the speed must stay put */
-    if (live && mic.nextSibling !== $('paTime')) $('paTime').parentNode.insertBefore(mic, $('paTime'));   /* the microphone level beside the time */
-    else if (!live && mic.parentNode !== $('paBarNow').parentNode) $('paBarNow').parentNode.insertBefore(mic, $('paBarNow'));
+    var pbar = paRec.parentNode;   /* one top bar in both views (Trix): Pages | Live, Start / Stop, the time, the pitch needle, the microphone level */
+    if (pbar.lastElementChild !== mic || paNeedle.parentNode !== pbar) { pbar.appendChild(paTime); pbar.appendChild(paNeedle); pbar.appendChild(mic); }
     paResEl.hidden = !paRes || rec;
     var sh = document.getElementById('shell'); if (sh) { sh.classList.toggle('pa-result', !!(paRes && !paRes.empty) && !rec); sh.classList.toggle('pa-sp', paShowMode !== 'time'); sh.classList.toggle('pa-st', paShowMode !== 'pitch'); }   /* fingerings hidden while a result shows; Pitch | Timing | Both */
     Array.prototype.forEach.call(paShowEl.children, function (b) { b.setAttribute('aria-checked', b.dataset.s === paShowMode ? 'true' : 'false'); });
