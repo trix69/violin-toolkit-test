@@ -1267,8 +1267,9 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
 /* the hand only over the music, where a click jumps to a note (Hermes F69) */
 #view-fingering .fg-page > g { cursor: pointer; }
 
-/* the floating controls (Trix): one pill at the bottom middle, as in Play-along; zoom out / in, then the player's buttons */
-#view-fingering .fg-fitbar { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); transform: translateX(-50%); z-index: 30;
+/* the floating controls (Trix): one pill at the top of the pages, staying at the top of the screen while they scroll (it was at
+   the bottom middle, over the music); zoom out / in, then the player's buttons */
+#view-fingering .fg-fitbar { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); width: fit-content; margin: 0 auto 12px; z-index: 30;
   display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px;
   background: color-mix(in srgb, var(--panel) 94%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   box-shadow: 0 8px 26px rgba(0, 0, 0, .18); max-width: calc(100vw - 24px); box-sizing: border-box; }
@@ -1277,9 +1278,8 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
 #view-fingering .fg-fitbar .fg-play { width: 36px; height: 36px; }
 #view-fingering .fg-fitbar .fg-play svg { width: 18px; height: 18px; }
 #view-fingering .fg-zoom svg { width: 19px; height: 19px; }
-#view-fingering .fg-fitbar .mp-mixpop, #view-fingering .fg-fitbar .mp-abpop { pointer-events: auto; bottom: calc(100% + 10px); top: auto; left: auto; right: 0; transform: none; }
-#view-fingering .fg-fitbar .fg-lvmenu { top: auto; bottom: calc(100% + 10px); }
-.shell[data-view="fingering"] #main { padding-bottom: 76px; }   /* room under the floating controls */
+#view-fingering .fg-fitbar .mp-mixpop, #view-fingering .fg-fitbar .mp-abpop { pointer-events: auto; top: calc(100% + 10px); bottom: auto; left: auto; right: 0; transform: none; }
+#view-fingering .fg-fitbar .fg-lvmenu { bottom: auto; top: calc(100% + 10px); }
 @media (max-width: 420px) {   /* a phone: ten buttons in one row */
   #view-fingering .fg-fitbar, #view-fingering .fg-fitbar .fgx { gap: 3px; }
   #view-fingering .fg-fitbar { padding: 5px 7px; }
@@ -1531,6 +1531,10 @@ html.fg-printing .pa-bt { display: none !important; } @media print { .pa-bt { di
 .shell[data-view="playalong"] #paFloat #mpFull { position: static !important; display: none !important; }
 .shell[data-view="playalong"] #paFloat.live #mpFull { display: grid !important; }
 .shell[data-view="playalong"] #main { padding-bottom: 76px; }   /* room under the floating controls */
+/* Pages (Trix): the same pill at the top of the pages, staying at the top of the screen while they scroll; menus open downwards */
+.pa-float.top { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); left: auto; bottom: auto; transform: none; width: fit-content; margin: 0 auto 12px; }
+.pa-float.top .mp-mixpop, .pa-float.top .mp-abpop { bottom: auto; top: calc(100% + 10px); }
+.shell:not([data-view="playalong"]) #paFloat { display: none !important; }   /* it waits among the Fingerings pages when Play-along is left */
 .shell[data-view="playalong"] #mpTop > .mp-row { display: none; }   /* one tune row: the one at the top (Trix) */
 .pa-float .pa-zoom svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .pa-float.live .pa-zoom { display: none; }   /* the pages only */
@@ -2548,7 +2552,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.48" data-build="20261115-065722" data-cache="violin-toolkit-test-"><span>Version 1.48-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.48" data-build="20261115-070348" data-cache="violin-toolkit-test-"><span>Version 1.48-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8467,7 +8471,7 @@ function noteGate() {
      framer: a pitch and a level every 512 samples; the audio itself is never kept). Stop ends a take for good; the
      analysis runs after it, in slices, and tints each bar. */
   var paBrowse = null, paDrag = null, paDragMoved = false;   /* Live, a result showing: the strip dragged by hand (Trix) */
-  var paFloatEl = $('paFloat'), paLent;
+  var paFloatEl = $('paFloat'), paLent, paFloatHome = paFloatEl.parentNode, paFloatNext = paFloatEl.nextSibling;
   var paView = 'pages', paRes = null, paSaved = null, paRaf = 0, paShowMode = 'both', paShowEl = $('paShow');
   try { var psm = localStorage.getItem('violin-pa-show'); if (psm === 'pitch' || psm === 'time') paShowMode = psm; } catch (e) {}
   try { paView = localStorage.getItem('violin-pa-view') === 'live' ? 'live' : 'pages'; } catch (e) {}
@@ -8522,6 +8526,10 @@ function noteGate() {
     paNeedle.hidden = !(rec && !busy);   /* the pitch needle during a take, in both views (Trix); Live has no page / bar line */
     var live = paView === 'live', mic = document.querySelector('#pa .pa-mic');
     $('pa').classList.toggle('live', live); paFloatEl.classList.toggle('live', live); paFloatEl.hidden = !!(rec || busy) || full;   /* not during a take: the speed must stay put */
+    /* Pages: the controls sit at the top of the pages and stay there while they scroll (Trix); Live keeps the pill at the bottom */
+    if (!live) { if (paFloatEl.nextSibling !== fgPages) fgPages.parentNode.insertBefore(paFloatEl, fgPages); }
+    else if (paFloatEl.parentNode !== paFloatHome) paFloatHome.insertBefore(paFloatEl, paFloatNext);
+    paFloatEl.classList.toggle('top', !live);
     var pbar = paRec.parentNode;   /* one top bar in both views (Trix): Pages | Live, Start / Stop, the time, the pitch needle, the microphone level */
     if (pbar.lastElementChild !== mic || paNeedle.parentNode !== pbar) { pbar.appendChild(paTime); pbar.appendChild(paNeedle); pbar.appendChild(mic); }
     paResEl.hidden = !paRes || rec;
@@ -9057,7 +9065,7 @@ function noteGate() {
   APP.mpNotes = function () { return song ? song.notes : null; };   /* tests */
   APP.paState = function () { return { take: paTake ? paTake.state : null, view: paView, result: paRes, mute: paMute }; };   /* tests */
   /* swipe between the tools (Trix): MIDI player, Fingerings and Play-along side by side, in that order; a swipe left on the
-     player opens Fingerings, a swipe right on Fingerings opens the player, sliding in like a page. From the fingerboard
+     player opens Fingerings, a swipe right on Fingerings opens the player, sliding in like a page, round in a loop. From the fingerboard
      too (Trix; in the player it only shows notes, a press plays nothing). Not from a slider, a list, an open panel, full screen, zoomed pages that scroll
      sideways, or Play-along */
   (function () {
@@ -9082,8 +9090,11 @@ function noteGate() {
       if (performance.now() - st > 700 || Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
       /* the row (Trix): MIDI player, Fingerings, Play-along (where the build shows its tile) */
       var row = ['midi', 'fingering'].concat(document.querySelector('.launch-btn[data-view="playalong"]') ? ['playalong'] : []);
-      var at = row.indexOf(paOn ? 'playalong' : shown ? 'midi' : 'fingering'), to = row[at + (dx < 0 ? 1 : -1)];
-      if (!to || at < 0) return;
+      /* a loop (Trix): past the last tool comes the first again, so a swipe left on Play-along opens the player, and a swipe
+         right on the player opens Play-along; never while a take is being recorded (from() above) */
+      var at = row.indexOf(paOn ? 'playalong' : shown ? 'midi' : 'fingering');
+      if (at < 0 || row.length < 2) return;
+      var to = row[(at + (dx < 0 ? 1 : -1) + row.length) % row.length];
       APP.show(to);
       var sec = document.getElementById('view-' + to);
       if (sec && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
