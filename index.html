@@ -1288,6 +1288,15 @@ html.fg-shot .fg-page { width: 595.28px !important; height: 841.89px !important;
   #view-fingering .fg-fitbar .fg-play { width: 33px; height: 33px; }
 }
 #view-fingering .fg-lvmenu button, .mp-lvmenu button { white-space: nowrap; }   /* "Minimum fingerings" on one line (Trix) */
+@media (max-width: 367px) {   /* ten buttons in 296 px (Hermes F98): 8 x 25 + 31 + 30 + 9 x 2 gap + 12 padding = 291 */
+  #view-fingering .fg-fitbar, #view-fingering .fg-fitbar .fgx { gap: 2px; }
+  #view-fingering .fg-fitbar { padding: 5px 6px; }
+  #view-fingering .fg-fitbar .fg-mini { width: 25px; height: 25px; font-size: 15px; }
+  #view-fingering .fg-fitbar .fg-mini.fgx-ab { width: 31px; }
+  #view-fingering .fg-fitbar .fg-zoom svg { width: 17px; height: 17px; }
+  #view-fingering .fg-fitbar .fg-play { width: 30px; height: 30px; }
+}
+#view-fingering .fg-fitbar .fg-mini, #view-fingering .fg-fitbar .fg-play { flex: 0 0 auto; }   /* no squeezing below the set size */
 
 /* ---- play-along ---- */
 /* Play-along (跟音练习): the take bar over the pages or the live view, the headphone gate, the result */
@@ -2537,7 +2546,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-223759" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.46" data-build="20261114-224023" data-cache="violin-toolkit-test-"><span>Version 1.46-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -9495,7 +9504,8 @@ function noteGate() {
     function newer() {
       return versionJson().then(function (j) {
         if (j && j.pp && APP.ppRemote) APP.ppRemote(j.pp);   /* the policy's date on the site (no extra request) */
-        if (PLAY && j.play) j = { version: j.play, build: 'play-' + j.play, pp: j.pp };   /* the Play app: what Google Play offers, not the website's release, which Play may not have yet (Trix) */
+        /* the Play app: what Google Play offers, not the website's release, which Play may not have yet (Trix); no Play number: nothing (Hermes) */
+        if (PLAY) { if (!j || !j.play) return null; j = { version: j.play, build: 'play-' + j.play, pp: j.pp }; }
         if (APK || IOSAPP) return num(j.version) > num(btn.dataset.version) ? j : null;   /* the app: only a higher version number */
         /* a different build stamp means a new release (test builds keep the same version number) */
         return (j.build && btn.dataset.build ? j.build !== btn.dataset.build : num(j.version) > num(btn.dataset.version)) ? j : null;
@@ -9808,7 +9818,7 @@ function noteGate() {
       { sel: '#fgSong', title: 'Pick a tune', text: 'The same tunes as the MIDI player, laid out on pages.' },
       { sel: '#fgPages .fg-page:first-child', title: 'Fingers and positions', text: 'Each note shows its finger in its string’s colour; Roman numerals mark the position. Tap a note to play from there.' },
       { sel: '#fgPlay', title: 'Play', text: 'Plays the tune; a line follows along on the pages.' },
-      { sel: '#fgMore', title: 'More controls', text: 'Back to start, speed, Mixer, Loop and A–B.' },
+      { sel: '#view-fingering .fg-fitbar', title: 'More controls', text: 'Back to start, speed, Mixer, Loop and A–B.' },   /* the pill (Hermes F99) */
       { sel: '#fgPdf', title: 'Export', text: 'Save the pages as a PDF to print or share.' }
     ]
   };
