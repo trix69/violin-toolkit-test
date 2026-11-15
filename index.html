@@ -1071,8 +1071,9 @@ h1 {
 .mp-parts { position: absolute; left: 10px; right: 10px; top: 50%; transform: translateY(-50%); z-index: 5; margin: 0 auto; max-width: 420px; box-sizing: border-box;
   padding: 10px 14px; border-radius: 12px; background: color-mix(in srgb, var(--panel) 94%, transparent); color: var(--fg); box-shadow: 0 6px 20px rgba(0,0,0,.18);
   pointer-events: none; opacity: 0; font: 400 14px/1.35 var(--font-body); }
-.mp-parts.show { animation: mpParts 4s ease forwards; }   /* Trix: 5 s, then 2.5 s, now a little longer: 4 s */
-@keyframes mpParts { 0% { opacity: 0; } 5% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; } }
+.mp-parts.show { animation: mpParts 3s ease forwards; }   /* Trix: 5 s, 2.5 s, 4 s, now 3 s; gone by a count-in's "1" (midi.js partsGoneBy) */
+.mp-parts.out { animation: none; transition: opacity .25s ease; }
+@keyframes mpParts { 0% { opacity: 0; } 6% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
 /* on Fingerings and the Play-along pages, where the MIDI player's score is not on screen: over the page, a third of the way down */
 .mp-parts.float { position: fixed; top: 33%; z-index: 60; }
 .mp-parts.edge:not(.float) { top: 6px; transform: none; z-index: 4; }   /* while counting in and playing: clear of the count-in number */
@@ -2571,7 +2572,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.50" data-build="20261116-060408" data-cache="violin-toolkit-test-"><span>Version 1.50-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.50" data-build="20261116-060853" data-cache="violin-toolkit-test-"><span>Version 1.50-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -7210,6 +7211,7 @@ function noteGate() {
     var pu = pulse(), n = pu.n, k = n, step = 60 / (song.bpmAt ? song.bpmAt(base) : song.bpm) * pu.q / speed * 1000;   /* at the tempo of where it leads (Trix: A–B in a slower passage) */
     var bar = n * pu.q, t0 = performance.now();
     counting = true; countBeat = base - bar; ui();
+    partsGoneBy(Math.min(3000, (n - 1) * step - 80));   /* gone just before the count says "1" (Trix) */
     (function slide() {   /* the score moves through the empty bar in time with the count */
       if (!counting) return;
       countBeat = base - bar * Math.max(0, 1 - (performance.now() - t0) / (n * step));
@@ -7259,15 +7261,15 @@ function noteGate() {
   function play() {
     if (!song || playing || counting) return;
     if (!APP.board.prime()) return;   /* the sound engine starts inside the tap (iPhone) */
-    partsEl.classList.add('edge');   /* the parts note never covers the count-in (Hermes F29): it moves to the score's top edge and finishes its time (Trix: it vanished as the tune started) */
+    partsEl.classList.add('edge');   /* the parts note never covers the count-in (Hermes F29): it moves to the score's top edge */
     var r = abRange();
     if (r) {   /* A–B: from bar A (outside the passage: back to A), counting in at A */
       if (pos < r.aT - 0.01 || pos >= r.eT - 0.01) seekTo(r.aT);
-      if (Math.abs(pos - r.aT) < 0.01) countIn(go, r.aB); else go();
+      if (Math.abs(pos - r.aT) < 0.01) countIn(go, r.aB); else { partsGoneBy(0); go(); }
       return;
     }
     if (pos >= song.end - 0.01) seekTo(0);
-    if (pos < 0.01) countIn(go); else go();   /* the count-in only at the beginning, not on resume (Trix) */
+    if (pos < 0.01) countIn(go); else { partsGoneBy(0); go(); }   /* the count-in only at the beginning, not on resume (Trix) */
   }
   function pause() {
     stopCount();
@@ -7307,7 +7309,18 @@ function noteGate() {
     $('mpPartsA').parentNode.hidden = !a; $('mpPartsD').parentNode.hidden = !d;
     partsEl.hidden = false; void partsEl.offsetWidth; partsEl.classList.add('show');
     partsSr.textContent = lv + (zh ? '：' : ': ') + v + (zh ? '。' : '. ') + (a ? la + (zh ? '：' : ': ') + a + (zh ? '。' : '. ') : '') + (d ? ld + (zh ? '：' : ': ') + d + (zh ? '。' : '.') : '');
-    partsT = setTimeout(function () { partsEl.hidden = true; partsEl.classList.remove('show'); }, 4200);   /* Trix: a little longer (was 2.7 s) */
+    partsT = setTimeout(partsOff, 3200);   /* Trix: 3 s (it was 2.5, then 4) */
+  }
+  function partsOff() { clearTimeout(partsT); partsEl.hidden = true; partsEl.classList.remove('show', 'out'); partsEl.style.opacity = ''; }
+  /* a count-in (the MIDI player starts a tune as soon as it is chosen; Fingerings and Play-along count in too): the note is gone
+     by the count's "1" at the latest, so before the first note (Trix); it fades out over a quarter second ending then */
+  function partsGoneBy(ms) {
+    if (partsEl.hidden) return;   /* every tool: the MIDI player, Fingerings and Play-along count in the same way (Trix) */
+    clearTimeout(partsT); var fade = Math.max(0, Math.min(250, ms));
+    partsT = setTimeout(function () {
+      partsEl.style.opacity = getComputedStyle(partsEl).opacity; partsEl.classList.add('out'); void partsEl.offsetWidth; partsEl.style.opacity = '0';
+      partsT = setTimeout(partsOff, fade);
+    }, Math.max(0, ms - fade));
   }
   function load(i) {
     pause();
