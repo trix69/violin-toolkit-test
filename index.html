@@ -2559,7 +2559,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.49" data-build="20261115-210416" data-cache="violin-toolkit-test-"><span>Version 1.49-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.49" data-build="20261115-214753" data-cache="violin-toolkit-test-"><span>Version 1.49-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8935,7 +8935,8 @@ function noteGate() {
         var c = Math.abs(r.cents), t = r.timing == null ? 0 : Math.abs(r.timing);
         if (c > ASSESS.RED || t > r.tRed) bad++; else if (c <= ASSESS.IN_TUNE && t <= r.tOk) good++;
       });
-      if (n) grade[bi] = bad >= Math.max(2, Math.ceil(n / 3)) ? 'red' : !bad && good >= n * 0.75 ? 'ok' : 'amber';
+      /* a bar with every note missed or wrong is red even with one note (Trix: a one-note bar went amber) */
+      if (n) grade[bi] = bad === n || bad >= Math.max(2, Math.ceil(n / 3)) ? 'red' : !bad && good >= n * 0.75 ? 'ok' : 'amber';
     });
     function draw(root, merge) {
       if (!root) return;
