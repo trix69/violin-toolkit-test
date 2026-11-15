@@ -1537,7 +1537,7 @@ html.fg-printing .pa-bt { display: none !important; } @media print { .pa-bt { di
 .pa-float .mp-speed { min-width: 3.2em; text-align: center; }
 .pa-float .mp-vibrow { display: none; }   /* no vibrato switch here (Trix) */
 .pa-float .mp-mixpop, .pa-float .mp-abpop { bottom: calc(100% + 10px); }
-.shell[data-view="playalong"] #paFloat #mpFull { position: static !important; display: none !important; }
+.shell[data-view="playalong"] #paFloat #mpFull { position: static !important; display: none !important; border-radius: 50%; width: clamp(33px, 9.6vw, 44px); height: auto; aspect-ratio: 1; }   /* round like the pill's other buttons (Trix) */
 .shell[data-view="playalong"] #paFloat.live #mpFull { display: grid !important; }
 .shell[data-view="playalong"] #main { padding-bottom: 76px; }   /* room under the floating controls */
 /* Pages (Trix): the same pill at the top of the pages, staying at the top of the screen while they scroll; menus open downwards */
@@ -2009,8 +2009,8 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
     <p class="pa-partial" id="paPartial" hidden></p>
     <div class="pa-bars" id="paStats"></div>
     <button type="button" class="pa-lgbtn" id="paLgBtn" aria-expanded="false" aria-controls="paStats"><span>Colour key</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
-    <p class="pa-temper" id="paTemper"></p>
-    <div class="pa-seg pa-show" id="paShow" role="radiogroup" aria-label="Show">
+    <p class="pa-temper" id="paTemper" hidden></p>
+    <div class="pa-seg pa-show" id="paShow" role="radiogroup" aria-label="Show" hidden>
       <button type="button" role="radio" data-s="pitch" aria-checked="false">Pitch</button>
       <button type="button" role="radio" data-s="time" aria-checked="false">Timing</button>
       <button type="button" role="radio" data-s="both" aria-checked="true">Both</button>
@@ -2559,7 +2559,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.48" data-build="20261115-154324" data-cache="violin-toolkit-test-"><span>Version 1.48-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.48" data-build="20261115-162335" data-cache="violin-toolkit-test-"><span>Version 1.48-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8503,8 +8503,7 @@ function noteGate() {
      analysis runs after it, in slices, and tints each bar. */
   var paBrowse = null, paDrag = null, paDragMoved = false;   /* Live, a result showing: the strip dragged by hand (Trix) */
   var paFloatEl = $('paFloat'), paLent, paFloatHome = paFloatEl.parentNode, paFloatNext = paFloatEl.nextSibling;
-  var paView = 'pages', paRes = null, paSaved = null, paRaf = 0, paShowMode = 'both', paShowEl = $('paShow');
-  try { var psm = localStorage.getItem('violin-pa-show'); if (psm === 'pitch' || psm === 'time') paShowMode = psm; } catch (e) {}
+  var paView = 'pages', paRes = null, paSaved = null, paRaf = 0, paShowMode = 'both', paShowEl = $('paShow');   /* the switch is gone (Trix): pitch and timing marks always show together */
   try { paView = localStorage.getItem('violin-pa-view') === 'live' ? 'live' : 'pages'; } catch (e) {}
   var paSeg = $('paSeg'), paRec = $('paRec'), paRecTxt = $('paRecTxt'), paTime = $('paTime'), paLvl = $('paLvl'), paMeter = $('paMeter');
   var paFill = $('paFill'), paTicks = $('paTicks'), paPage = $('paPage'), paBarNow = $('paBarNow'), paHp = $('paHp'), paWarn = $('paWarn');
@@ -9931,8 +9930,7 @@ function noteGate() {
       { sel: '#paStats', title: 'Your result', text: 'How many notes were in tune and on time. The bar shows the green, amber, red and missed share.' },
       { sel: '#fgPages .pa-sh', one: true, mid: true, when: function () { return APP.paState && APP.paState().view === 'pages'; }, title: 'Shadow notes', text: 'Each note you played is drawn as a coloured shadow: higher or lower when sharp or flat, moved left or right when early or late, with a longer or shorter stem when held too long or cut short. Each bar gets a light green, amber or red background.' },
       { sel: '#mpSvg .pa-sh', one: true, mid: true, fall: '#mpScore', when: function () { return APP.paState && APP.paState().view === 'live'; }, title: 'Shadow notes', text: 'Each note you played is drawn as a coloured shadow: higher or lower when sharp or flat, moved left or right when early or late, with a longer or shorter stem when held too long or cut short. Each bar gets a light green, amber or red background.' },
-      { sel: '#fgPages .pa-sh, #mpSvg .pa-sh', one: true, mid: true, fall: '#mpScore', title: 'Tap a note', text: 'Tap a note for its card: how many cents off, how early or late, and on the fingerboard where your finger landed and how far to move it.' },
-      { sel: '#paShow', title: 'Pitch, Timing or Both', text: 'Show only the pitch marks, only the timing marks, or both.' }
+      { sel: '#fgPages .pa-sh, #mpSvg .pa-sh', one: true, mid: true, fall: '#mpScore', title: 'Tap a note', text: 'Tap a note for its card: how many cents off, how early or late, and on the fingerboard where your finger landed and how far to move it.' }
     ]
   };
   /* a small picture of the board for the Pitch Check tip: F on the E string in C major (low 1st finger),
