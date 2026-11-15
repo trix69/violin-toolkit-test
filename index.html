@@ -2568,7 +2568,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.50" data-build="20261115-233431" data-cache="violin-toolkit-test-"><span>Version 1.50-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.50" data-build="20261115-233825" data-cache="violin-toolkit-test-"><span>Version 1.50-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -5226,6 +5226,7 @@ function noteGate() {
             var pc = 0;
             if (p.m !== null) { pc = Infinity; e.ms.forEach(function (em) { var d = Math.abs(p.m - em); d = Math.min(d, Math.abs(d - 12), Math.abs(d - 24)) + (d > 6 ? 0.5 : 0); pc = Math.min(pc, d < 0.5 ? 0 : Math.min(d, 4) * 0.6); }); }   /* a double stop: the nearer of its notes */
             else pc = e.chord ? 0.3 : 0.5;
+            if (has[k] && pc > 1.2 && Math.abs(L - lag[k]) > 0.1) step = INF;   /* far in time and in pitch at once: not this note (Hermes F116) */
             if (cost[k] + step + pc < best) { best = cost[k] + step + pc; bf = 3; bl = L; be = e.t; bh = 1; }
           }
         }
@@ -8860,7 +8861,7 @@ function noteGate() {
           return;
         }
         if (r.noPitch) { if (r.timing === null || r.timing === undefined) T.miss++; else { var t0 = Math.abs(r.timing); T[t0 <= r.tOk ? 'ok' : t0 <= r.tRed ? 'amber' : 'red']++; } return; }   /* a double stop with no pitch to read: timing only */
-        if (r.missed || r.cents === undefined) { P.miss++; T.miss++; return; }
+        if (r.missed || r.cents === undefined) { var mm = r.chord && r.idx ? r.idx.length : 1; P.miss += mm; T.miss++; return; }   /* a missed chord: each of its notes (Hermes F115) */
         var c = Math.abs(r.cents); P[c <= ASSESS.IN_TUNE ? 'ok' : c <= ASSESS.RED ? 'amber' : 'red']++;
         if (r.timing === null || r.timing === undefined) { T.miss++; return; }
         var t = Math.abs(r.timing); T[t <= r.tOk ? 'ok' : t <= r.tRed ? 'amber' : 'red']++;
@@ -9076,7 +9077,7 @@ function noteGate() {
       var sum = 0, n = 0;
       function tPart(r) { return r.timing == null ? 1 : Math.min(2, Math.abs(r.timing) / r.tRed); }
       b.notes.forEach(function (r) {
-        if (r.missed) { sum += 4; n++; return; }
+        if (r.missed) { var mc = r.chord && r.idx ? r.idx.length : 1; sum += 4 * mc; n += mc; return; }   /* a missed chord: each note (Hermes F115) */
         heard = true;
         if (r.noPitch) { sum += 2 * tPart(r); n++; return; }
         if (r.each) { r.each.forEach(function (o) { sum += (o.cents === undefined ? 2 : Math.min(2, Math.abs(o.cents) / ASSESS.RED)) + tPart(r); n++; }); return; }
