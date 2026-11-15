@@ -2558,7 +2558,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.48" data-build="20261115-120735" data-cache="violin-toolkit-test-"><span>Version 1.48-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.48" data-build="20261115-120833" data-cache="violin-toolkit-test-"><span>Version 1.48-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -8081,8 +8081,10 @@ function noteGate() {
       fgNote = 'This piece is in a newer version of the app. Update the app to open it.'; fgDirty = true; if (APP.fgSync) APP.fgSync();
       return;
     }
+    fgNote = '';   /* a code this version has clears an earlier notice (Hermes F110) */
     for (var i = 0; f && i < songs.length; i++) if (songs[i].demo && songs[i].demo.f === f) {
       if (+songSel.value !== i) { songSel.value = String(i); load(i); }
+      else { fgDirty = true; if (APP.fgSync) APP.fgSync(); }   /* the same piece, shown again without the notice */
       if (fgSel) fgOptions();
       if (APP.show) APP.show('fingering');
       return;
