@@ -2583,7 +2583,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.53" data-build="20261117-072650" data-cache="violin-toolkit-test-"><span>Version 1.53-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.53" data-build="20261117-073212" data-cache="violin-toolkit-test-"><span>Version 1.53-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -4204,7 +4204,7 @@ function noteGate() {
   function applyVib(rec) {
     /* the MIDI player plays without vibrato (Trix: it sounded noisy) */
     if (rec.player) {   /* the MIDI player: its own switch (Trix), off by default; long notes only */
-      var pw = playerVibOn && !rec.open && rec.tone !== 'pure' && rec.tone !== 'pizz' && (performance.now() - rec.t0 >= 290);
+      var pw = playerVibOn && !rec.trill && !rec.open && rec.tone !== 'pure' && rec.tone !== 'pizz' && (performance.now() - rec.t0 >= 290);
       if (pw !== rec.vibOn) { rec.vibOn = pw; if (rec.v && rec.v.vib) rec.v.vib(pw); }
       return;
     }
@@ -4358,7 +4358,7 @@ function noteGate() {
     }
     return -1;
   }
-  function pOn(midi, id, fx, si, grp, quiet, tone, lvl) {   /* tone: 'pure' a harmonic (a flute-like sine), 'pizz' plucked (Trix); lvl: loudness from the score's dynamics */   /* si: the string to use (a double stop's two strings); grp: its chord; fx false: no wobble or rings; quiet: shown, not sounded (paused) */
+  function pOn(midi, id, fx, si, grp, quiet, tone, lvl, trill) {   /* trill: { up: semitones to the upper note, dur, step: seconds } (Trix: tr was not heard) */   /* tone: 'pure' a harmonic (a flute-like sine), 'pizz' plucked (Trix); lvl: loudness from the score's dynamics */   /* si: the string to use (a double stop's two strings); grp: its chord; fx false: no wobble or rings; quiet: shown, not sounded (paused) */
     if (!quiet) {
       if (window.APP && APP.playThroughSilent) APP.playThroughSilent();
       if (!ensureCtx()) return;
@@ -4375,6 +4375,18 @@ function noteGate() {
       else rec.v.out.connect(soloOut());
     }
     rec.tone = tone;
+    /* a trill: both oscillators step between the note and the one above (detune, so the vibrato LFO still adds on top),
+       starting on the note and ending on it for the last quarter, as players are taught for a plain tr */
+    if (trill && rec.v && tone !== 'pure' && tone !== 'pizz' && trill.up > 0) {
+      rec.trill = true;
+      var tt = ctx.currentTime, tEnd = tt + trill.dur * 0.75, hi = false;
+      rec.v.nodes.forEach(function (o) {
+        if (o.type !== 'sawtooth' && o.type !== 'triangle') return;
+        o.detune.setValueAtTime(0, tt);
+        for (var q = tt + trill.step, up = true; q < tEnd - trill.step * 0.5; q += trill.step, up = !up) o.detune.setValueAtTime(up ? trill.up * 100 : 0, q);
+        o.detune.setValueAtTime(0, Math.max(tt, tEnd - trill.step * 0.5));
+      });
+    }
     if (!quiet) rec.timer = setTimeout(function () { applyVib(rec); }, 300);
     if (el) {
       el.classList.remove('off');
@@ -6168,6 +6180,21 @@ function noteGate() {
   /* the violin note's loudness from its velocity, around the part's usual level (so the mixer level holds) */
   function lvlOf(n) { return song && song.velMid ? Math.max(0.3, Math.min(1.8, Math.pow((n.vel || song.velMid) / song.velMid, 1.2))) : 1; }
   function toneOf(n) { return n.harm ? 'pure' : n.pz ? 'pizz' : ''; }
+  /* a written trill (tr) as sound (Trix): the upper note is the next one up in the key at that beat, changed by an accidental
+     written on the tr; it alternates every 1/12 s of real time (about a 32nd at 160), or a 32nd at slow tempos if slower */
+  function trillOf(n) {
+    if (!(n.art || []).some(function (a) { return a === 'trill-mark'; })) return null;
+    var k = song.keyAt ? song.keyAt(n.b) : { sf: song.sf || 0 }, tonic = ((7 * k.sf) % 12 + 12) % 12;
+    var inKey = function (m) { var pc = ((m - tonic) % 12 + 12) % 12; return [0, 2, 4, 5, 7, 9, 11].indexOf(pc) >= 0; };
+    var u = inKey(n.m + 1) && inKey(n.m) ? n.m + 1 : n.m + 2;
+    var white = function (m) { return [0, 2, 4, 5, 7, 9, 11].indexOf(((m % 12) + 12) % 12) >= 0; };
+    if (n.oacc === 'sharp' && white(u)) u += 1;
+    else if (n.oacc === 'flat' && white(u)) u -= 1;
+    else if (n.oacc === 'natural' && !white(u)) u += k.sf >= 0 ? -1 : 1;
+    var dur = (n.e - n.t) / speed, beatSec = song.beatSec ? (song.beatSec(n.b + 1) - song.beatSec(n.b)) / speed : 0.5;
+    if (u <= n.m || dur < 0.15) return null;
+    return { up: u - n.m, dur: dur, step: Math.max(1 / 12, beatSec > 0 ? beatSec / 8 : 0) };
+  }
   function strForFinger(m, f) {
     if (f === 0) return OPEN.indexOf(m);
     var best = -1, bestBase = 99;
@@ -7234,7 +7261,7 @@ function noteGate() {
       /* a note under a quarter of a second just lights up: no string wobble, rings or glow (Trix: fast pieces lagged) */
       var quick = (ns[ni].e - ns[ni].t) / speed < 0.25;
       APP.board.hand(boardHand(ns[ni]));   /* before on(): a new position centres the board first */
-      APP.board.on(ns[ni].m, 'n' + ni, !quick && !paMute, ns[ni].si, ns[ni].b, paMute, toneOf(ns[ni]), lvlOf(ns[ni]));   /* a take without sound: lit, not sounded */   /* a harmonic sounds pure, pizzicato plucked */   /* its string, and its chord (both notes of a double stop stay lit) */
+      APP.board.on(ns[ni].m, 'n' + ni, !quick && !paMute, ns[ni].si, ns[ni].b, paMute, toneOf(ns[ni]), lvlOf(ns[ni]), paMute ? null : trillOf(ns[ni]));   /* a take without sound: lit, not sounded */   /* a harmonic sounds pure, pizzicato plucked */   /* its string, and its chord (both notes of a double stop stay lit) */
       noteEls[ni].classList.add('on');
       noteEls[ni].classList.toggle('quick', quick);
       active.push(ni); ni++;
