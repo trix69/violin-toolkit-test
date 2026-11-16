@@ -1,7 +1,7 @@
 {
   "name": "Violin Toolkit (Test)",
   "short_name": "VT Test",
-  "description": "Violin tuner, fingerboard chart, metronome, MIDI player and music symbols.",
+  "description": "Violin tuner, fingerboard, metronome, symbols, MIDI player, fingered sheet music and play-along.",
   "id": "/violin-toolkit-test/",
   "lang": "en",
   "dir": "ltr",
