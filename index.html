@@ -1505,6 +1505,11 @@ html.fg-printing .pa-wrong { display: none !important; } @media print { .pa-wron
 .pa-tip-body .pa-fb-say { margin-top: 8px; font-weight: 600; }
 .pa-sb .pa-lg { margin-top: 4px; font-size: 13px; }
 .pa-bars { gap: 16px; grid-template-columns: 1fr 1fr; }   /* Pitch left, Timing right (Trix) */
+/* F127: a three-digit score must not widen the card past a 320-360 px phone (Hermes's measured patch) */
+.pa-bars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pa-bars .pa-sb { min-width: 0; }
+.pa-bars .pa-sb-big { font-size: clamp(26px, 9.6vw, 44px); gap: clamp(3px, 1.4vw, 6px); }
+.pa-bars .pa-sb-ic { width: clamp(22px, 8vw, 38px); height: clamp(22px, 8vw, 38px); }
 .pa-bars .pa-sb-h { flex-wrap: wrap; column-gap: 6px; row-gap: 0; }
 .pa-bars .pa-sb-h b { min-width: 0; }
 .pa-lgbtn { display: inline-flex; align-items: center; gap: 4px; justify-self: start; padding: 4px 0; border: 0; background: none; color: var(--muted); font: 500 13px var(--font-body); cursor: pointer; }
@@ -2578,7 +2583,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.52" data-build="20261116-132450" data-cache="violin-toolkit-test-"><span>Version 1.52-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.52" data-build="20261116-211810" data-cache="violin-toolkit-test-"><span>Version 1.52-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
