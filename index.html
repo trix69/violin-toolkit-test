@@ -2583,7 +2583,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.53" data-build="20261117-074558" data-cache="violin-toolkit-test-"><span>Version 1.53-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.53" data-build="20261117-120444" data-cache="violin-toolkit-test-"><span>Version 1.53-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -5222,8 +5222,8 @@ function noteGate() {
     song.notes.forEach(function (n, k) {
       if (n.grace) return;
       var last = ev[ev.length - 1];
-      if (last && Math.abs(last.t - n.t) < 1e-4) { last.idx.push(k); last.ms.push(n.m); last.chord = true; last.e = Math.max(last.e, n.e); return; }
-      ev.push({ t: n.t, e: n.e, m: n.m, ms: [n.m], idx: [k], chord: false, b: n.b });
+      if (last && Math.abs(last.t - n.t) < 1e-4) { last.idx.push(k); last.ms.push(n.m); last.chord = true; last.e = Math.max(last.e, n.e); last.orn = last.orn || (n.art || []).indexOf('trill-mark') >= 0; return; }
+      ev.push({ t: n.t, e: n.e, m: n.m, ms: [n.m], idx: [k], chord: false, b: n.b, orn: (n.art || []).indexOf('trill-mark') >= 0 });
     });
     return ev;
   }
@@ -5331,6 +5331,8 @@ function noteGate() {
       if (endT !== null) r.exit = Math.round((endT - (e.e + r.warp)) * 1000);
       /* the window: from the onset to the next onset (an open string ringing on is not measured past it), and no
          longer than the note's own length allows; attack 80 ms and release 120 ms left out (less for short notes) */
+      /* a trill alternates with the note above, so its pitch reads between the two: its start and end are still judged (Hermes F129) */
+      if (e.orn) { r.noPitch = true; r.trill = true; return r; }
       var dur = (e.e - e.t), end = Math.min(nextT, o.t + dur * 1.25 + 0.1), L = end - o.t;
       var a = o.t + Math.min(0.08, 0.2 * L), b = end - Math.min(0.12, 0.2 * L);
       /* a double stop (Trix: they were all shown as missed): one pitch is heard at a time, so it is measured against the note of
@@ -5656,7 +5658,7 @@ function noteGate() {
     if (!w || TEMPO_W.test(w) || w.length > 40) return 0;   /* rit., a tempo…: handled as tempo changes; a long sentence is not a tempo mark */
     for (var i = 0; i < TEMPO_TERMS.length; i++) if (TEMPO_TERMS[i][0].test(w)) {
       var b = TEMPO_TERMS[i][1];
-      if (/non troppo|non tanto|ma non/.test(w)) b *= 0.92; else if (/molto|assai/.test(w)) b *= 1.08;
+      if (/non troppo|non tanto|ma non|not too|nicht zu|pas trop/.test(w)) b *= 0.92; else if (/molto|assai/.test(w)) b *= 1.08;
       return b;
     }
     return 0;
@@ -5882,16 +5884,20 @@ function noteGate() {
     });
     /* tempo words and ♩ = marks without a <sound tempo> of their own (Trix): a word's speed is for the felt beat, so x/2 is
        counted in minims, 6/8 9/8 12/8 in dotted crotchets and 3/8 in quavers (as crotchets: x1.2, x1.05, x0.5) */
-    var sgN = sig ? sig.num : 4, sgD = sig ? sig.den : 4, feel = sgD === 2 ? 1.2 : sgD === 8 && sgN % 3 === 0 && sgN > 3 ? 1.05 : sgD === 8 ? 0.5 : 1;
-    /* a word after a tempo that has a word of its own changes speed by the ratio of the two words (Handel's "Adagio" after
-       "Andante" ♩ = 60 slows to 46, not up to the table's 70); otherwise the table's speed */
+    /* the metre in force at the word's tick (a later 6/8 or 3/8 counts its own beat; Hermes F131) */
+    function feelAt(t) {
+      var ts = sig || { num: 4, den: 4 }; bars.forEach(function (b) { if (b.tick <= t && b.ts) ts = b.ts; });
+      return ts.den === 2 ? 1.2 : ts.den === 8 && ts.num % 3 === 0 && ts.num > 3 ? 1.05 : ts.den === 8 ? 0.5 : 1;
+    }
+    /* a word after a word-only tempo changes speed by the ratio of the two words (Vivace, then Adagio: 160 to 70);
+       otherwise the table's speed */
     Object.keys(textTempos).map(Number).sort(function (a, b) { return a - b; }).forEach(function (t) {
       var tt = textTempos[t]; if (seenTempo[t]) { if (!tt.exact) seenTempo[t].term = tt.q; return; }
       var prev = null; tempos.forEach(function (tp) { if (tp.tick < t && (!prev || tp.tick >= prev.tick)) prev = tp; });
       /* a word only where the file has set no tempo of its own yet: an edition that sets one and then writes "Adagio" for a
          cadence may not mark the return (Bach BWV 1042 bar 121, the written-out da capo after it), so its words stay words */
       if (!tt.exact && tempos.some(function (tp) { return tp.tick <= t && !tp.fromText; })) return;
-      var bp = Math.round(tt.exact ? tt.q : prev && prev.term ? 60e6 / prev.us * tt.q / prev.term : tt.q * feel);
+      var bp = Math.round(tt.exact ? tt.q : prev && prev.term ? 60e6 / prev.us * tt.q / prev.term : tt.q * feelAt(t));
       tempos.push(seenTempo[t] = { tick: t, us: 60e6 / bp, term: tt.exact ? 0 : tt.q, fromText: !tt.exact });
       if (t > 0 && !tmarks[t]) tmarks[t] = { w: '', bpm: bp };
     });
@@ -6225,17 +6231,22 @@ function noteGate() {
   /* the violin note's loudness from its velocity, around the part's usual level (so the mixer level holds) */
   function lvlOf(n) { return song && song.velMid ? Math.max(0.3, Math.min(1.8, Math.pow((n.vel || song.velMid) / song.velMid, 1.2))) : 1; }
   function toneOf(n) { return n.harm ? 'pure' : n.pz ? 'pizz' : ''; }
-  /* a written trill (tr) as sound (Trix): the upper note is the next one up in the key at that beat, changed by an accidental
-     written on the tr; it alternates every 1/12 s of real time (about a 32nd at 160), or a 32nd at slow tempos if slower */
+  /* a written trill (tr) as sound (Trix): the upper note is the next letter up, as the key at that beat has it, changed by an
+     accidental written on the tr (D natural in F minor trills to E flat; Hermes F128); it alternates every 1/12 s of real time
+     (about a 32nd at 160), or a 32nd at slow tempos if slower */
+  var NAT = [0, 2, 4, 5, 7, 9, 11], OACC = { sharp: 1, flat: -1, natural: 0, 'double-sharp': 2, 'flat-flat': -2 };
   function trillOf(n) {
     if (!(n.art || []).some(function (a) { return a === 'trill-mark'; })) return null;
-    var k = song.keyAt ? song.keyAt(n.b) : { sf: song.sf || 0 }, tonic = ((7 * k.sf) % 12 + 12) % 12;
-    var inKey = function (m) { var pc = ((m - tonic) % 12 + 12) % 12; return [0, 2, 4, 5, 7, 9, 11].indexOf(pc) >= 0; };
-    var u = inKey(n.m + 1) && inKey(n.m) ? n.m + 1 : n.m + 2;
-    var white = function (m) { return [0, 2, 4, 5, 7, 9, 11].indexOf(((m % 12) + 12) % 12) >= 0; };
-    if (n.oacc === 'sharp' && white(u)) u += 1;
-    else if (n.oacc === 'flat' && white(u)) u -= 1;
-    else if (n.oacc === 'natural' && !white(u)) u += k.sf >= 0 ? -1 : 1;
+    var k = song.keyAt ? song.keyAt(n.b) : { sf: song.sf || 0 }, u;
+    if (n.wsp && n.wsp[0] >= 0) {
+      var s = n.wsp[0], s2 = (s + 1) % 7, keyAlt = 0;
+      for (var j = 0; j < Math.abs(k.sf); j++) if ((k.sf > 0 ? [3, 0, 4, 1, 5, 2, 6] : [6, 2, 5, 1, 4, 0, 3])[j] === s2) keyAlt = k.sf > 0 ? 1 : -1;
+      var alt = OACC[n.oacc] !== undefined ? OACC[n.oacc] : keyAlt;
+      u = n.m + (NAT[s2] + (s === 6 ? 12 : 0) + alt) - (NAT[s] + n.wsp[1]);   /* the written interval, so a transposed part keeps it */
+    } else {   /* MIDI: no written letter; the semitone above if both are in the key, else a whole tone */
+      var tonic = ((7 * k.sf) % 12 + 12) % 12, inKey = function (m) { return NAT.indexOf(((m - tonic) % 12 + 12) % 12) >= 0; };
+      u = inKey(n.m + 1) && inKey(n.m) ? n.m + 1 : n.m + 2;
+    }
     var dur = (n.e - n.t) / speed, beatSec = song.beatSec ? (song.beatSec(n.b + 1) - song.beatSec(n.b)) / speed : 0.5;
     if (u <= n.m || dur < 0.15) return null;
     return { up: u - n.m, dur: dur, step: Math.max(1 / 12, beatSec > 0 ? beatSec / 8 : 0) };
@@ -9109,7 +9120,7 @@ function noteGate() {
       if (!r) { line('Not recorded.'); return; }
       if (r.missed) { line('Not heard.'); return; }
       var dbl = !r.idx || r.idx.length === 2, cname = dbl ? 'Double stop' : 'Chord';   /* by count (Hermes F113) */
-      if (r.noPitch) { line(r.far ? cname + ': started too far from its place for the pitch to be measured.' : cname + ': pitch not measured (' + (dbl ? 'two' : r.idx.length) + ' notes at once).'); if (r.timing !== null && r.timing !== undefined) line(ms(r.timing, 'Start', r)); if (r.exit !== undefined) line(ms(r.exit, 'End', r)); return; }
+      if (r.noPitch) { line(r.trill ? 'Trill: pitch not measured.' : r.far ? cname + ': started too far from its place for the pitch to be measured.' : cname + ': pitch not measured (' + (dbl ? 'two' : r.idx.length) + ' notes at once).'); if (r.timing !== null && r.timing !== undefined) line(ms(r.timing, 'Start', r)); if (r.exit !== undefined) line(ms(r.exit, 'End', r)); return; }
       if (r.each) line(cname + ':');
       if (r.chord && r.m !== undefined && !r.each) line(cname + ': measured on ' + APP.board.name(r.m) + '.');
       if (r.each) {   /* each note of the double stop, top first */
@@ -10712,7 +10723,7 @@ function noteGate() {
     'Simile: keep the same bowing or articulation as before.': 'Simile：继续使用与前面相同的弓法或演奏法。',
     'Attacca: start the next movement without a pause.': 'Attacca：不停顿，直接开始下一乐章。',
     'Volti subito: turn the page quickly, the music carries straight on.': 'Volti subito：快速翻页，音乐紧接着继续。',
-    "Play-along": "跟音练习", "Play the piece · see each bar": "演奏整首 · 查看每小节", "Play a piece to the microphone, see each bar": "对着麦克风演奏，查看每一小节", "View": "视图", "Pages": "谱页", "Live": "实时", "Start": "开始", "Stop": "停止", "Start again": "重新开始", "Upbeat": "弱起", "Bar background, pitch and rhythm together:": "小节底色（音准与节奏合计）：", "greener for this take's better bars, redder for its weaker ones, by how good each is": "本次演奏中较好的小节偏绿，较弱的偏红，并按各小节本身的好坏调整", "Updating…": "正在更新…", "Update progress": "更新进度", "Double stop:": "双音：", "Chord:": "和弦：", "Analysing…": "正在分析…", "Microphone level": "麦克风音量", "Headphones only: the microphone is on.": "请用耳机：麦克风已打开。", "No sound: the microphone is on.": "静音：麦克风已打开。", "The microphone can not hear the violin.": "麦克风听不到琴声。", "The microphone is not available.": "无法使用麦克风。", "The microphone is blocked.": "麦克风被阻止了。", "10–25 ¢ off": "偏差 10–25 音分", "more than 25 ¢ off": "偏差超过 25 音分", "timing off by more than 25 ms": "节奏偏差超过 25 毫秒", "not assessed": "未评估", "within 10 ¢": "偏差 10 音分以内", "Show": "显示", "Zoom in": "放大", "Zoom out": "缩小", "Shadow note head, pitch (higher = sharp, lower = flat):": "影子音符的符头（音准，偏高在上、偏低在下）：", "Shadow note stem, timing (moved left = early, right = late; longer stem = held too long, shorter = cut short):": "影子音符的符干（节奏：左移偏早、右移偏晚；符干变长＝拉得太长，变短＝太短）：", "grey note: missed or not assessed": "灰色音符：漏掉或未评估", "Finger in place.": "手指位置正确。", "← scroll": "← 琴头", "bridge →": "琴马 →", "Fingerboard": "指板", "in tune": "音准合格", "on time": "节奏合格", "Pitch": "音准", "Timing": "节奏", "Rhythm": "节奏", "Both": "两者", "red head beside it: the note you played instead": "旁边的红色音符：实际拉出的音", "Not heard.": "没有听到这个音。", "Not recorded.": "没有录到。", "Double stop: not assessed.": "双音：未评估。", "Note colour, pitch:": "音符颜色（音准）：", "Background, timing:": "背景（节奏）：", "within 1/10 of a beat (40–120 ms)": "误差在 1/10 拍以内（40–120 毫秒）", "1/10–1/5 of a beat off (90–240 ms)": "误差 1/10–1/5 拍（90–240 毫秒）", "more than 1/5 of a beat off (past 240 ms)": "误差超过 1/5 拍（240 毫秒以上）", "missed or not assessed": "漏掉或未评估", "Tap a note to practise its bar in the MIDI player.": "点一个音，到 MIDI 播放器里练习它所在的小节。", "The five worst bars": "最需要练习的五个小节", "Tap a bar to practise it in the MIDI player.": "点一个小节，到 MIDI 播放器里练习它。", "Use headphones": "请使用耳机", "The microphone is on for the whole take. With the phone on speaker, any reference or click the app plays reaches it and is scored as your own playing. Put on headphones, or start without sound.": "整段录音期间麦克风一直开着。如果用外放，应用发出的参考音或节拍都会被录进去，并当成你拉的内容评分。请戴上耳机，或选择静音开始。", "I’m using headphones — start": "已戴耳机，开始", "I'm using headphones — start": "已戴耳机，开始", "Start without sound": "静音开始", "Nothing was recorded.": "没有录到内容。", "Measured against Equal temperament.": "按平均律计算。", "Measured against Just intonation.": "按纯律计算。", "Measured against Pythagorean tuning.": "按五度相生律计算。",
+    "Play-along": "跟音练习", "Play the piece · see each bar": "演奏整首 · 查看每小节", "Play a piece to the microphone, see each bar": "对着麦克风演奏，查看每一小节", "View": "视图", "Pages": "谱页", "Live": "实时", "Start": "开始", "Stop": "停止", "Start again": "重新开始", "Upbeat": "弱起", "Bar background, pitch and rhythm together:": "小节底色（音准与节奏合计）：", "greener for this take's better bars, redder for its weaker ones, by how good each is": "本次演奏中较好的小节偏绿，较弱的偏红，并按各小节本身的好坏调整", "Updating…": "正在更新…", "Update progress": "更新进度", "Double stop:": "双音：", "Chord:": "和弦：", "Analysing…": "正在分析…", "Microphone level": "麦克风音量", "Headphones only: the microphone is on.": "请用耳机：麦克风已打开。", "No sound: the microphone is on.": "静音：麦克风已打开。", "The microphone can not hear the violin.": "麦克风听不到琴声。", "The microphone is not available.": "无法使用麦克风。", "The microphone is blocked.": "麦克风被阻止了。", "10–25 ¢ off": "偏差 10–25 音分", "more than 25 ¢ off": "偏差超过 25 音分", "timing off by more than 25 ms": "节奏偏差超过 25 毫秒", "not assessed": "未评估", "within 10 ¢": "偏差 10 音分以内", "Show": "显示", "Zoom in": "放大", "Zoom out": "缩小", "Shadow note head, pitch (higher = sharp, lower = flat):": "影子音符的符头（音准，偏高在上、偏低在下）：", "Shadow note stem, timing (moved left = early, right = late; longer stem = held too long, shorter = cut short):": "影子音符的符干（节奏：左移偏早、右移偏晚；符干变长＝拉得太长，变短＝太短）：", "grey note: missed or not assessed": "灰色音符：漏掉或未评估", "Finger in place.": "手指位置正确。", "← scroll": "← 琴头", "bridge →": "琴马 →", "Fingerboard": "指板", "in tune": "音准合格", "on time": "节奏合格", "Pitch": "音准", "Timing": "节奏", "Rhythm": "节奏", "Both": "两者", "red head beside it: the note you played instead": "旁边的红色音符：实际拉出的音", "Not heard.": "没有听到这个音。", "Trill: pitch not measured.": "颤音：不评估音准。", "Not recorded.": "没有录到。", "Double stop: not assessed.": "双音：未评估。", "Note colour, pitch:": "音符颜色（音准）：", "Background, timing:": "背景（节奏）：", "within 1/10 of a beat (40–120 ms)": "误差在 1/10 拍以内（40–120 毫秒）", "1/10–1/5 of a beat off (90–240 ms)": "误差 1/10–1/5 拍（90–240 毫秒）", "more than 1/5 of a beat off (past 240 ms)": "误差超过 1/5 拍（240 毫秒以上）", "missed or not assessed": "漏掉或未评估", "Tap a note to practise its bar in the MIDI player.": "点一个音，到 MIDI 播放器里练习它所在的小节。", "The five worst bars": "最需要练习的五个小节", "Tap a bar to practise it in the MIDI player.": "点一个小节，到 MIDI 播放器里练习它。", "Use headphones": "请使用耳机", "The microphone is on for the whole take. With the phone on speaker, any reference or click the app plays reaches it and is scored as your own playing. Put on headphones, or start without sound.": "整段录音期间麦克风一直开着。如果用外放，应用发出的参考音或节拍都会被录进去，并当成你拉的内容评分。请戴上耳机，或选择静音开始。", "I’m using headphones — start": "已戴耳机，开始", "I'm using headphones — start": "已戴耳机，开始", "Start without sound": "静音开始", "Nothing was recorded.": "没有录到内容。", "Measured against Equal temperament.": "按平均律计算。", "Measured against Just intonation.": "按纯律计算。", "Measured against Pythagorean tuning.": "按五度相生律计算。",
     'Intonation': '律制', 'Equal': '平均律', 'Just': '纯律', 'Pythagorean': '五度相生律',
     'Tap': '点拍', 'Slower': '减慢', 'Faster': '加快', 'Time signature': '拍号', 'Beats per bar': '每小节拍数',
     'Note value': '音符时值', 'Tempo': '速度', 'Start': '开始', 'Stop': '停止',
