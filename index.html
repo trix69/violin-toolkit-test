@@ -2616,7 +2616,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.54" data-build="20261117-213923" data-cache="violin-toolkit-test-"><span>Version 1.54-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.54" data-build="20261117-214327" data-cache="violin-toolkit-test-"><span>Version 1.54-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -4550,6 +4550,8 @@ function noteGate() {
   }
   if (window.APP) APP.board = {
     toTop: function () { stage.scrollTop = 0; },
+    /* semitones a stopped note sits from its equal-tempered place on a string (Settings > Intonation), for drawings elsewhere (Trix: the note card's board) */
+    tempN: function (midi, openMidi) { return midi === openMidi ? 0 : (stopCents(midi) - openCents({ midi: openMidi })) / 100; },
     relayout: function () { layout(); },   /* sizes only, no redraw (full screen settling: a redraw flashed the notes) */   /* a newly chosen tune starts at the open strings (Hermes F14) */
     /* on: player mode; top(): height of the player's own part above the board, so the board fits below it */
     player: function (on, top, n, key, flat, rot) {   /* rot(): full screen, the box { L, T, W, H } the turned board fills */
@@ -9233,16 +9235,18 @@ function noteGate() {
      the finger should be (the written note, with its finger), a disc where it was (from the pitch played), and how far apart
      they are on a real violin (328 mm string) */
   var PA_OPEN = [55, 62, 69, 76], PA_SNAME = ['G', 'D', 'A', 'E'], PA_LEN = 328;
-  function paFingerSvg(n, r, k, oth) {
+  function paFingerSvg(n, r, k, oth, minTop) {
     oth = (oth || []).filter(function (q) { return q.n.si !== n.si; });   /* the rest of a double stop, each on its own string */
     /* drawn like the MIDI player's board (Trix): all four strings, every note place from the open string up, the key's notes
        tinted, the written note lit in its string colour with its finger, and a disc where the played pitch puts the finger */
-    var si = n.si, open = PA_OPEN[si], ne = n.m - open, na = ne + r.cents / 100, sa = si;
-    while (na < -0.4 && sa > 0) { sa--; na = n.m + r.cents / 100 - PA_OPEN[sa]; }   /* lower than this open string: where it is played, a string down (Trix) */
+    /* where each note sits with Settings > Intonation (Trix: the card's board did not follow it) */
+    var TN = function (m, s) { return APP.board.tempN ? APP.board.tempN(m, PA_OPEN[s]) : 0; };
+    var si = n.si, open = PA_OPEN[si], ne = n.m - open + TN(n.m, si), na = ne + r.cents / 100, sa = si;
+    while (na < -0.4 && sa > 0) { sa--; na = n.m + r.cents / 100 - PA_OPEN[sa] + TN(n.m, sa); }   /* lower than this open string: where it is played, a string down (Trix) */
     na = Math.max(-0.4, na);
     function mm(x) { return PA_LEN * (1 - Math.pow(2, -x / 12)); }
-    oth.forEach(function (q) { q.ne = q.n.m - PA_OPEN[q.n.si]; q.na = Math.max(-0.4, q.ne + q.cents / 100); });
-    var top = Math.max(7, Math.ceil(Math.max.apply(null, [ne, na].concat(oth.map(function (q) { return Math.max(q.ne, q.na); })))) + 1), COL = ['#66AEE6', '#74C493', '#E3A24C', '#EE6A5E'];
+    oth.forEach(function (q) { q.ne = q.n.m - PA_OPEN[q.n.si] + TN(q.n.m, q.n.si); q.na = Math.max(-0.4, q.ne + q.cents / 100); });
+    var top = Math.max(7, minTop || 0, Math.ceil(Math.max.apply(null, [ne, na].concat(oth.map(function (q) { return Math.max(q.ne, q.na); })))) + 1), COL = ['#66AEE6', '#74C493', '#E3A24C', '#EE6A5E'];
     var W = 150, X0 = 22, DX = (W - 2 * X0) / 3, Y0 = 26, H = Math.max(210, 22 * top + 40), K = (H - Y0 - 14) / mm(top), R = Math.min(10, K * (mm(1) - mm(0)) / 2 - 1);
     function Y(x) { return Y0 + K * mm(x); }
     var kn = song.keyAt ? song.keyAt(n.b || 0) : { sf: song.sf || 0 }, root = ((kn.sf * 7) % 12 + 12) % 12, inKey = {};
@@ -9256,8 +9260,8 @@ function noteGate() {
       o.push('<text x="' + x + '" y="12" class="pa-fb-lab" fill="' + COL[s4] + '">' + PA_SNAME[s4] + '</text>');
       o.push('<line x1="' + x + '" y1="' + (Y0 - 6) + '" x2="' + x + '" y2="' + (H - 6) + '" stroke="' + COL[s4] + '" class="pa-fb-str"/>');
       for (var j = 0; j <= top; j++) {
-        var oq = oth.filter(function (q) { return q.n.si === s4 && q.ne === j; })[0];
-        var m = PA_OPEN[s4] + j, y = Y(j), lit = (s4 === si && j === ne) || !!oq, key = inKey[m % 12];
+        var oq = oth.filter(function (q) { return q.n.si === s4 && q.n.m - PA_OPEN[s4] === j; })[0];
+        var m = PA_OPEN[s4] + j, y = Y(j + TN(m, s4)), lit = (s4 === si && j === n.m - open) || !!oq, key = inKey[m % 12];
         var nm = APP.board.name(m).replace(/-?\d+$/, '');
         o.push('<circle cx="' + x + '" cy="' + y.toFixed(1) + '" r="' + R.toFixed(1) + '" class="pa-fb-n' + (lit ? ' lit' : key ? ' key' : '') + '" style="--c:' + COL[s4] + '"/>');
         if (R >= 7) o.push('<text x="' + x + '" y="' + (y + 3).toFixed(1) + '" class="pa-fb-t' + (lit ? ' lit' : '') + '">' + (lit && (oq ? oq.n.fg : n.fg) > 0 ? (oq ? oq.n.fg : n.fg) : nm) + '</text>');
@@ -9282,13 +9286,14 @@ function noteGate() {
     var n0 = song.notes[k]; if (!n0) return;
     if (paCardEl.parentNode !== document.body) document.body.appendChild(paCardEl);   /* it lives in Play-along's view, hidden here */
     var bars = song.bars || [], bi = -1; bars.forEach(function (b, i) { if (b.beat <= n0.b + 1e-6) bi = i; });
-    $('paCardN').textContent = APP.board.name(n0.m);
+    $('paCardN').textContent = n0.wsp && n0.wsp[0] >= 0 && Math.abs(n0.wsp[1]) <= 2 ? 'CDEFGAB'[n0.wsp[0]] + ['𝄫', '♭', '', '♯', '𝄪'][n0.wsp[1] + 2] + n0.wsp[2] : APP.board.name(n0.m);   /* as written (E♭, not D♯) */
     $('paCardT').textContent = bars[bi] ? (bars[bi].num === '0' ? 'Upbeat' : 'Bar ' + bars[bi].num) : '';
     var box = $('paCardB'); box.textContent = ''; box.classList.remove('has-fb');
     function line(t) { var p0 = document.createElement('p'); p0.textContent = t; box.appendChild(p0); }
     var ORD = function (i) { return i + (i % 10 === 1 && i !== 11 ? 'st' : i % 10 === 2 && i !== 12 ? 'nd' : i % 10 === 3 && i !== 13 ? 'rd' : 'th'); };
     if (n0.si >= 0) line(n0.fg === 0 ? 'Open ' + PA_SNAME[n0.si] + ' string' : PA_SNAME[n0.si] + ' string, finger ' + n0.fg);
     if (n0.si >= 0 && n0.fg !== 0) { if (n0.half) line('Half position'); else if (n0.hand >= 0) line(ORD(n0.hand + 1) + ' position'); }
+    if (n0.tup) line(n0.tup === 3 ? 'Triplet: three in the time of two' : n0.tup + ' notes in the time of ' + (n0.tup === 5 || n0.tup === 6 ? 4 : n0.tup === 7 ? 4 : 2));
     var oth = song.notes.filter(function (q, i) { return i !== k && !q.grace && Math.abs(q.t - n0.t) < 1e-4; });
     if (oth.length) line('Double stop with ' + oth.map(function (q) { return APP.board.name(q.m); }).join(', '));
     var syms = fgSymbols(n0, k), symBox = null;
@@ -9303,8 +9308,9 @@ function noteGate() {
         symBox.appendChild(d);
       });
     }
+    var othB = oth.filter(function (q) { return q.si >= 0; }).map(function (q) { return { n: q, cents: 0 }; });
     if (n0.si >= 0) {
-      var fb = paFingerSvg(n0, { cents: 0 }, k, oth.filter(function (q) { return q.si >= 0; }).map(function (q) { return { n: q, cents: 0 }; }));
+      var fb = paFingerSvg(n0, { cents: 0 }, k, othB);
       var txt = document.createElement('div'); txt.className = 'pa-fb-txt fg-txt';
       while (box.firstChild) txt.appendChild(box.firstChild);
       var more = null;
@@ -9320,6 +9326,16 @@ function noteGate() {
     paCardEl.classList.toggle('up', up);
     $('paCardC').style.maxHeight = rr ? Math.max(160, up ? rr.top - 30 : window.innerHeight - rr.bottom - 30) + 'px' : '';
     paCardEl.hidden = false;
+    /* the board as tall as the lines and card beside it (Trix: no blank space under it): more of the string, further up */
+    var fsv = box.querySelector('svg.pa-fb'), ftx = box.querySelector('.fg-txt');
+    if (fsv && ftx) {
+      var rs = fsv.getBoundingClientRect(), need = ftx.scrollHeight;
+      if (rs.width && need > rs.height + 12) {
+        var rows = Math.min(24, Math.floor((need * 150 / rs.width - 40) / 22));
+        var fb2 = paFingerSvg(n0, { cents: 0 }, k, othB, rows);
+        if (fb2.svg) fsv.parentNode.replaceChild(fb2.svg, fsv);
+      }
+    }
     try { $('paCardC').focus({ preventScroll: true }); } catch (e) {}
   }
   /* the written marks on a note, as the Symbols page names them: its length, accidental, slur, articulations, bowing, ornaments,
@@ -9331,9 +9347,9 @@ function noteGate() {
     sf: 'Sudden accent', sfz: 'Sudden accent', fz: 'Sudden accent', fp: 'Loud, then soft', sfp: 'Accent, then soft' };
   function fgSymbols(n, k) {
     var want = [];
-    if (!n.tup && !n.grace) {
+    if (!n.grace) {   /* the written value (a triplet quaver is a quaver; Trix: its card was missing) */
       var L = { 0.25: 'Semiquaver (16th note)', 0.5: 'Quaver (eighth note)', 1: 'Crotchet (quarter note)', 1.5: 'Dotted crotchet', 2: 'Minim (half note)', 3: 'Dotted minim', 4: 'Semibreve (whole note)' };
-      var own = Math.round((n.own || 0) * 4) / 4; if (L[own]) want.push(L[own]);
+      var own = Math.round((n.tup ? n.wl || 0 : n.wl || n.own || 0) * 4) / 4; if (L[own]) want.push(L[own]);
     }
     if (n.wsp && n.wsp[0] >= 0) {   /* an accidental the key does not give */
       var kk = song.keyAt ? song.keyAt(n.b) : { sf: song.sf || 0 }, ka = 0;
@@ -10914,7 +10930,7 @@ function noteGate() {
     'Simile: keep the same bowing or articulation as before.': 'Simile：继续使用与前面相同的弓法或演奏法。',
     'Attacca: start the next movement without a pause.': 'Attacca：不停顿，直接开始下一乐章。',
     'Volti subito: turn the page quickly, the music carries straight on.': 'Volti subito：快速翻页，音乐紧接着继续。',
-    "Play-along": "跟音练习", "Play the piece · see each bar": "演奏整首 · 查看每小节", "Play a piece to the microphone, see each bar": "对着麦克风演奏，查看每一小节", "View": "视图", "Pages": "谱页", "Live": "实时", "Start": "开始", "Stop": "停止", "Start again": "重新开始", "Upbeat": "弱起", "Bar background, pitch and rhythm together:": "小节底色（音准与节奏合计）：", "greener for this take's better bars, redder for its weaker ones, by how good each is": "本次演奏中较好的小节偏绿，较弱的偏红，并按各小节本身的好坏调整", "Updating…": "正在更新…", "Update progress": "更新进度", "Double stop:": "双音：", "Chord:": "和弦：", "Analysing…": "正在分析…", "Microphone level": "麦克风音量", "Headphones only: the microphone is on.": "请用耳机：麦克风已打开。", "No sound: the microphone is on.": "静音：麦克风已打开。", "The microphone can not hear the violin.": "麦克风听不到琴声。", "The microphone is not available.": "无法使用麦克风。", "The microphone is blocked.": "麦克风被阻止了。", "10–25 ¢ off": "偏差 10–25 音分", "more than 25 ¢ off": "偏差超过 25 音分", "timing off by more than 25 ms": "节奏偏差超过 25 毫秒", "not assessed": "未评估", "within 10 ¢": "偏差 10 音分以内", "Show": "显示", "Zoom in": "放大", "Zoom out": "缩小", "Shadow note head, pitch (higher = sharp, lower = flat):": "影子音符的符头（音准，偏高在上、偏低在下）：", "Shadow note stem, timing (moved left = early, right = late; longer stem = held too long, shorter = cut short):": "影子音符的符干（节奏：左移偏早、右移偏晚；符干变长＝拉得太长，变短＝太短）：", "grey note: missed or not assessed": "灰色音符：漏掉或未评估", "Finger in place.": "手指位置正确。", "← scroll": "← 琴头", "bridge →": "琴马 →", "Fingerboard": "指板", "in tune": "音准合格", "on time": "节奏合格", "Pitch": "音准", "Timing": "节奏", "Rhythm": "节奏", "Both": "两者", "red head beside it: the note you played instead": "旁边的红色音符：实际拉出的音", "Not heard.": "没有听到这个音。", "Turn sideways": "横屏使用", "Half position": "半把位", "Dotted: half as long again": "附点：时值再加一半", "Rest": "休止符", "The tuner also works with the phone on its side: the gauge and the strings on one screen. Tap here for how.": "手机横过来也能调音：仪表和琴弦在同一屏上。点这里看怎么做。", "Search": "搜索", "Type a word such as slur, forte or repeat to find a symbol.": "输入关键词，如连线、强或反复，即可找到符号。", "Tap a symbol": "点一个符号", "Tap or hold any symbol for a card: what it means and how to play it on the violin.": "点按或长按任意符号，会弹出卡片：它的含义以及在小提琴上怎么拉。", "Grouped by kind": "按类别分组", "Notes, bowing, accidentals, rests, dynamics, ornaments, repeats and more. Scroll down to browse them all.": "音符、弓法、变音记号、休止符、力度、装饰音、反复记号等。向下滚动即可浏览全部。", "Turn your phone sideways: the gauge and the strings fit on one screen. If it stays upright, switch off rotation lock.": "把手机横过来：仪表和琴弦在同一屏上。如果屏幕不转，请关闭竖排方向锁定。", "Trill: pitch not measured.": "颤音：不评估音准。", "Not recorded.": "没有录到。", "Double stop: not assessed.": "双音：未评估。", "Note colour, pitch:": "音符颜色（音准）：", "Background, timing:": "背景（节奏）：", "within 1/10 of a beat (40–120 ms)": "误差在 1/10 拍以内（40–120 毫秒）", "1/10–1/5 of a beat off (90–240 ms)": "误差 1/10–1/5 拍（90–240 毫秒）", "more than 1/5 of a beat off (past 240 ms)": "误差超过 1/5 拍（240 毫秒以上）", "missed or not assessed": "漏掉或未评估", "Tap a note to practise its bar in the MIDI player.": "点一个音，到 MIDI 播放器里练习它所在的小节。", "The five worst bars": "最需要练习的五个小节", "Tap a bar to practise it in the MIDI player.": "点一个小节，到 MIDI 播放器里练习它。", "Use headphones": "请使用耳机", "The microphone is on for the whole take. With the phone on speaker, any reference or click the app plays reaches it and is scored as your own playing. Put on headphones, or start without sound.": "整段录音期间麦克风一直开着。如果用外放，应用发出的参考音或节拍都会被录进去，并当成你拉的内容评分。请戴上耳机，或选择静音开始。", "I’m using headphones — start": "已戴耳机，开始", "I'm using headphones — start": "已戴耳机，开始", "Start without sound": "静音开始", "Nothing was recorded.": "没有录到内容。", "Measured against Equal temperament.": "按平均律计算。", "Measured against Just intonation.": "按纯律计算。", "Measured against Pythagorean tuning.": "按五度相生律计算。",
+    "Play-along": "跟音练习", "Play the piece · see each bar": "演奏整首 · 查看每小节", "Play a piece to the microphone, see each bar": "对着麦克风演奏，查看每一小节", "View": "视图", "Pages": "谱页", "Live": "实时", "Start": "开始", "Stop": "停止", "Start again": "重新开始", "Upbeat": "弱起", "Bar background, pitch and rhythm together:": "小节底色（音准与节奏合计）：", "greener for this take's better bars, redder for its weaker ones, by how good each is": "本次演奏中较好的小节偏绿，较弱的偏红，并按各小节本身的好坏调整", "Updating…": "正在更新…", "Update progress": "更新进度", "Double stop:": "双音：", "Chord:": "和弦：", "Analysing…": "正在分析…", "Microphone level": "麦克风音量", "Headphones only: the microphone is on.": "请用耳机：麦克风已打开。", "No sound: the microphone is on.": "静音：麦克风已打开。", "The microphone can not hear the violin.": "麦克风听不到琴声。", "The microphone is not available.": "无法使用麦克风。", "The microphone is blocked.": "麦克风被阻止了。", "10–25 ¢ off": "偏差 10–25 音分", "more than 25 ¢ off": "偏差超过 25 音分", "timing off by more than 25 ms": "节奏偏差超过 25 毫秒", "not assessed": "未评估", "within 10 ¢": "偏差 10 音分以内", "Show": "显示", "Zoom in": "放大", "Zoom out": "缩小", "Shadow note head, pitch (higher = sharp, lower = flat):": "影子音符的符头（音准，偏高在上、偏低在下）：", "Shadow note stem, timing (moved left = early, right = late; longer stem = held too long, shorter = cut short):": "影子音符的符干（节奏：左移偏早、右移偏晚；符干变长＝拉得太长，变短＝太短）：", "grey note: missed or not assessed": "灰色音符：漏掉或未评估", "Finger in place.": "手指位置正确。", "← scroll": "← 琴头", "bridge →": "琴马 →", "Fingerboard": "指板", "in tune": "音准合格", "on time": "节奏合格", "Pitch": "音准", "Timing": "节奏", "Rhythm": "节奏", "Both": "两者", "red head beside it: the note you played instead": "旁边的红色音符：实际拉出的音", "Not heard.": "没有听到这个音。", "Turn sideways": "横屏使用", "Half position": "半把位", "Dotted: half as long again": "附点：时值再加一半", "Rest": "休止符", "Triplet: three in the time of two": "三连音：三个音占两个音的时值", "The tuner also works with the phone on its side: the gauge and the strings on one screen. Tap here for how.": "手机横过来也能调音：仪表和琴弦在同一屏上。点这里看怎么做。", "Search": "搜索", "Type a word such as slur, forte or repeat to find a symbol.": "输入关键词，如连线、强或反复，即可找到符号。", "Tap a symbol": "点一个符号", "Tap or hold any symbol for a card: what it means and how to play it on the violin.": "点按或长按任意符号，会弹出卡片：它的含义以及在小提琴上怎么拉。", "Grouped by kind": "按类别分组", "Notes, bowing, accidentals, rests, dynamics, ornaments, repeats and more. Scroll down to browse them all.": "音符、弓法、变音记号、休止符、力度、装饰音、反复记号等。向下滚动即可浏览全部。", "Turn your phone sideways: the gauge and the strings fit on one screen. If it stays upright, switch off rotation lock.": "把手机横过来：仪表和琴弦在同一屏上。如果屏幕不转，请关闭竖排方向锁定。", "Trill: pitch not measured.": "颤音：不评估音准。", "Not recorded.": "没有录到。", "Double stop: not assessed.": "双音：未评估。", "Note colour, pitch:": "音符颜色（音准）：", "Background, timing:": "背景（节奏）：", "within 1/10 of a beat (40–120 ms)": "误差在 1/10 拍以内（40–120 毫秒）", "1/10–1/5 of a beat off (90–240 ms)": "误差 1/10–1/5 拍（90–240 毫秒）", "more than 1/5 of a beat off (past 240 ms)": "误差超过 1/5 拍（240 毫秒以上）", "missed or not assessed": "漏掉或未评估", "Tap a note to practise its bar in the MIDI player.": "点一个音，到 MIDI 播放器里练习它所在的小节。", "The five worst bars": "最需要练习的五个小节", "Tap a bar to practise it in the MIDI player.": "点一个小节，到 MIDI 播放器里练习它。", "Use headphones": "请使用耳机", "The microphone is on for the whole take. With the phone on speaker, any reference or click the app plays reaches it and is scored as your own playing. Put on headphones, or start without sound.": "整段录音期间麦克风一直开着。如果用外放，应用发出的参考音或节拍都会被录进去，并当成你拉的内容评分。请戴上耳机，或选择静音开始。", "I’m using headphones — start": "已戴耳机，开始", "I'm using headphones — start": "已戴耳机，开始", "Start without sound": "静音开始", "Nothing was recorded.": "没有录到内容。", "Measured against Equal temperament.": "按平均律计算。", "Measured against Just intonation.": "按纯律计算。", "Measured against Pythagorean tuning.": "按五度相生律计算。",
     'Intonation': '律制', 'Equal': '平均律', 'Just': '纯律', 'Pythagorean': '五度相生律',
     'Tap': '点拍', 'Slower': '减慢', 'Faster': '加快', 'Time signature': '拍号', 'Beats per bar': '每小节拍数',
     'Note value': '音符时值', 'Tempo': '速度', 'Start': '开始', 'Stop': '停止',
@@ -11021,6 +11037,7 @@ function noteGate() {
     [/^([GDAE]) string, finger (\d)$/, function (m, st, f) { return st + ' 弦，' + f + ' 指'; }],   /* Fingerings' note card */
     [/^Open ([GDAE]) string$/, function (m, st) { return st + ' 弦空弦'; }],
     [/^(\d+)(?:st|nd|rd|th) position$/, function (m, n) { return '第 ' + n + ' 把位'; }],
+    [/^(\d+) notes in the time of (\d+)$/, function (m, a, b) { return a + ' 连音：' + a + ' 个音占 ' + b + ' 个音的时值'; }],
     [/^Double stop with (.+)$/, function (m, x) { return '双音，另一音 ' + x; }],
     [/^(\S+): in tune \(([+−]\d+) ¢\)$/, function (m, n, c) { return n + '：音准合格（' + c + ' 音分）'; }],
     [/^(\S+): (\d+) ¢ (high|low)$/, function (m, n, c, d) { return n + '：' + (d === 'high' ? '偏高 ' : '偏低 ') + c + ' 音分'; }],
