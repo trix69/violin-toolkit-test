@@ -650,7 +650,7 @@ h1 {
 #view-tuner .primary[aria-pressed="true"] { background: var(--t-fg); color: var(--t-bg); }
 #view-tuner #status { margin: 0; font-size: 14px; color: var(--t-muted); flex: 1 1 220px; min-width: 0; }
 #view-tuner #status.err { color: var(--t-bad); }
-#view-tuner .turn-btn { display: none; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--t-line); background: var(--t-panel, transparent); color: var(--t-muted); padding: 0; align-items: center; justify-content: center; cursor: pointer; flex: 0 0 auto; }
+#view-tuner .turn-btn { display: none; margin-left: auto; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--t-line); background: var(--t-panel, transparent); color: var(--t-muted); padding: 0; align-items: center; justify-content: center; cursor: pointer; flex: 0 0 auto; }
 #view-tuner .turn-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 #view-tuner .turn-btn[aria-expanded="true"] { background: var(--t-accent); border-color: var(--t-accent); color: var(--t-on-accent, #fff); }
 #view-tuner .turn-btn:focus-visible { outline: 3px solid var(--t-accent); outline-offset: 2px; }
@@ -1204,6 +1204,13 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
 @keyframes vt-slide-r { from { transform: translateX(-28%); opacity: .3; } to { transform: none; opacity: 1; } }
 .slide-l { animation: vt-slide-l 240ms ease-out; }
 .slide-r { animation: vt-slide-r 240ms ease-out; }
+
+/* the Full screen button turns twice when the player opens on an upright phone, as the tuner's turn button does (Trix) */
+@media (orientation: portrait) and (max-width: 600px) {
+  .shell:not(.mp-fs) #mpFull .i-in { transform-origin: 50% 50%; animation: mpTurnNudge 1.6s ease-in-out 1s 2; }
+}
+@keyframes mpTurnNudge { 0%, 100% { transform: rotate(0); } 40%, 60% { transform: rotate(-90deg); } }
+@media (prefers-reduced-motion: reduce) { #mpFull .i-in { animation: none; } }
 
 /* ---- fingerings ---- */
 /* Fingerings (指法谱, Trix): the violin part on A4 pages, the same drawing as the MIDI player's score */
@@ -2616,7 +2623,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.55" data-build="20261117-220152" data-cache="violin-toolkit-test-"><span>Version 1.55-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.55" data-build="20261117-220305" data-cache="violin-toolkit-test-"><span>Version 1.55-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
