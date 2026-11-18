@@ -2627,7 +2627,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.55" data-build="20261118-113255" data-cache="violin-toolkit-test-"><span>Version 1.55-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.55" data-build="20261118-140548" data-cache="violin-toolkit-test-"><span>Version 1.55-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
@@ -10161,6 +10161,7 @@ function noteGate() {
         return v;
       } catch (e) { return ''; }
     }
+    APP.installId = installId;   /* Report an issue makes it too when no check has yet (the test site's checks never do) */
     function getJson(u) { return fetch(u, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); }
     function versionJson() {
       if (TESTSITE) return getJson(SITE);
@@ -10425,8 +10426,7 @@ function noteGate() {
     var zh = window.I18N && I18N.lang === 'zh', tpl = zh   /* a template that says the issue is public (Trix) */
       ? '发生了什么：\n\n你期望的结果：\n\n（公开问题——请不要写姓名、邮箱或其他个人信息。）'
       : 'What happened:\n\nWhat you expected:\n\n(Public issue — please don\'t include names, e-mail addresses or other personal details.)';
-    var id = ''; try { id = localStorage.getItem('vt-id') || ''; } catch (e) {}   /* the random id the version check sends (Trix): lets an issue be matched to its device's checks; none when not made yet */
-    if (!/^[0-9a-f]{16}$/.test(id)) id = '';
+    var id = APP.installId ? APP.installId() : '';   /* the random id the version check sends (Trix): lets an issue be matched to its device's checks; made now if no check has yet; none without storage */
     this.href = 'https://github.com/trix69/violin-toolkit/issues/new?body=' + encodeURIComponent(tpl + '\n\n---\nViolin Toolkit ' + v + (bd ? ' (' + bd + ')' : '') + ', ' + kind
       + (id ? '\n' + (zh ? '设备 ID（本设备生成的随机数）：' : 'Device ID (a random number made on this device): ') + id : ''));
   }, true);
