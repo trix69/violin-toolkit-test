@@ -1210,7 +1210,10 @@ html.mp-fs-on, html.mp-fs-on body { overflow: hidden; }
   .shell:not(.mp-fs) #mpFull .i-in { transform-origin: 50% 50%; animation: mpTurnNudge 1.6s ease-in-out 1s 2; }
 }
 @keyframes mpTurnNudge { 0%, 100% { transform: rotate(0); } 40%, 60% { transform: rotate(-90deg); } }
-@media (prefers-reduced-motion: reduce) { #mpFull .i-in { animation: none; } }
+@media (prefers-reduced-motion: reduce) {   /* as specific as the rules they stop (Hermes F140) */
+  .shell:not(.mp-fs) #mpFull .i-in { animation: none; }
+  .slide-l, .slide-r { animation: none; }
+}
 
 /* ---- fingerings ---- */
 /* Fingerings (指法谱, Trix): the violin part on A4 pages, the same drawing as the MIDI player's score */
@@ -2624,7 +2627,7 @@ a.howto-btn { text-decoration: none; box-sizing: border-box; }
       </div>
       </div>
     </div>
-    <button type="button" class="ver" id="verBtn" data-version="1.55" data-build="20261118-113052" data-cache="violin-toolkit-test-"><span>Version 1.55-test</span> · <span id="verMsg">Check for updates</span></button>
+    <button type="button" class="ver" id="verBtn" data-version="1.55" data-build="20261118-113255" data-cache="violin-toolkit-test-"><span>Version 1.55-test</span> · <span id="verMsg">Check for updates</span></button>
     <button type="button" class="sheet-done" id="sheetDone">Done</button>
   </div>
 </div>
